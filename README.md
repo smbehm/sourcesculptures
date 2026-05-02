@@ -1,5 +1,39 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## GitHub repository (clone & hand-off)
+
+Use a normal Git remote so you can clone on another machine or point another AI at the same codebase.
+
+1. **Install Git** ([Windows](https://git-scm.com/download/win)), restart the terminal, then from this project folder run:
+
+   ```powershell
+   .\scripts\init-github-remote.ps1
+   ```
+
+   That checks for Git, commits any pending changes if needed, and prints the exact commands below.
+
+2. **Create an empty repo on GitHub** (green **New** button). If this project already has files, **do not** add a README, `.gitignore`, or license on GitHub (avoid merge conflicts).
+
+3. **Connect and push** (replace `YOUR_USER` / `REPO`, branch is usually `main`):
+
+   ```bash
+   git remote add origin https://github.com/YOUR_USER/REPO.git
+   git push -u origin main
+   ```
+
+4. **Clone anywhere** (another developer or AI workspace):
+
+   ```bash
+   git clone https://github.com/YOUR_USER/REPO.git
+   cd REPO
+   npm install
+   npm run dev
+   ```
+
+5. **Paste for troubleshooting**: the repo URL, branch name (`main`), how to run (`npm run dev` → `http://localhost:3000`), and what’s wrong. Keep secrets in `.env.local` only — never commit them (they’re gitignored).
+
+**Optional:** [GitHub CLI](https://cli.github.com/) — `gh auth login`, then `gh repo create … --push` from the project folder.
+
 ## Getting Started
 
 First, run the development server:
