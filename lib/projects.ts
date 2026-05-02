@@ -10,8 +10,6 @@ export type Project = {
   /** Poster / fallback image (YouTube thumb or GitHub asset) */
   coverImageUrl: string;
   youtubeId: string;
-  /** Optional alternate stream on small viewports (e.g. vertical-first edit). */
-  youtubeIdMobile?: string;
   overview: string[];
   credits: Credit[];
 };
@@ -27,7 +25,6 @@ export const projects: Project[] = [
     coverImageUrl:
       "https://i.ytimg.com/vi/Bv-a_7zH88o/maxresdefault.jpg",
     youtubeId: "Bv-a_7zH88o",
-    youtubeIdMobile: "aoD2vFN5wFw",
     overview: [
       "Source Spirits — campaign visual built around atmosphere, restraint, and texture.",
       "Full write-up and credits can be edited when you wire the CMS.",

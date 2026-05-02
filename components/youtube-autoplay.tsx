@@ -6,12 +6,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
-import { useEffectiveYoutubeId } from "@/lib/use-effective-youtube-id";
 
 type YouTubeAutoplayProps = {
   videoId: string;
-  /** Shown on small viewports only (e.g. Source Spirits vertical cut). */
-  youtubeIdMobile?: string;
   title: string;
   className?: string;
   variant?: "inline" | "hero";
@@ -23,13 +20,11 @@ function youtubePosterSrc(videoId: string) {
 
 export function YouTubeAutoplay({
   videoId,
-  youtubeIdMobile,
   title,
   className = "",
   variant = "inline",
 }: YouTubeAutoplayProps) {
   const { registerHeroPlayer, reinforcePlaybackQuality } = useSitePlayback();
-  const effectiveId = useEffectiveYoutubeId(videoId, youtubeIdMobile);
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
@@ -51,7 +46,7 @@ export function YouTubeAutoplay({
 
   useEffect(() => {
     setShowYtPoster(true);
-  }, [effectiveId]);
+  }, [videoId]);
 
   useEffect(() => {
     return () => {
@@ -95,7 +90,7 @@ export function YouTubeAutoplay({
     };
   }, [isHero]);
 
-  const poster = youtubePosterSrc(effectiveId);
+  const poster = youtubePosterSrc(videoId);
 
   const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
     registerHeroPlayer(e.target);
@@ -160,8 +155,7 @@ export function YouTubeAutoplay({
                 ) : (
                   <>
                     <YouTube
-                      key={effectiveId}
-                      videoId={effectiveId}
+                      videoId={videoId}
                       opts={ytOpts}
                       title={title}
                       className={`${sharedTubeClasses} z-0`}
@@ -203,8 +197,7 @@ export function YouTubeAutoplay({
         ) : (
           <>
             <YouTube
-              key={effectiveId}
-              videoId={effectiveId}
+              videoId={videoId}
               opts={ytOpts}
               title={title}
               className={`${sharedTubeClasses} z-0`}

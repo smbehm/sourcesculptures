@@ -51,7 +51,6 @@ export default async function ProjectPage({ params }: Props) {
         <YouTubeAutoplay
           variant="hero"
           videoId={project.youtubeId}
-          youtubeIdMobile={project.youtubeIdMobile}
           title={project.title}
         />
 

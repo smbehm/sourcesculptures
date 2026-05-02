@@ -13,7 +13,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
-import { useEffectiveYoutubeId } from "@/lib/use-effective-youtube-id";
 import type { Project } from "@/lib/projects";
 
 type Props = {
@@ -278,16 +277,12 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
-  const effectiveYoutubeId = useEffectiveYoutubeId(
-    project.youtubeId,
-    project.youtubeIdMobile,
-  );
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
 
-  const ytPoster = `https://i.ytimg.com/vi/${effectiveYoutubeId}/maxresdefault.jpg`;
+  const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
   const ytOpts = useMemo(
     () => ({
@@ -300,7 +295,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
 
   useEffect(() => {
     setShowYtPoster(true);
-  }, [effectiveYoutubeId]);
+  }, [project.youtubeId]);
 
   useEffect(() => {
     if (!play) setShowYtPoster(true);
@@ -401,8 +396,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
               ) : (
                 <>
                   <YouTube
-                    key={effectiveYoutubeId}
-                    videoId={effectiveYoutubeId}
+                    videoId={project.youtubeId}
                     opts={ytOpts}
                     title=""
                     className="absolute inset-0 z-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
