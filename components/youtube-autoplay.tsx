@@ -1,35 +1,43 @@
 "use client";
 
 import Image from "next/image";
+import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSiteAudio } from "@/components/site-audio-provider";
-import { getYoutubeEmbedOrigin } from "@/lib/embed-origin";
-import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
+import { useSitePlayback } from "@/components/site-playback-provider";
+import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 
 type YouTubeAutoplayProps = {
   videoId: string;
   title: string;
   className?: string;
-  /**
-   * `hero` — edge-to-edge cinematic strip (project pages): always plays when mounted, cover-style iframe.
-   * `inline` — aspect-video block with intersection-triggered load (home sections if reused).
-   */
   variant?: "inline" | "hero";
 };
 
-/**
- * Muted autoplay when the frame is sufficiently in view; poster when out of view (inline only).
- */
 export function YouTubeAutoplay({
   videoId,
   title,
   className = "",
   variant = "inline",
 }: YouTubeAutoplayProps) {
-  const { siteMuted } = useSiteAudio();
+  const { registerHeroPlayer, videoQuality } = useSitePlayback();
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
   const [active, setActive] = useState(isHero);
+
+  const ytOpts = useMemo(
+    () => ({
+      width: "100%",
+      height: "100%",
+      playerVars: buildYoutubePlayerVars({ startMuted: true }),
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (isHero) registerHeroPlayer(null);
+    };
+  }, [isHero, registerHeroPlayer]);
 
   useEffect(() => {
     if (isHero) return;
@@ -67,48 +75,58 @@ export function YouTubeAutoplay({
     };
   }, [isHero]);
 
-  const embedOrigin = useMemo(() => getYoutubeEmbedOrigin(), []);
-
-  const embedSrc = useMemo(
-    () =>
-      chromelessYoutubeEmbedUrl(videoId, {
-        muted: siteMuted,
-        embedOrigin,
-      }),
-    [videoId, siteMuted, embedOrigin],
-  );
-
   const poster = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
 
-  const iframeCore = (
-    <>
-      <iframe
-        key={`${videoId}-${siteMuted}`}
-        title={title}
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full select-none border-0"
-        src={embedSrc}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
-        referrerPolicy="strict-origin-when-cross-origin"
-        tabIndex={-1}
-      />
-      <div
-        className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
-        aria-hidden
-      />
-    </>
-  );
+  const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+    registerHeroPlayer(e.target);
+    try {
+      e.target.setPlaybackQuality(videoQuality);
+    } catch {
+      /* noop */
+    }
+  };
+
+  const handleInlineReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+    try {
+      e.target.setPlaybackQuality(videoQuality);
+    } catch {
+      /* noop */
+    }
+  };
+
+  const handleEnd = (e: { target: import("react-youtube").YouTubePlayer }) => {
+    try {
+      e.target.seekTo(0, true);
+      e.target.playVideo();
+    } catch {
+      /* noop */
+    }
+  };
+
+  const sharedTubeClasses =
+    "absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full";
 
   if (isHero) {
     return (
-      <div
-        ref={rootRef}
-        className={`relative w-full bg-black ${className}`}
-      >
+      <div ref={rootRef} className={`relative w-full bg-black ${className}`}>
         <div className="relative w-full overflow-hidden">
-          {/* Cover-scale iframe: full-bleed width, crops side letterboxing (no "theater" pillarbox) */}
           <div className="relative min-h-[56.25vw] w-full md:min-h-[min(56.25vw,85vh)]">
             <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2">
-              {iframeCore}
+              <div className="absolute inset-0 overflow-hidden">
+                <YouTube
+                  videoId={videoId}
+                  opts={ytOpts}
+                  title={title}
+                  className={sharedTubeClasses}
+                  iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+                  onReady={handleHeroReady}
+                  onEnd={handleEnd}
+                />
+                <div
+                  className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
+                  aria-hidden
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -122,7 +140,21 @@ export function YouTubeAutoplay({
       className={`relative aspect-video w-full overflow-hidden bg-black ${className}`}
     >
       {active ? (
-        iframeCore
+        <>
+          <YouTube
+            videoId={videoId}
+            opts={ytOpts}
+            title={title}
+            className={sharedTubeClasses}
+            iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+            onReady={handleInlineReady}
+            onEnd={handleEnd}
+          />
+          <div
+            className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
+            aria-hidden
+          />
+        </>
       ) : (
         <>
           <Image

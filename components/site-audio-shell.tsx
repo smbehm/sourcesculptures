@@ -1,13 +1,13 @@
 "use client";
 
-import { SiteAudioProvider } from "@/components/site-audio-provider";
-import { GlobalMuteButton } from "@/components/global-mute-button";
+import { GlobalPlaybackBar } from "@/components/global-playback-bar";
+import { SitePlaybackProvider } from "@/components/site-playback-provider";
 
 export function SiteAudioShell({ children }: { children: React.ReactNode }) {
   return (
-    <SiteAudioProvider>
+    <SitePlaybackProvider>
       {children}
-      <GlobalMuteButton />
-    </SiteAudioProvider>
+      <GlobalPlaybackBar />
+    </SitePlaybackProvider>
   );
 }

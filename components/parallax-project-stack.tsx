@@ -8,10 +8,10 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
+import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSiteAudio } from "@/components/site-audio-provider";
-import { getYoutubeEmbedOrigin } from "@/lib/embed-origin";
-import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
+import { useSitePlayback } from "@/components/site-playback-provider";
+import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import type { Project } from "@/lib/projects";
 
 type Props = {
@@ -69,7 +69,7 @@ const INITIAL_TITLE_FADE_MS = 1000;
 const IDLE_TITLE_FADE_MS = 250;
 
 export function ParallaxProjectStack({ projects }: Props) {
-  const { siteMuted } = useSiteAudio();
+  const { setActiveParallaxSlug } = useSitePlayback();
   const reduceMotion = useReducedMotion();
   const textMeasureRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<Project>(projects[0]);
@@ -140,6 +140,10 @@ export function ParallaxProjectStack({ projects }: Props) {
       window.removeEventListener("pointermove", onMove, opts);
     };
   }, [showCaption, reduceMotion, onTitlePointerActivity]);
+
+  useEffect(() => {
+    setActiveParallaxSlug(showCaption ? active.slug : null);
+  }, [showCaption, active.slug, setActiveParallaxSlug]);
 
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
@@ -222,33 +226,31 @@ export function ParallaxProjectStack({ projects }: Props) {
 
       <div className="relative bg-black">
         {projects.map((p, i) => (
-          <ParallaxProjectSection
-            key={p.slug}
-            project={p}
-            priority={i === 0}
-            activeSlug={active.slug}
-            siteMuted={siteMuted}
-          />
+          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
         ))}
       </div>
     </>
   );
 }
 
-function ParallaxProjectSection({
-  project,
-  priority,
-  activeSlug,
-  siteMuted,
-}: {
-  project: Project;
-  priority: boolean;
-  activeSlug: string;
-  siteMuted: boolean;
-}) {
+function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
+  const { registerParallaxPlayer, videoQuality } = useSitePlayback();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
+
+  const ytOpts = useMemo(
+    () => ({
+      width: "100%",
+      height: "100%",
+      playerVars: buildYoutubePlayerVars({ startMuted: true }),
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    return () => registerParallaxPlayer(project.slug, null);
+  }, [project.slug, registerParallaxPlayer]);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -307,20 +309,6 @@ function ParallaxProjectSection({
     };
   }, []);
 
-  /** Only the caption-aligned panel uses unmuted URL when the site isn’t muted (stable iframe key). */
-  const embedMuted = siteMuted || activeSlug !== project.slug;
-
-  const embedSrc = useMemo(
-    () =>
-      chromelessYoutubeEmbedUrl(project.youtubeId, {
-        muted: embedMuted,
-        embedOrigin: getYoutubeEmbedOrigin(),
-      }),
-    [project.youtubeId, embedMuted],
-  );
-
-  const iframeKey = `${project.slug}-${siteMuted}`;
-
   return (
     <div
       id={`panel-${project.slug}`}
@@ -342,21 +330,36 @@ function ParallaxProjectSection({
 
         {play && (
           <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
-            <iframe
-              key={iframeKey}
-              title=""
-              src={embedSrc}
-              className="pointer-events-none absolute inset-0 h-full w-full select-none border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              loading={priority ? "eager" : "lazy"}
-              tabIndex={-1}
-            />
-            {/* Blocks tap/hover from reaching the player so built-in overlays stay hidden */}
-            <div
-              className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
-              aria-hidden
-            />
+            <div className="absolute inset-0 z-0 overflow-hidden">
+              <YouTube
+                videoId={project.youtubeId}
+                opts={ytOpts}
+                title=""
+                className="absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
+                iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+                loading={priority ? "eager" : "lazy"}
+                onReady={(e) => {
+                  registerParallaxPlayer(project.slug, e.target);
+                  try {
+                    e.target.setPlaybackQuality(videoQuality);
+                  } catch {
+                    /* noop */
+                  }
+                }}
+                onEnd={(e) => {
+                  try {
+                    e.target.seekTo(0, true);
+                    e.target.playVideo();
+                  } catch {
+                    /* noop */
+                  }
+                }}
+              />
+              <div
+                className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
+                aria-hidden
+              />
+            </div>
           </div>
         )}
 
