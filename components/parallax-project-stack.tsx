@@ -76,6 +76,8 @@ export function ParallaxProjectStack({ projects }: Props) {
   /** 1 = visible; fades to 0 after idle / initial delay (unless reduced motion). */
   const [titleOpacity, setTitleOpacity] = useState(1);
   const [titleFadeInstant, setTitleFadeInstant] = useState(false);
+  /** Aligns with Tailwind `md` — used so embed mute URL doesn’t thrash on scroll (mobile). */
+  const [narrowViewport, setNarrowViewport] = useState(false);
   const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -139,6 +141,14 @@ export function ParallaxProjectStack({ projects }: Props) {
       window.removeEventListener("pointermove", onMove, opts);
     };
   }, [showCaption, reduceMotion, onTitlePointerActivity]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setNarrowViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
@@ -227,6 +237,7 @@ export function ParallaxProjectStack({ projects }: Props) {
             priority={i === 0}
             activeSlug={active.slug}
             siteMuted={siteMuted}
+            narrowViewport={narrowViewport}
           />
         ))}
       </div>
@@ -239,11 +250,13 @@ function ParallaxProjectSection({
   priority,
   activeSlug,
   siteMuted,
+  narrowViewport,
 }: {
   project: Project;
   priority: boolean;
   activeSlug: string;
   siteMuted: boolean;
+  narrowViewport: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -276,11 +289,22 @@ function ParallaxProjectSection({
         : [0, 0.08, 0.15, 0.35];
       io = new IntersectionObserver(
         ([e]) => {
-          setPlay(e.isIntersecting && e.intersectionRatio > minRatio);
+          const ratio = e.intersectionRatio;
+          const ins = e.isIntersecting;
+          if (mobile) {
+            /** Avoid stop/start flicker when URL bar / caption causes tiny ratio swings. */
+            setPlay((prev) => {
+              if (!ins || ratio < 0.008) return false;
+              if (ratio > minRatio) return true;
+              return prev;
+            });
+          } else {
+            setPlay(ins && ratio > minRatio);
+          }
         },
         {
           threshold: thresholds,
-          rootMargin: mobile ? "12% 0px 12% 0px" : "0px",
+          rootMargin: mobile ? "15% 0px 15% 0px" : "0px",
         },
       );
       io.observe(root);
@@ -295,14 +319,23 @@ function ParallaxProjectSection({
     };
   }, []);
 
-  /** Only the caption-aligned panel may play sound when the user has unmuted the site. */
-  const embedMuted = siteMuted || activeSlug !== project.slug;
+  /**
+   * Desktop: only the caption-aligned strip gets unmuted embed params (others stay muted in URL).
+   * Mobile: use global mute only so the iframe isn’t remounted on every active-project change (fixes
+   * split-second playback + helps audio after the user taps Unmute).
+   */
+  const embedMuted =
+    siteMuted || (!narrowViewport && activeSlug !== project.slug);
 
   const embedSrc = useMemo(
     () =>
       chromelessYoutubeEmbedUrl(project.youtubeId, { muted: embedMuted }),
     [project.youtubeId, embedMuted],
   );
+
+  const iframeKey = narrowViewport
+    ? `${project.slug}-${siteMuted}`
+    : `${project.slug}-${embedMuted}`;
 
   return (
     <div
@@ -326,7 +359,7 @@ function ParallaxProjectSection({
         {play && (
           <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
             <iframe
-              key={`${project.slug}-${embedMuted}`}
+              key={iframeKey}
               title=""
               src={embedSrc}
               className="pointer-events-none absolute inset-0 h-full w-full select-none border-0"

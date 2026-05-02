@@ -1,5 +1,6 @@
 "use client";
 
+import { flushSync } from "react-dom";
 import { useSiteAudio } from "@/components/site-audio-provider";
 
 export function GlobalMuteButton() {
@@ -8,10 +9,15 @@ export function GlobalMuteButton() {
   return (
     <button
       type="button"
-      onClick={toggleMute}
+      onClick={() => {
+        /** Helps Safari/iOS attach unmuted embed reload to the same user gesture. */
+        flushSync(() => {
+          toggleMute();
+        });
+      }}
       aria-pressed={!siteMuted}
       title={siteMuted ? "Unmute video audio" : "Mute video audio"}
-      className="fixed bottom-6 right-6 z-[100] flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/70 text-white shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:border-white/45 hover:bg-black/85 md:bottom-8 md:right-8"
+      className="fixed bottom-6 right-6 z-[100] flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/25 bg-black/70 text-white shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:border-white/45 hover:bg-black/85 md:bottom-8 md:right-8"
     >
       <span className="sr-only">
         {siteMuted ? "Unmute video audio" : "Mute video audio"}
