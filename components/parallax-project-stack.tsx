@@ -265,9 +265,11 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      <div className="relative bg-black">
+      <div className="relative bg-black max-lg:-mt-2">
         {projects.map((p, i) => (
-          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
+          <div key={p.slug} className={i > 0 ? "max-lg:-mt-3" : undefined}>
+            <ParallaxProjectSection project={p} priority={i === 0} />
+          </div>
         ))}
       </div>
     </>

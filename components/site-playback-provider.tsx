@@ -5,23 +5,20 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import type { YouTubePlayer } from "react-youtube";
 
-/** youtube-player wraps YT.Player — methods may return Promises; await follow-ups where needed. */
-function runPlayerApi(player: YouTubePlayer, fn: (p: YouTubePlayer) => unknown) {
-  try {
-    const r = fn(player);
-    if (r != null && typeof (r as Promise<unknown>).then === "function") {
-      void (r as Promise<unknown>).catch(() => {});
-    }
-  } catch {
-    /* player may be tearing down */
-  }
-}
+import type { VideoQualityTier } from "@/lib/playback-types";
+import {
+  applyPreferredQuality,
+  reinforcePreferredQuality,
+} from "@/lib/youtube-quality";
+
+export type { VideoQualityTier };
 
 /** Site-wide mute off → unmute + play; mute on → mute. Handles both sync YT.Player and promisified wrappers. */
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
@@ -58,8 +55,6 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   }
 }
 
-export type VideoQualityTier = "hd1080" | "hd2160";
-
 /** Persisted site-wide in localStorage (survives reload and matches cross-route SPA state after hydrate). */
 const STORAGE_MUTE = "sourcesculptures:playback:mute";
 const STORAGE_QUALITY = "sourcesculptures:playback:quality";
@@ -72,9 +67,7 @@ type PlaybackContextValue = {
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
   setActiveParallaxSlug: (slug: string | null) => void;
-  /** Pass the muted state *after* toggle (same tick as the mute button click). */
-  syncPlaybackAfterToggle: (muted: boolean) => void;
-  /** Call when the player enters PLAYING — YouTube often applies `setPlaybackQuality` only after playback starts. */
+  /** Call when the player enters PLAYING — quality requests stick better after playback starts. */
   reinforcePlaybackQuality: (player: YouTubePlayer) => void;
 };
 
@@ -83,27 +76,32 @@ const PlaybackContext = createContext<PlaybackContextValue | null>(null);
 export function SitePlaybackProvider({ children }: { children: React.ReactNode }) {
   /** Default unmuted: global bar mutes/unmutes the whole site; only one embed gets sound when unmuted. */
   const [siteMuted, setSiteMuted] = useState(false);
-  const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
+  const [videoQuality, setVideoQualityState] = useState<VideoQualityTier>("hd1080");
   const [prefsHydrated, setPrefsHydrated] = useState(false);
   const [activeParallaxSlug, setActiveParallaxSlug] = useState<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
   const videoQualityRef = useRef(videoQuality);
-  videoQualityRef.current = videoQuality;
   const siteMutedRef = useRef(siteMuted);
-  siteMutedRef.current = siteMuted;
+
+  useLayoutEffect(() => {
+    videoQualityRef.current = videoQuality;
+    siteMutedRef.current = siteMuted;
+  }, [videoQuality, siteMuted]);
 
   useEffect(() => {
     try {
       const m = localStorage.getItem(STORAGE_MUTE);
-      if (m === "0") setSiteMuted(false);
-      else if (m === "1") setSiteMuted(true);
       const q = localStorage.getItem(STORAGE_QUALITY);
-      if (q === "hd1080" || q === "hd2160") setVideoQuality(q);
+      queueMicrotask(() => {
+        if (m === "0") setSiteMuted(false);
+        else if (m === "1") setSiteMuted(true);
+        if (q === "hd1080" || q === "hd2160") setVideoQualityState(q);
+        setPrefsHydrated(true);
+      });
     } catch {
-      /* private mode / quota */
+      queueMicrotask(() => setPrefsHydrated(true));
     }
-    setPrefsHydrated(true);
   }, []);
 
   /** Keep mute + quality in sync across browser tabs. */
@@ -116,7 +114,7 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
         e.key === STORAGE_QUALITY &&
         (e.newValue === "hd1080" || e.newValue === "hd2160")
       ) {
-        setVideoQuality(e.newValue);
+        setVideoQualityState(e.newValue);
       }
     };
     window.addEventListener("storage", onStorage);
@@ -141,10 +139,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     }
   }, [videoQuality, prefsHydrated]);
 
-  const toggleMute = useCallback(() => {
-    setSiteMuted((m) => !m);
-  }, []);
-
   const applyPolicy = useCallback(
     (muted: boolean) => {
       const q = videoQualityRef.current;
@@ -153,15 +147,40 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
 
       parallaxPlayersRef.current.forEach((player, slug) => {
         const audible = !muted && slug === parallaxAudibleSlug;
-        runPlayerApi(player, (p) => p.setPlaybackQuality(q));
+        applyPreferredQuality(player, q);
         setPlayerMuted(player, !audible);
       });
       if (hero) {
-        runPlayerApi(hero, (p) => p.setPlaybackQuality(q));
+        applyPreferredQuality(hero, q);
         setPlayerMuted(hero, muted);
       }
     },
     [activeParallaxSlug],
+  );
+
+  const toggleMute = useCallback(() => {
+    /**
+     * Use explicit `!siteMuted` (not `setSiteMuted(p => !p)`) so React Strict Mode in dev
+     * cannot double-invoke the updater and cancel the toggle.
+     */
+    const next = !siteMuted;
+    setSiteMuted(next);
+    queueMicrotask(() => {
+      applyPolicy(next);
+      requestAnimationFrame(() => applyPolicy(next));
+    });
+  }, [siteMuted, applyPolicy]);
+
+  const setVideoQuality = useCallback(
+    (q: VideoQualityTier) => {
+      videoQualityRef.current = q;
+      setVideoQualityState(q);
+      queueMicrotask(() => {
+        applyPolicy(siteMutedRef.current);
+        requestAnimationFrame(() => applyPolicy(siteMutedRef.current));
+      });
+    },
+    [applyPolicy],
   );
 
   const registerParallaxPlayer = useCallback(
@@ -187,20 +206,12 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
-    runPlayerApi(player, (p) => p.setPlaybackQuality(videoQualityRef.current));
+    reinforcePreferredQuality(player, videoQualityRef.current);
   }, []);
 
   useEffect(() => {
     applyPolicy(siteMuted);
   }, [siteMuted, activeParallaxSlug, videoQuality, applyPolicy]);
-
-  const syncPlaybackAfterToggle = useCallback(
-    (muted: boolean) => {
-      applyPolicy(muted);
-      requestAnimationFrame(() => applyPolicy(muted));
-    },
-    [applyPolicy],
-  );
 
   const value = useMemo(
     () => ({
@@ -211,7 +222,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
-      syncPlaybackAfterToggle,
       reinforcePlaybackQuality,
     }),
     [
@@ -221,7 +231,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       setVideoQuality,
       registerParallaxPlayer,
       registerHeroPlayer,
-      syncPlaybackAfterToggle,
       reinforcePlaybackQuality,
     ],
   );

@@ -30,7 +30,7 @@ export default function HomePage() {
       <main className="bg-black">
         <section
           id="intro"
-          className="relative min-h-[100svh] overflow-hidden md:min-h-[100dvh]"
+          className="relative max-lg:-mb-2 min-h-[100svh] overflow-hidden md:min-h-[100dvh]"
         >
           <Image
             src={siteConfig.heroImageUrl}
