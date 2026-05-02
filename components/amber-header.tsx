@@ -9,13 +9,17 @@ import { siteConfig } from "@/lib/site";
 export function AmberHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const isHome = pathname === "/";
+  /** Match homepage: no bar under header on home and project detail routes. */
+  const minimalHeaderChrome =
+    pathname === "/" || pathname.startsWith("/projects/");
 
   return (
     <>
       <header
         className={`fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-6 py-6 md:px-10 ${
-          isHome ? "" : "border-b border-white/10 bg-black/85 backdrop-blur-md"
+          minimalHeaderChrome
+            ? ""
+            : "border-b border-white/10 bg-black/85 backdrop-blur-md"
         }`}
       >
         <Link

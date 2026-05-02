@@ -48,21 +48,10 @@ export default async function ProjectPage({ params }: Props) {
   return (
     <main className="pt-20">
       <article>
-        <div className="border-b border-white/10">
-          <div className="mx-auto max-w-[1400px] px-5 py-6 sm:px-8 lg:px-12">
-            <Link
-              href="/"
-              className="text-[11px] tracking-[0.28em] text-white/45 uppercase transition hover:text-white"
-            >
-              ← Home
-            </Link>
-          </div>
-        </div>
-
         <YouTubeAutoplay
+          variant="hero"
           videoId={project.youtubeId}
           title={project.title}
-          className="aspect-video min-h-[min(78vh,56.25vw)] max-h-[92vh] w-full sm:min-h-[min(82vh,56.25vw)]"
         />
 
         <section className="border-t border-white/10 bg-black">

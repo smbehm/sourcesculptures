@@ -1,6 +1,8 @@
 export type ChromelessEmbedOptions = {
   /** Default true — keep muted until the user unmutes via the site control (required for autoplay). */
   muted?: boolean;
+  /** Required for reliable embed behavior + audio unlock on some mobile browsers (full URL origin). */
+  embedOrigin?: string;
 };
 
 /** Chromeless-style embed — controls hidden; loop requires playlist=id */
@@ -21,11 +23,13 @@ export function chromelessYoutubeEmbedUrl(
     disablekb: "1",
     fs: "0",
     iv_load_policy: "3",
-    /** Reduces extra chrome / keyboard shortcuts surfacing as UI hints */
     cc_load_policy: "0",
-    /** Limits JS API surface (helps avoid interactive overlays on some clients) */
+    /** Keep off to limit in-player UI / overlay surfacing. */
     enablejsapi: "0",
   });
+  if (options?.embedOrigin) {
+    q.set("origin", options.embedOrigin);
+  }
   return `https://www.youtube-nocookie.com/embed/${videoId}?${q.toString()}`;
 }
 

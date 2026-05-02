@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSiteAudio } from "@/components/site-audio-provider";
+import { getYoutubeEmbedOrigin } from "@/lib/embed-origin";
 import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
 import type { Project } from "@/lib/projects";
 
@@ -76,8 +77,6 @@ export function ParallaxProjectStack({ projects }: Props) {
   /** 1 = visible; fades to 0 after idle / initial delay (unless reduced motion). */
   const [titleOpacity, setTitleOpacity] = useState(1);
   const [titleFadeInstant, setTitleFadeInstant] = useState(false);
-  /** Aligns with Tailwind `md` — used so embed mute URL doesn’t thrash on scroll (mobile). */
-  const [narrowViewport, setNarrowViewport] = useState(false);
   const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -141,14 +140,6 @@ export function ParallaxProjectStack({ projects }: Props) {
       window.removeEventListener("pointermove", onMove, opts);
     };
   }, [showCaption, reduceMotion, onTitlePointerActivity]);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const sync = () => setNarrowViewport(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
@@ -237,7 +228,6 @@ export function ParallaxProjectStack({ projects }: Props) {
             priority={i === 0}
             activeSlug={active.slug}
             siteMuted={siteMuted}
-            narrowViewport={narrowViewport}
           />
         ))}
       </div>
@@ -250,13 +240,11 @@ function ParallaxProjectSection({
   priority,
   activeSlug,
   siteMuted,
-  narrowViewport,
 }: {
   project: Project;
   priority: boolean;
   activeSlug: string;
   siteMuted: boolean;
-  narrowViewport: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -319,23 +307,19 @@ function ParallaxProjectSection({
     };
   }, []);
 
-  /**
-   * Desktop: only the caption-aligned strip gets unmuted embed params (others stay muted in URL).
-   * Mobile: use global mute only so the iframe isn’t remounted on every active-project change (fixes
-   * split-second playback + helps audio after the user taps Unmute).
-   */
-  const embedMuted =
-    siteMuted || (!narrowViewport && activeSlug !== project.slug);
+  /** Only the caption-aligned panel uses unmuted URL when the site isn’t muted (stable iframe key). */
+  const embedMuted = siteMuted || activeSlug !== project.slug;
 
   const embedSrc = useMemo(
     () =>
-      chromelessYoutubeEmbedUrl(project.youtubeId, { muted: embedMuted }),
+      chromelessYoutubeEmbedUrl(project.youtubeId, {
+        muted: embedMuted,
+        embedOrigin: getYoutubeEmbedOrigin(),
+      }),
     [project.youtubeId, embedMuted],
   );
 
-  const iframeKey = narrowViewport
-    ? `${project.slug}-${siteMuted}`
-    : `${project.slug}-${embedMuted}`;
+  const iframeKey = `${project.slug}-${siteMuted}`;
 
   return (
     <div
