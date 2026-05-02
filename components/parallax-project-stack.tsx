@@ -267,7 +267,9 @@ export function ParallaxProjectStack({ projects }: Props) {
 
       <div className="relative bg-black">
         {projects.map((p, i) => (
-          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
+          <div key={p.slug} className={i > 0 ? "-mt-px" : undefined}>
+            <ParallaxProjectSection project={p} priority={i === 0} />
+          </div>
         ))}
       </div>
     </>
@@ -305,15 +307,26 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     return () => registerParallaxPlayer(project.slug, null);
   }, [project.slug, registerParallaxPlayer]);
 
+  const [narrowViewport, setNarrowViewport] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setNarrowViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
 
+  /** Parallax transform exposes subpixel seams on mobile Safari; keep motion on desktop only. */
   const y = useTransform(
     scrollYProgress,
     [0, 1],
-    reduce ? [0, 0] : [-90, 90],
+    reduce || narrowViewport ? [0, 0] : [-90, 90],
   );
 
   useEffect(() => {
@@ -366,7 +379,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     <div
       id={`panel-${project.slug}`}
       ref={ref}
-      className="relative h-[135vh] min-h-[100dvh] w-full overflow-hidden bg-black"
+      className="relative isolate h-[135vh] min-h-[100dvh] w-full overflow-hidden bg-black [transform:translateZ(0)]"
     >
       <motion.div
         className="absolute -top-[11%] left-0 h-[122%] w-full will-change-transform"

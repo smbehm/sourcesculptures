@@ -27,10 +27,10 @@ export default function HomePage() {
 
   return (
     <>
-      <main>
+      <main className="bg-black">
         <section
           id="intro"
-          className="relative min-h-[100dvh] overflow-hidden"
+          className="relative -mb-px min-h-[100dvh] overflow-hidden"
         >
           <Image
             src={siteConfig.heroImageUrl}
@@ -73,7 +73,7 @@ export default function HomePage() {
 
         <section
           id="about"
-          className="border-y border-white/10 bg-[#040404] px-6 py-24 md:px-14 md:py-32"
+          className="-mt-px border-y border-white/10 bg-[#040404] px-6 py-24 md:px-14 md:py-32"
         >
           <div className="mx-auto max-w-5xl">
             <h2 className="text-pretty font-[family-name:var(--font-inter)] text-2xl font-light leading-[1.35] tracking-[-0.01em] text-white/90 sm:text-3xl md:text-4xl md:leading-[1.25] lg:text-[2.65rem] lg:leading-[1.2]">
@@ -102,7 +102,7 @@ export default function HomePage() {
 
         <section
           id="cta"
-          className="border-t border-white/10 bg-black px-6 py-28 text-center md:py-36"
+          className="-mt-px border-t border-white/10 bg-black px-6 py-28 text-center md:py-36"
         >
           <RulerRule className="mx-auto mb-14 max-w-lg opacity-70" />
           <p className="text-[10px] tracking-[0.45em] text-white/40 uppercase">

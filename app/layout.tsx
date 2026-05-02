@@ -69,7 +69,7 @@ export default function RootLayout({
       lang="en"
       className={`${antonio.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#050505] text-zinc-100">
+      <body className="min-h-full bg-black text-zinc-100">
         <LenisProvider>
           <SiteAudioShell>
             <JsonLd />
