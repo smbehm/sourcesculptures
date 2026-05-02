@@ -75,9 +75,7 @@ export default function RootLayout({
             <JsonLd />
             <div className="flex min-h-full flex-col">
               <AmberHeader />
-              <div className="flex-1 pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-28">
-                {children}
-              </div>
+              <div className="flex-1">{children}</div>
               <SiteFooter />
             </div>
           </SiteAudioShell>

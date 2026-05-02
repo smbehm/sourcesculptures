@@ -57,13 +57,16 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
 
 /** Persisted site-wide in localStorage (survives reload and matches cross-route SPA state after hydrate). */
 const STORAGE_MUTE = "sourcesculptures:playback:mute";
-const STORAGE_QUALITY = "sourcesculptures:playback:quality";
+
+/** Mobile/tablet: ask YouTube for HD; desktop: ask for 4K (best-effort per video + API). */
+function preferredTierForViewport(): VideoQualityTier {
+  if (typeof window === "undefined") return "hd1080";
+  return window.matchMedia("(max-width: 1023px)").matches ? "hd1080" : "hd2160";
+}
 
 type PlaybackContextValue = {
   siteMuted: boolean;
   toggleMute: () => void;
-  videoQuality: VideoQualityTier;
-  setVideoQuality: (q: VideoQualityTier) => void;
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
   setActiveParallaxSlug: (slug: string | null) => void;
@@ -92,11 +95,9 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     try {
       const m = localStorage.getItem(STORAGE_MUTE);
-      const q = localStorage.getItem(STORAGE_QUALITY);
       queueMicrotask(() => {
         if (m === "0") setSiteMuted(false);
         else if (m === "1") setSiteMuted(true);
-        if (q === "hd1080" || q === "hd2160") setVideoQualityState(q);
         setPrefsHydrated(true);
       });
     } catch {
@@ -104,17 +105,20 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  /** Keep mute + quality in sync across browser tabs. */
+  /** Preferred stream tier follows viewport (HD on mobile, 4K on desktop). */
+  useEffect(() => {
+    const sync = () => setVideoQualityState(preferredTierForViewport());
+    sync();
+    const mq = window.matchMedia("(max-width: 1023px)");
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  /** Keep mute in sync across browser tabs. */
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_MUTE && (e.newValue === "0" || e.newValue === "1")) {
         setSiteMuted(e.newValue === "1");
-      }
-      if (
-        e.key === STORAGE_QUALITY &&
-        (e.newValue === "hd1080" || e.newValue === "hd2160")
-      ) {
-        setVideoQualityState(e.newValue);
       }
     };
     window.addEventListener("storage", onStorage);
@@ -129,15 +133,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       /* noop */
     }
   }, [siteMuted, prefsHydrated]);
-
-  useEffect(() => {
-    if (!prefsHydrated) return;
-    try {
-      localStorage.setItem(STORAGE_QUALITY, videoQuality);
-    } catch {
-      /* noop */
-    }
-  }, [videoQuality, prefsHydrated]);
 
   const applyPolicy = useCallback(
     (muted: boolean) => {
@@ -170,18 +165,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       requestAnimationFrame(() => applyPolicy(next));
     });
   }, [siteMuted, applyPolicy]);
-
-  const setVideoQuality = useCallback(
-    (q: VideoQualityTier) => {
-      videoQualityRef.current = q;
-      setVideoQualityState(q);
-      queueMicrotask(() => {
-        applyPolicy(siteMutedRef.current);
-        requestAnimationFrame(() => applyPolicy(siteMutedRef.current));
-      });
-    },
-    [applyPolicy],
-  );
 
   const registerParallaxPlayer = useCallback(
     (slug: string, player: YouTubePlayer | null) => {
@@ -217,8 +200,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     () => ({
       siteMuted,
       toggleMute,
-      videoQuality,
-      setVideoQuality,
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
@@ -227,8 +208,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     [
       siteMuted,
       toggleMute,
-      videoQuality,
-      setVideoQuality,
       registerParallaxPlayer,
       registerHeroPlayer,
       reinforcePlaybackQuality,
