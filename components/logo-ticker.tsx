@@ -7,7 +7,7 @@ export function LogoTicker() {
   return (
     <section
       id="clients"
-      className="-mt-px scroll-mt-0 border-y border-white/10 bg-[#060606]"
+      className="scroll-mt-0 border-y border-white/10 bg-[#060606]"
     >
       <RulerRule className="border-t-0" />
       <div className="mx-auto max-w-6xl px-6 py-14 md:px-10 md:py-16">

@@ -21,15 +21,22 @@ const options: LenisOptions = {
 export function LenisProvider({ children }: PropsWithChildren) {
   const [mounted, setMounted] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  /** Lenis uses transforms while syncing touch scroll — causes visible seams/gaps on phones. */
+  const [nativeScrollOnly, setNativeScrollOnly] = useState(true);
 
   useEffect(() => {
     setMounted(true);
     setReduceMotion(
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     );
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const syncScrollMode = () => setNativeScrollOnly(!mq.matches);
+    syncScrollMode();
+    mq.addEventListener("change", syncScrollMode);
+    return () => mq.removeEventListener("change", syncScrollMode);
   }, []);
 
-  if (!mounted || reduceMotion) {
+  if (!mounted || reduceMotion || nativeScrollOnly) {
     return <>{children}</>;
   }
 

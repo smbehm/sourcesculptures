@@ -30,7 +30,7 @@ export default function HomePage() {
       <main className="bg-black">
         <section
           id="intro"
-          className="relative -mb-px min-h-[100dvh] overflow-hidden"
+          className="relative min-h-[100svh] overflow-hidden md:min-h-[100dvh]"
         >
           <Image
             src={siteConfig.heroImageUrl}
@@ -50,7 +50,7 @@ export default function HomePage() {
             aria-hidden
           />
 
-          <div className="relative flex min-h-[100dvh] flex-col items-center justify-center px-5 pb-40 pt-32 text-center sm:px-8">
+          <div className="relative flex min-h-[100svh] flex-col items-center justify-center px-5 pb-40 pt-32 text-center sm:px-8 md:min-h-[100dvh]">
             <h1 className="font-display max-w-[min(100%,56rem)] text-balance text-[clamp(2.6rem,12.5vw,9.5rem)] font-bold leading-[0.86] tracking-[-0.02em] text-white uppercase drop-shadow-[0_6px_40px_rgba(0,0,0,0.45)]">
               {siteConfig.heroLines.map((line) => (
                 <span key={line} className="block">
@@ -73,7 +73,7 @@ export default function HomePage() {
 
         <section
           id="about"
-          className="-mt-px border-y border-white/10 bg-[#040404] px-6 py-24 md:px-14 md:py-32"
+          className="border-y border-white/10 bg-[#040404] px-6 py-24 md:px-14 md:py-32"
         >
           <div className="mx-auto max-w-5xl">
             <h2 className="text-pretty font-[family-name:var(--font-inter)] text-2xl font-light leading-[1.35] tracking-[-0.01em] text-white/90 sm:text-3xl md:text-4xl md:leading-[1.25] lg:text-[2.65rem] lg:leading-[1.2]">
@@ -102,7 +102,7 @@ export default function HomePage() {
 
         <section
           id="cta"
-          className="-mt-px border-t border-white/10 bg-black px-6 py-28 text-center md:py-36"
+          className="border-t border-white/10 bg-black px-6 py-28 text-center md:py-36"
         >
           <RulerRule className="mx-auto mb-14 max-w-lg opacity-70" />
           <p className="text-[10px] tracking-[0.45em] text-white/40 uppercase">

@@ -267,9 +267,7 @@ export function ParallaxProjectStack({ projects }: Props) {
 
       <div className="relative bg-black">
         {projects.map((p, i) => (
-          <div key={p.slug} className={i > 0 ? "-mt-px" : undefined}>
-            <ParallaxProjectSection project={p} priority={i === 0} />
-          </div>
+          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
         ))}
       </div>
     </>
@@ -310,7 +308,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
   const [narrowViewport, setNarrowViewport] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
+    const mq = window.matchMedia("(max-width: 1023px)");
     const sync = () => setNarrowViewport(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -322,12 +320,16 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     offset: ["start end", "end start"],
   });
 
-  /** Parallax transform exposes subpixel seams on mobile Safari; keep motion on desktop only. */
+  /** Parallax Y exposes seams with touch scroll; desktop keeps drift. */
   const y = useTransform(
     scrollYProgress,
     [0, 1],
     reduce || narrowViewport ? [0, 0] : [-90, 90],
   );
+
+  const motionLayerClass = narrowViewport
+    ? "absolute inset-0 h-full w-full will-change-transform"
+    : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
   useEffect(() => {
     const root = ref.current;
@@ -379,12 +381,9 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     <div
       id={`panel-${project.slug}`}
       ref={ref}
-      className="relative isolate h-[135vh] min-h-[100dvh] w-full overflow-hidden bg-black [transform:translateZ(0)]"
+      className="relative isolate h-[135vh] min-h-[100svh] w-full overflow-hidden bg-black md:min-h-[100dvh]"
     >
-      <motion.div
-        className="absolute -top-[11%] left-0 h-[122%] w-full will-change-transform"
-        style={{ y }}
-      >
+      <motion.div className={motionLayerClass} style={{ y }}>
         <Image
           src={project.coverImageUrl}
           alt=""
