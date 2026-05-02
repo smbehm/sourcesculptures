@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { YouTubePlayer } from "react-youtube";
 
-/** youtube-player promisifies some API calls — always invoke and optionally float the Promise. */
+/** youtube-player wraps YT.Player — methods may return Promises; await follow-ups where needed. */
 function runPlayerApi(player: YouTubePlayer, fn: (p: YouTubePlayer) => unknown) {
   try {
     const r = fn(player);
@@ -20,6 +20,42 @@ function runPlayerApi(player: YouTubePlayer, fn: (p: YouTubePlayer) => unknown) 
     }
   } catch {
     /* player may be tearing down */
+  }
+}
+
+/** Unmute must chain playVideo; iOS needs this to complete in the same activation when possible. */
+function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
+  const p = player as unknown as {
+    mute?: () => unknown;
+    unMute?: () => unknown;
+    playVideo?: () => unknown;
+  };
+  try {
+    if (muted) {
+      const r = p.mute?.();
+      if (r != null && typeof (r as Promise<unknown>).then === "function") {
+        void (r as Promise<unknown>).catch(() => {});
+      }
+      return;
+    }
+    const u = p.unMute?.();
+    if (u != null && typeof (u as Promise<unknown>).then === "function") {
+      void (u as Promise<unknown>)
+        .then(() => {
+          const pv = p.playVideo?.();
+          if (pv != null && typeof (pv as Promise<unknown>).then === "function") {
+            void (pv as Promise<unknown>).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    } else {
+      const pv = p.playVideo?.();
+      if (pv != null && typeof (pv as Promise<unknown>).then === "function") {
+        void (pv as Promise<unknown>).catch(() => {});
+      }
+    }
+  } catch {
+    /* noop */
   }
 }
 
@@ -54,6 +90,8 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
   const videoQualityRef = useRef(videoQuality);
   videoQualityRef.current = videoQuality;
+  const siteMutedRef = useRef(siteMuted);
+  siteMutedRef.current = siteMuted;
 
   useEffect(() => {
     try {
@@ -113,22 +151,12 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       parallaxPlayersRef.current.forEach((player, slug) => {
         const audible = !muted && slug === activeParallaxSlug;
         runPlayerApi(player, (p) => p.setPlaybackQuality(q));
-        if (audible) {
-          runPlayerApi(player, (p) => p.unMute());
-          runPlayerApi(player, (p) => p.playVideo());
-        } else {
-          runPlayerApi(player, (p) => p.mute());
-        }
+        setPlayerMuted(player, !audible);
       });
       const hero = heroPlayerRef.current;
       if (hero) {
         runPlayerApi(hero, (p) => p.setPlaybackQuality(q));
-        if (muted) {
-          runPlayerApi(hero, (p) => p.mute());
-        } else {
-          runPlayerApi(hero, (p) => p.unMute());
-          runPlayerApi(hero, (p) => p.playVideo());
-        }
+        setPlayerMuted(hero, muted);
       }
     },
     [activeParallaxSlug],
@@ -140,24 +168,20 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       if (player) m.set(slug, player);
       else m.delete(slug);
       if (player) {
-        queueMicrotask(() => {
-          applyPolicy(siteMuted);
-        });
+        applyPolicy(siteMutedRef.current);
       }
     },
-    [applyPolicy, siteMuted],
+    [applyPolicy],
   );
 
   const registerHeroPlayer = useCallback(
     (player: YouTubePlayer | null) => {
       heroPlayerRef.current = player;
       if (player) {
-        queueMicrotask(() => {
-          applyPolicy(siteMuted);
-        });
+        applyPolicy(siteMutedRef.current);
       }
     },
-    [applyPolicy, siteMuted],
+    [applyPolicy],
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {

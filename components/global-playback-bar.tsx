@@ -1,6 +1,7 @@
 "use client";
 
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
+import { useLayoutEffect, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 
 export function GlobalPlaybackBar() {
@@ -11,9 +12,17 @@ export function GlobalPlaybackBar() {
     setVideoQuality,
     syncPlaybackAfterToggle,
   } = useSitePlayback();
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed bottom-6 right-6 z-[200] flex flex-row items-stretch gap-1 rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md md:bottom-8 md:right-8">
+  useLayoutEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const bar = (
+    <div
+      className="pointer-events-auto fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-[9999] flex flex-row items-stretch gap-1 rounded-full border border-white/25 bg-black/85 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md md:bottom-8 md:right-8"
+      style={{ isolation: "isolate" }}
+    >
       <div className="flex rounded-full p-0.5">
         <QualityPill
           label="HD"
@@ -38,7 +47,9 @@ export function GlobalPlaybackBar() {
       </div>
       <button
         type="button"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           const nextMuted = !siteMuted;
           flushSync(() => {
             toggleMute();
@@ -47,7 +58,7 @@ export function GlobalPlaybackBar() {
         }}
         aria-pressed={!siteMuted}
         title={siteMuted ? "Unmute video audio" : "Mute video audio"}
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10 active:bg-white/15"
       >
         <span className="sr-only">
           {siteMuted ? "Unmute video audio" : "Mute video audio"}
@@ -56,6 +67,12 @@ export function GlobalPlaybackBar() {
       </button>
     </div>
   );
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(bar, document.body);
 }
 
 function QualityPill({
@@ -70,7 +87,11 @@ function QualityPill({
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
       className={`min-w-[2.75rem] rounded-full px-2.5 py-2 font-display text-[10px] tracking-[0.18em] uppercase transition ${
         selected
           ? "bg-white text-black"

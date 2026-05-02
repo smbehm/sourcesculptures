@@ -6,9 +6,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
+import { useEffectiveYoutubeId } from "@/lib/use-effective-youtube-id";
 
 type YouTubeAutoplayProps = {
   videoId: string;
+  /** Shown on small viewports only (e.g. Source Spirits vertical cut). */
+  youtubeIdMobile?: string;
   title: string;
   className?: string;
   variant?: "inline" | "hero";
@@ -20,11 +23,13 @@ function youtubePosterSrc(videoId: string) {
 
 export function YouTubeAutoplay({
   videoId,
+  youtubeIdMobile,
   title,
   className = "",
   variant = "inline",
 }: YouTubeAutoplayProps) {
   const { registerHeroPlayer, reinforcePlaybackQuality } = useSitePlayback();
+  const effectiveId = useEffectiveYoutubeId(videoId, youtubeIdMobile);
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
@@ -46,7 +51,7 @@ export function YouTubeAutoplay({
 
   useEffect(() => {
     setShowYtPoster(true);
-  }, [videoId]);
+  }, [effectiveId]);
 
   useEffect(() => {
     return () => {
@@ -90,7 +95,7 @@ export function YouTubeAutoplay({
     };
   }, [isHero]);
 
-  const poster = youtubePosterSrc(videoId);
+  const poster = youtubePosterSrc(effectiveId);
 
   const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
     registerHeroPlayer(e.target);
@@ -138,8 +143,10 @@ export function YouTubeAutoplay({
     return (
       <div ref={rootRef} className={`relative w-full bg-black ${className}`}>
         <div className="relative w-full overflow-hidden">
-          <div className="relative min-h-[56.25vw] w-full md:min-h-[min(56.25vw,85vh)]">
-            <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2">
+          <div className="relative min-h-[100dvh] w-full md:min-h-[min(56.25vw,85vh)]">
+            <div
+              className="absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[56.25vw] md:min-h-[115vh] md:min-w-[177.78vh] md:w-[100vw] md:scale-100 max-md:h-[100dvh] max-md:min-h-[100dvh] max-md:w-[max(100vw,177.78vh)] max-md:min-w-full"
+            >
               <div className="absolute inset-0 overflow-hidden bg-black">
                 {!embedReady ? (
                   <Image
@@ -153,7 +160,8 @@ export function YouTubeAutoplay({
                 ) : (
                   <>
                     <YouTube
-                      videoId={videoId}
+                      key={effectiveId}
+                      videoId={effectiveId}
                       opts={ytOpts}
                       title={title}
                       className={`${sharedTubeClasses} z-0`}
@@ -195,7 +203,8 @@ export function YouTubeAutoplay({
         ) : (
           <>
             <YouTube
-              videoId={videoId}
+              key={effectiveId}
+              videoId={effectiveId}
               opts={ytOpts}
               title={title}
               className={`${sharedTubeClasses} z-0`}

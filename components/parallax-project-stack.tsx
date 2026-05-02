@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
+import { useEffectiveYoutubeId } from "@/lib/use-effective-youtube-id";
 import type { Project } from "@/lib/projects";
 
 type Props = {
@@ -237,12 +238,16 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
+  const effectiveYoutubeId = useEffectiveYoutubeId(
+    project.youtubeId,
+    project.youtubeIdMobile,
+  );
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
 
-  const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
+  const ytPoster = `https://i.ytimg.com/vi/${effectiveYoutubeId}/maxresdefault.jpg`;
 
   const ytOpts = useMemo(
     () => ({
@@ -255,7 +260,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
 
   useEffect(() => {
     setShowYtPoster(true);
-  }, [project.youtubeId]);
+  }, [effectiveYoutubeId]);
 
   useEffect(() => {
     if (!play) setShowYtPoster(true);
@@ -342,7 +347,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
         />
 
         {play && (
-          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
+          <div className="absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[56.25vw] md:min-h-[115vh] md:min-w-[177.78vh] md:w-[100vw] md:scale-[1.16] max-md:h-[100dvh] max-md:min-h-[100dvh] max-md:w-[max(100vw,177.78vh)] max-md:min-w-full max-md:scale-100">
             <div className="absolute inset-0 z-0 overflow-hidden bg-black">
               {!embedReady ? (
                 <Image
@@ -356,7 +361,8 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
               ) : (
                 <>
                   <YouTube
-                    videoId={project.youtubeId}
+                    key={effectiveYoutubeId}
+                    videoId={effectiveYoutubeId}
                     opts={ytOpts}
                     title=""
                     className="absolute inset-0 z-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
