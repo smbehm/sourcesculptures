@@ -34,12 +34,21 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} — ${siteConfig.tagline}`,
     description:
       "Creative production studio for brand films, commercials, weddings, and editorial cinematography.",
+    images: [
+      {
+        url: siteConfig.heroImageUrl,
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} — ${siteConfig.tagline}`,
     description:
       "Creative production studio for cinematic storytelling and intentional filmmaking.",
+    images: [siteConfig.heroImageUrl],
   },
   robots: {
     index: true,
