@@ -8,7 +8,6 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useLenis } from "lenis/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSiteAudio } from "@/components/site-audio-provider";
 import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
@@ -67,12 +66,9 @@ function pickProjectForTextMidline(
 
 export function ParallaxProjectStack({ projects }: Props) {
   const { siteMuted } = useSiteAudio();
-  const lenis = useLenis();
   const textMeasureRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<Project>(projects[0]);
   const [showCaption, setShowCaption] = useState(false);
-  /** Matches Tailwind `md` (freeze scroll only below 768px). */
-  const [isNarrowViewport, setIsNarrowViewport] = useState(false);
 
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
@@ -126,43 +122,6 @@ export function ParallaxProjectStack({ projects }: Props) {
     const id = requestAnimationFrame(() => updateScrollUi());
     return () => cancelAnimationFrame(id);
   }, [showCaption, updateScrollUi]);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const sync = () => setIsNarrowViewport(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
-  /** Mobile-only: keep view fixed on the active parallax panel while the caption strip is shown. */
-  useEffect(() => {
-    const lock = showCaption && isNarrowViewport;
-    if (!lock) return;
-
-    const html = document.documentElement;
-    const body = document.body;
-
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
-    const prevBodyTouch = body.style.touchAction;
-    const prevBodyOverscroll = body.style.overscrollBehavior;
-
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.style.touchAction = "none";
-    body.style.overscrollBehavior = "none";
-
-    lenis?.stop();
-
-    return () => {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-      body.style.touchAction = prevBodyTouch;
-      body.style.overscrollBehavior = prevBodyOverscroll;
-      lenis?.start();
-    };
-  }, [showCaption, isNarrowViewport, lenis]);
 
   return (
     <>
