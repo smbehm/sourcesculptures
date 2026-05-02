@@ -23,36 +23,35 @@ function runPlayerApi(player: YouTubePlayer, fn: (p: YouTubePlayer) => unknown) 
   }
 }
 
-/** Unmute must chain playVideo; iOS needs this to complete in the same activation when possible. */
+/** Site-wide mute off → unmute + play; mute on → mute. Handles both sync YT.Player and promisified wrappers. */
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
     mute?: () => unknown;
     unMute?: () => unknown;
     playVideo?: () => unknown;
+    setVolume?: (n: number) => unknown;
+  };
+  const float = (x: unknown) => {
+    if (x != null && typeof (x as Promise<unknown>).then === "function") {
+      void (x as Promise<unknown>).catch(() => {});
+    }
   };
   try {
     if (muted) {
-      const r = p.mute?.();
-      if (r != null && typeof (r as Promise<unknown>).then === "function") {
-        void (r as Promise<unknown>).catch(() => {});
-      }
+      float(p.mute?.());
       return;
     }
     const u = p.unMute?.();
     if (u != null && typeof (u as Promise<unknown>).then === "function") {
       void (u as Promise<unknown>)
         .then(() => {
-          const pv = p.playVideo?.();
-          if (pv != null && typeof (pv as Promise<unknown>).then === "function") {
-            void (pv as Promise<unknown>).catch(() => {});
-          }
+          float(p.setVolume?.(100));
+          float(p.playVideo?.());
         })
         .catch(() => {});
     } else {
-      const pv = p.playVideo?.();
-      if (pv != null && typeof (pv as Promise<unknown>).then === "function") {
-        void (pv as Promise<unknown>).catch(() => {});
-      }
+      float(p.setVolume?.(100));
+      float(p.playVideo?.());
     }
   } catch {
     /* noop */
@@ -82,7 +81,8 @@ type PlaybackContextValue = {
 const PlaybackContext = createContext<PlaybackContextValue | null>(null);
 
 export function SitePlaybackProvider({ children }: { children: React.ReactNode }) {
-  const [siteMuted, setSiteMuted] = useState(true);
+  /** Default unmuted: global bar mutes/unmutes the whole site; only one embed gets sound when unmuted. */
+  const [siteMuted, setSiteMuted] = useState(false);
   const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
   const [prefsHydrated, setPrefsHydrated] = useState(false);
   const [activeParallaxSlug, setActiveParallaxSlug] = useState<string | null>(null);
@@ -148,12 +148,14 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const applyPolicy = useCallback(
     (muted: boolean) => {
       const q = videoQualityRef.current;
+      const hero = heroPlayerRef.current;
+      const parallaxAudibleSlug = hero ? null : activeParallaxSlug;
+
       parallaxPlayersRef.current.forEach((player, slug) => {
-        const audible = !muted && slug === activeParallaxSlug;
+        const audible = !muted && slug === parallaxAudibleSlug;
         runPlayerApi(player, (p) => p.setPlaybackQuality(q));
         setPlayerMuted(player, !audible);
       });
-      const hero = heroPlayerRef.current;
       if (hero) {
         runPlayerApi(hero, (p) => p.setPlaybackQuality(q));
         setPlayerMuted(hero, muted);
@@ -195,6 +197,7 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const syncPlaybackAfterToggle = useCallback(
     (muted: boolean) => {
       applyPolicy(muted);
+      requestAnimationFrame(() => applyPolicy(muted));
     },
     [applyPolicy],
   );

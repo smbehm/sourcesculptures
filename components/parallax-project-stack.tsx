@@ -38,6 +38,44 @@ function CaptionBody({ project }: { project: Project }) {
  * caption text** (halfway through the title block). The label switches
  * instantly when that midline moves from one panel to the next.
  */
+/**
+ * Which parallax panel should own audio: strongest overlap with the viewport,
+ * tie-broken by closeness to vertical center.
+ */
+function pickAudibleParallaxSlug(projects: Project[]): string | null {
+  const vh = window.innerHeight;
+  const midY = vh * 0.5;
+  let bestSlug: string | null = null;
+  let bestScore = 0;
+  let bestDist = Infinity;
+
+  for (const p of projects) {
+    const el = document.getElementById(`panel-${p.slug}`);
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    const visTop = Math.max(r.top, 0);
+    const visBottom = Math.min(r.bottom, vh);
+    const vis = Math.max(0, visBottom - visTop);
+    if (vis < 1) continue;
+
+    const overlapRatio = vis / Math.min(r.height, vh);
+    const center = (r.top + r.bottom) / 2;
+    const dist = Math.abs(center - midY);
+
+    if (
+      overlapRatio > bestScore + 0.02 ||
+      (overlapRatio >= bestScore - 0.02 && dist < bestDist)
+    ) {
+      bestScore = overlapRatio;
+      bestDist = dist;
+      bestSlug = p.slug;
+    }
+  }
+
+  if (!bestSlug || bestScore < 0.1) return null;
+  return bestSlug;
+}
+
 function pickProjectForTextMidline(
   projects: Project[],
   midY: number,
@@ -143,10 +181,6 @@ export function ParallaxProjectStack({ projects }: Props) {
     };
   }, [showCaption, reduceMotion, onTitlePointerActivity]);
 
-  useEffect(() => {
-    setActiveParallaxSlug(showCaption ? active.slug : null);
-  }, [showCaption, active.slug, setActiveParallaxSlug]);
-
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
     if (!intro) return;
@@ -166,6 +200,12 @@ export function ParallaxProjectStack({ projects }: Props) {
 
     setShowCaption(introPast && inStack);
 
+    if (!inStack) {
+      setActiveParallaxSlug(null);
+    } else {
+      setActiveParallaxSlug(pickAudibleParallaxSlug(projects));
+    }
+
     const tr = textMeasureRef.current?.getBoundingClientRect();
     if (!tr || !introPast || !inStack) {
       return;
@@ -173,7 +213,7 @@ export function ParallaxProjectStack({ projects }: Props) {
 
     const midY = (tr.top + tr.bottom) / 2;
     setActive(pickProjectForTextMidline(projects, midY));
-  }, [projects]);
+  }, [projects, setActiveParallaxSlug]);
 
   useEffect(() => {
     let ticking = false;
