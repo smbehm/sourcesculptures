@@ -234,7 +234,8 @@ export function ParallaxProjectStack({ projects }: Props) {
 }
 
 function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
-  const { registerParallaxPlayer, videoQuality } = useSitePlayback();
+  const { registerParallaxPlayer, videoQuality, reinforcePlaybackQuality } =
+    useSitePlayback();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
@@ -345,6 +346,9 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
                   } catch {
                     /* noop */
                   }
+                }}
+                onStateChange={(e) => {
+                  if (e.data === 1) reinforcePlaybackQuality(e.target);
                 }}
                 onEnd={(e) => {
                   try {

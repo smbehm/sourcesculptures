@@ -19,7 +19,8 @@ export function YouTubeAutoplay({
   className = "",
   variant = "inline",
 }: YouTubeAutoplayProps) {
-  const { registerHeroPlayer, videoQuality } = useSitePlayback();
+  const { registerHeroPlayer, videoQuality, reinforcePlaybackQuality } =
+    useSitePlayback();
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
   const [active, setActive] = useState(isHero);
@@ -103,6 +104,14 @@ export function YouTubeAutoplay({
     }
   };
 
+  /** YouTube IFrame API: 1 = PLAYING */
+  const handleStateChange = (e: {
+    data: number;
+    target: import("react-youtube").YouTubePlayer;
+  }) => {
+    if (e.data === 1) reinforcePlaybackQuality(e.target);
+  };
+
   const sharedTubeClasses =
     "absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full";
 
@@ -120,6 +129,7 @@ export function YouTubeAutoplay({
                   className={sharedTubeClasses}
                   iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                   onReady={handleHeroReady}
+                  onStateChange={handleStateChange}
                   onEnd={handleEnd}
                 />
                 <div
@@ -148,6 +158,7 @@ export function YouTubeAutoplay({
             className={sharedTubeClasses}
             iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
             onReady={handleInlineReady}
+            onStateChange={handleStateChange}
             onEnd={handleEnd}
           />
           <div
