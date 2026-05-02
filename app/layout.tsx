@@ -61,16 +61,16 @@ export default function RootLayout({
       className={`${antonio.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[#050505] text-zinc-100">
-        <LenisProvider>
-          <SiteAudioShell>
+        <SiteAudioShell>
+          <LenisProvider>
             <JsonLd />
             <div className="flex min-h-full flex-col">
               <AmberHeader />
               <div className="flex-1">{children}</div>
               <SiteFooter />
             </div>
-          </SiteAudioShell>
-        </LenisProvider>
+          </LenisProvider>
+        </SiteAudioShell>
       </body>
     </html>
   );

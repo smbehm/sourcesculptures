@@ -1,12 +1,18 @@
 import { getYoutubeEmbedOrigin } from "@/lib/embed-origin";
 
-/** YouTube IFrame `playerVars` — chromeless; origin required for API + mobile policies. */
+/** YouTube IFrame `playerVars` — chromeless; origin must match the embedding page for the JS API. */
 export function buildYoutubePlayerVars(options: {
   /** Start muted for autoplay compliance; unmute via IFrame API after user gesture. */
   startMuted: boolean;
+  /**
+   * Parent document origin — use `window.location.origin` after mount.
+   * If this does not match the real page, mute/quality API calls fail silently.
+   */
+  origin?: string;
 }): Record<string, string | number> {
-  const origin = getYoutubeEmbedOrigin();
+  const origin = options.origin?.trim() || getYoutubeEmbedOrigin();
   const v: Record<string, string | number> = {
+    enablejsapi: 1,
     autoplay: 1,
     mute: options.startMuted ? 1 : 0,
     controls: 0,

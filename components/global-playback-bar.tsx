@@ -13,17 +13,27 @@ export function GlobalPlaybackBar() {
   } = useSitePlayback();
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-row items-stretch gap-1 rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md md:bottom-8 md:right-8">
+    <div className="fixed bottom-6 right-6 z-[200] flex flex-row items-stretch gap-1 rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md md:bottom-8 md:right-8">
       <div className="flex rounded-full p-0.5">
         <QualityPill
           label="HD"
           selected={videoQuality === "hd1080"}
-          onSelect={() => setVideoQuality("hd1080")}
+          onSelect={() => {
+            flushSync(() => {
+              setVideoQuality("hd1080");
+            });
+            syncPlaybackAfterToggle(siteMuted);
+          }}
         />
         <QualityPill
           label="4K"
           selected={videoQuality === "hd2160"}
-          onSelect={() => setVideoQuality("hd2160")}
+          onSelect={() => {
+            flushSync(() => {
+              setVideoQuality("hd2160");
+            });
+            syncPlaybackAfterToggle(siteMuted);
+          }}
         />
       </div>
       <button

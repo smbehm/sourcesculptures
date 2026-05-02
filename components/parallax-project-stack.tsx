@@ -12,6 +12,7 @@ import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
+import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
 
 type Props = {
@@ -234,20 +235,31 @@ export function ParallaxProjectStack({ projects }: Props) {
 }
 
 function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
-  const { registerParallaxPlayer, videoQuality, reinforcePlaybackQuality } =
-    useSitePlayback();
+  const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
+  const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
+  const [showYtPoster, setShowYtPoster] = useState(true);
+
+  const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
   const ytOpts = useMemo(
     () => ({
       width: "100%",
       height: "100%",
-      playerVars: buildYoutubePlayerVars({ startMuted: true }),
+      playerVars: buildYoutubePlayerVars({ startMuted: true, origin: embedOrigin }),
     }),
-    [],
+    [embedOrigin],
   );
+
+  useEffect(() => {
+    setShowYtPoster(true);
+  }, [project.youtubeId]);
+
+  useEffect(() => {
+    if (!play) setShowYtPoster(true);
+  }, [play]);
 
   useEffect(() => {
     return () => registerParallaxPlayer(project.slug, null);
@@ -331,38 +343,60 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
 
         {play && (
           <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
-            <div className="absolute inset-0 z-0 overflow-hidden">
-              <YouTube
-                videoId={project.youtubeId}
-                opts={ytOpts}
-                title=""
-                className="absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
-                iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
-                loading={priority ? "eager" : "lazy"}
-                onReady={(e) => {
-                  registerParallaxPlayer(project.slug, e.target);
-                  try {
-                    e.target.setPlaybackQuality(videoQuality);
-                  } catch {
-                    /* noop */
-                  }
-                }}
-                onStateChange={(e) => {
-                  if (e.data === 1) reinforcePlaybackQuality(e.target);
-                }}
-                onEnd={(e) => {
-                  try {
-                    e.target.seekTo(0, true);
-                    e.target.playVideo();
-                  } catch {
-                    /* noop */
-                  }
-                }}
-              />
-              <div
-                className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
-                aria-hidden
-              />
+            <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+              {!embedReady ? (
+                <Image
+                  src={ytPoster}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority={priority}
+                />
+              ) : (
+                <>
+                  <YouTube
+                    videoId={project.youtubeId}
+                    opts={ytOpts}
+                    title=""
+                    className="absolute inset-0 z-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
+                    iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+                    loading={priority ? "eager" : "lazy"}
+                    onReady={(e) => {
+                      registerParallaxPlayer(project.slug, e.target);
+                      reinforcePlaybackQuality(e.target);
+                    }}
+                    onStateChange={(e) => {
+                      if (e.data === YouTube.PlayerState.PLAYING) {
+                        reinforcePlaybackQuality(e.target);
+                        setShowYtPoster(false);
+                      }
+                    }}
+                    onEnd={(e) => {
+                      try {
+                        e.target.seekTo(0, true);
+                        e.target.playVideo();
+                      } catch {
+                        /* noop */
+                      }
+                    }}
+                  />
+                  {showYtPoster ? (
+                    <Image
+                      src={ytPoster}
+                      alt=""
+                      fill
+                      className="pointer-events-none absolute inset-0 z-[1] object-cover transition-opacity duration-500 ease-out"
+                      sizes="100vw"
+                      priority={priority}
+                    />
+                  ) : null}
+                  <div
+                    className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
+                    aria-hidden
+                  />
+                </>
+              )}
             </div>
           </div>
         )}

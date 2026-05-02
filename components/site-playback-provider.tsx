@@ -11,6 +11,18 @@ import {
 } from "react";
 import type { YouTubePlayer } from "react-youtube";
 
+/** youtube-player promisifies some API calls — always invoke and optionally float the Promise. */
+function runPlayerApi(player: YouTubePlayer, fn: (p: YouTubePlayer) => unknown) {
+  try {
+    const r = fn(player);
+    if (r != null && typeof (r as Promise<unknown>).then === "function") {
+      void (r as Promise<unknown>).catch(() => {});
+    }
+  } catch {
+    /* player may be tearing down */
+  }
+}
+
 export type VideoQualityTier = "hd1080" | "hd2160";
 
 /** Persisted site-wide in localStorage (survives reload and matches cross-route SPA state after hydrate). */
@@ -40,6 +52,8 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const [activeParallaxSlug, setActiveParallaxSlug] = useState<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
+  const videoQualityRef = useRef(videoQuality);
+  videoQualityRef.current = videoQuality;
 
   useEffect(() => {
     try {
@@ -95,37 +109,29 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
 
   const applyPolicy = useCallback(
     (muted: boolean) => {
-      const q = videoQuality;
+      const q = videoQualityRef.current;
       parallaxPlayersRef.current.forEach((player, slug) => {
-        try {
-          const audible = !muted && slug === activeParallaxSlug;
-          player.setPlaybackQuality(q);
-          if (audible) {
-            player.unMute();
-            player.playVideo();
-          } else {
-            player.mute();
-          }
-        } catch {
-          /* player may be tearing down */
+        const audible = !muted && slug === activeParallaxSlug;
+        runPlayerApi(player, (p) => p.setPlaybackQuality(q));
+        if (audible) {
+          runPlayerApi(player, (p) => p.unMute());
+          runPlayerApi(player, (p) => p.playVideo());
+        } else {
+          runPlayerApi(player, (p) => p.mute());
         }
       });
       const hero = heroPlayerRef.current;
-      try {
-        if (hero) {
-          hero.setPlaybackQuality(q);
-          if (muted) {
-            hero.mute();
-          } else {
-            hero.unMute();
-            hero.playVideo();
-          }
+      if (hero) {
+        runPlayerApi(hero, (p) => p.setPlaybackQuality(q));
+        if (muted) {
+          runPlayerApi(hero, (p) => p.mute());
+        } else {
+          runPlayerApi(hero, (p) => p.unMute());
+          runPlayerApi(hero, (p) => p.playVideo());
         }
-      } catch {
-        /* noop */
       }
     },
-    [activeParallaxSlug, videoQuality],
+    [activeParallaxSlug],
   );
 
   const registerParallaxPlayer = useCallback(
@@ -154,16 +160,9 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     [applyPolicy, siteMuted],
   );
 
-  const reinforcePlaybackQuality = useCallback(
-    (player: YouTubePlayer) => {
-      try {
-        player.setPlaybackQuality(videoQuality);
-      } catch {
-        /* noop */
-      }
-    },
-    [videoQuality],
-  );
+  const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
+    runPlayerApi(player, (p) => p.setPlaybackQuality(videoQualityRef.current));
+  }, []);
 
   useEffect(() => {
     applyPolicy(siteMuted);

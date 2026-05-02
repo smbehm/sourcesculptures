@@ -5,6 +5,7 @@ import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
+import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
 type YouTubeAutoplayProps = {
   videoId: string;
@@ -13,26 +14,39 @@ type YouTubeAutoplayProps = {
   variant?: "inline" | "hero";
 };
 
+function youtubePosterSrc(videoId: string) {
+  return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+}
+
 export function YouTubeAutoplay({
   videoId,
   title,
   className = "",
   variant = "inline",
 }: YouTubeAutoplayProps) {
-  const { registerHeroPlayer, videoQuality, reinforcePlaybackQuality } =
-    useSitePlayback();
+  const { registerHeroPlayer, reinforcePlaybackQuality } = useSitePlayback();
+  const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
   const [active, setActive] = useState(isHero);
+  /** Hide YouTube thumbnail layer once the iframe is actually playing (avoids black flash). */
+  const [showYtPoster, setShowYtPoster] = useState(true);
 
   const ytOpts = useMemo(
     () => ({
       width: "100%",
       height: "100%",
-      playerVars: buildYoutubePlayerVars({ startMuted: true }),
+      playerVars: buildYoutubePlayerVars({
+        startMuted: true,
+        origin: embedOrigin,
+      }),
     }),
-    [],
+    [embedOrigin],
   );
+
+  useEffect(() => {
+    setShowYtPoster(true);
+  }, [videoId]);
 
   useEffect(() => {
     return () => {
@@ -76,23 +90,15 @@ export function YouTubeAutoplay({
     };
   }, [isHero]);
 
-  const poster = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+  const poster = youtubePosterSrc(videoId);
 
   const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
     registerHeroPlayer(e.target);
-    try {
-      e.target.setPlaybackQuality(videoQuality);
-    } catch {
-      /* noop */
-    }
+    reinforcePlaybackQuality(e.target);
   };
 
   const handleInlineReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
-    try {
-      e.target.setPlaybackQuality(videoQuality);
-    } catch {
-      /* noop */
-    }
+    reinforcePlaybackQuality(e.target);
   };
 
   const handleEnd = (e: { target: import("react-youtube").YouTubePlayer }) => {
@@ -104,16 +110,29 @@ export function YouTubeAutoplay({
     }
   };
 
-  /** YouTube IFrame API: 1 = PLAYING */
   const handleStateChange = (e: {
     data: number;
     target: import("react-youtube").YouTubePlayer;
   }) => {
-    if (e.data === 1) reinforcePlaybackQuality(e.target);
+    if (e.data === YouTube.PlayerState.PLAYING) {
+      reinforcePlaybackQuality(e.target);
+      setShowYtPoster(false);
+    }
   };
 
   const sharedTubeClasses =
     "absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full";
+
+  const posterLayer = showYtPoster && embedReady && (
+    <Image
+      src={poster}
+      alt=""
+      fill
+      className="pointer-events-none absolute inset-0 z-[1] object-cover transition-opacity duration-500 ease-out"
+      sizes="100vw"
+      priority={isHero}
+    />
+  );
 
   if (isHero) {
     return (
@@ -121,21 +140,35 @@ export function YouTubeAutoplay({
         <div className="relative w-full overflow-hidden">
           <div className="relative min-h-[56.25vw] w-full md:min-h-[min(56.25vw,85vh)]">
             <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2">
-              <div className="absolute inset-0 overflow-hidden">
-                <YouTube
-                  videoId={videoId}
-                  opts={ytOpts}
-                  title={title}
-                  className={sharedTubeClasses}
-                  iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
-                  onReady={handleHeroReady}
-                  onStateChange={handleStateChange}
-                  onEnd={handleEnd}
-                />
-                <div
-                  className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
-                  aria-hidden
-                />
+              <div className="absolute inset-0 overflow-hidden bg-black">
+                {!embedReady ? (
+                  <Image
+                    src={poster}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority
+                  />
+                ) : (
+                  <>
+                    <YouTube
+                      videoId={videoId}
+                      opts={ytOpts}
+                      title={title}
+                      className={`${sharedTubeClasses} z-0`}
+                      iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+                      onReady={handleHeroReady}
+                      onStateChange={handleStateChange}
+                      onEnd={handleEnd}
+                    />
+                    {posterLayer}
+                    <div
+                      className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
+                      aria-hidden
+                    />
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -150,22 +183,34 @@ export function YouTubeAutoplay({
       className={`relative aspect-video w-full overflow-hidden bg-black ${className}`}
     >
       {active ? (
-        <>
-          <YouTube
-            videoId={videoId}
-            opts={ytOpts}
-            title={title}
-            className={sharedTubeClasses}
-            iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
-            onReady={handleInlineReady}
-            onStateChange={handleStateChange}
-            onEnd={handleEnd}
+        !embedReady ? (
+          <Image
+            src={poster}
+            alt=""
+            fill
+            className="object-cover opacity-90"
+            sizes="100vw"
+            priority={false}
           />
-          <div
-            className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
-            aria-hidden
-          />
-        </>
+        ) : (
+          <>
+            <YouTube
+              videoId={videoId}
+              opts={ytOpts}
+              title={title}
+              className={`${sharedTubeClasses} z-0`}
+              iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+              onReady={handleInlineReady}
+              onStateChange={handleStateChange}
+              onEnd={handleEnd}
+            />
+            {posterLayer}
+            <div
+              className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
+              aria-hidden
+            />
+          </>
+        )
       ) : (
         <>
           <Image
