@@ -3,6 +3,7 @@ import { Antonio, Inter } from "next/font/google";
 import "./globals.css";
 import { LenisProvider } from "@/components/lenis-provider";
 import { AmberHeader } from "@/components/amber-header";
+import { SiteAudioShell } from "@/components/site-audio-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { siteConfig } from "@/lib/site";
 import { JsonLd } from "@/components/json-ld";
@@ -61,12 +62,14 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[#050505] text-zinc-100">
         <LenisProvider>
-          <JsonLd />
-          <div className="flex min-h-full flex-col">
-            <AmberHeader />
-            <div className="flex-1">{children}</div>
-            <SiteFooter />
-          </div>
+          <SiteAudioShell>
+            <JsonLd />
+            <div className="flex min-h-full flex-col">
+              <AmberHeader />
+              <div className="flex-1">{children}</div>
+              <SiteFooter />
+            </div>
+          </SiteAudioShell>
         </LenisProvider>
       </body>
     </html>

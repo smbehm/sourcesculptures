@@ -1,8 +1,17 @@
+export type ChromelessEmbedOptions = {
+  /** Default true — keep muted until the user unmutes via the site control (required for autoplay). */
+  muted?: boolean;
+};
+
 /** Chromeless-style embed — controls hidden; loop requires playlist=id */
-export function chromelessYoutubeEmbedUrl(videoId: string): string {
+export function chromelessYoutubeEmbedUrl(
+  videoId: string,
+  options?: ChromelessEmbedOptions,
+): string {
+  const muted = options?.muted ?? true;
   const q = new URLSearchParams({
     autoplay: "1",
-    mute: "1",
+    mute: muted ? "1" : "0",
     controls: "0",
     modestbranding: "1",
     rel: "0",

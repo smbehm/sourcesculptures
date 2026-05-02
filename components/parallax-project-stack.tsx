@@ -9,6 +9,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSiteAudio } from "@/components/site-audio-provider";
 import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
 import type { Project } from "@/lib/projects";
 
@@ -64,6 +65,7 @@ function pickProjectForTextMidline(
 }
 
 export function ParallaxProjectStack({ projects }: Props) {
+  const { siteMuted } = useSiteAudio();
   const textMeasureRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<Project>(projects[0]);
   const [showCaption, setShowCaption] = useState(false);
@@ -143,6 +145,8 @@ export function ParallaxProjectStack({ projects }: Props) {
             key={p.slug}
             project={p}
             priority={i === 0}
+            activeSlug={active.slug}
+            siteMuted={siteMuted}
           />
         ))}
       </div>
@@ -153,9 +157,13 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({
   project,
   priority,
+  activeSlug,
+  siteMuted,
 }: {
   project: Project;
   priority: boolean;
+  activeSlug: string;
+  siteMuted: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -185,9 +193,13 @@ function ParallaxProjectSection({
     return () => io.disconnect();
   }, []);
 
+  /** Only the caption-aligned panel may play sound when the user has unmuted the site. */
+  const embedMuted = siteMuted || activeSlug !== project.slug;
+
   const embedSrc = useMemo(
-    () => chromelessYoutubeEmbedUrl(project.youtubeId),
-    [project.youtubeId],
+    () =>
+      chromelessYoutubeEmbedUrl(project.youtubeId, { muted: embedMuted }),
+    [project.youtubeId, embedMuted],
   );
 
   return (
@@ -210,18 +222,26 @@ function ParallaxProjectSection({
         />
 
         {play && (
-          <iframe
-            title=""
-            src={embedSrc}
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16] select-none border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-            loading={priority ? "eager" : "lazy"}
-            tabIndex={-1}
-          />
+          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
+            <iframe
+              key={`${project.slug}-${embedMuted}`}
+              title=""
+              src={embedSrc}
+              className="pointer-events-none absolute inset-0 h-full w-full select-none border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading={priority ? "eager" : "lazy"}
+              tabIndex={-1}
+            />
+            {/* Blocks tap/hover from reaching the player so built-in overlays stay hidden */}
+            <div
+              className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
+              aria-hidden
+            />
+          </div>
         )}
 
-        <div className="absolute inset-0 bg-black/28" />
+        <div className="pointer-events-none absolute inset-0 z-[3] bg-black/28" />
       </motion.div>
 
       <PanelProjectLink slug={project.slug} title={project.title} />

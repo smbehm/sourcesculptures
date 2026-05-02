@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSiteAudio } from "@/components/site-audio-provider";
 import { chromelessYoutubeEmbedUrl } from "@/lib/youtube";
 
 type YouTubeAutoplayProps = {
@@ -19,6 +20,7 @@ export function YouTubeAutoplay({
   title,
   className = "",
 }: YouTubeAutoplayProps) {
+  const { siteMuted } = useSiteAudio();
   const rootRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 
@@ -37,20 +39,32 @@ export function YouTubeAutoplay({
 
   const poster = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
 
+  const embedSrc = useMemo(
+    () => chromelessYoutubeEmbedUrl(videoId, { muted: siteMuted }),
+    [videoId, siteMuted],
+  );
+
   return (
     <div
       ref={rootRef}
       className={`relative aspect-video w-full overflow-hidden bg-black ${className}`}
     >
       {active ? (
-        <iframe
-          title={title}
-          className="pointer-events-none absolute inset-0 h-full w-full select-none border-0"
-          src={chromelessYoutubeEmbedUrl(videoId)}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          tabIndex={-1}
-        />
+        <>
+          <iframe
+            key={`${videoId}-${siteMuted}`}
+            title={title}
+            className="pointer-events-none absolute inset-0 z-0 h-full w-full select-none border-0"
+            src={embedSrc}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            tabIndex={-1}
+          />
+          <div
+            className="pointer-events-auto absolute inset-0 z-[1] bg-transparent"
+            aria-hidden
+          />
+        </>
       ) : (
         <>
           <Image
