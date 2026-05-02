@@ -27,14 +27,35 @@ export function YouTubeAutoplay({
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        setActive(entry.isIntersecting && entry.intersectionRatio > 0.35);
-      },
-      { threshold: [0, 0.35, 0.6] },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+
+    let io: IntersectionObserver | null = null;
+
+    const attach = () => {
+      io?.disconnect();
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      const minRatio = mobile ? 0.12 : 0.35;
+      const thresholds = mobile
+        ? [0, 0.08, 0.12, 0.18, 0.25, 0.35, 0.5]
+        : [0, 0.35, 0.6];
+      io = new IntersectionObserver(
+        ([entry]) => {
+          setActive(entry.isIntersecting && entry.intersectionRatio > minRatio);
+        },
+        {
+          threshold: thresholds,
+          rootMargin: mobile ? "12% 0px 12% 0px" : "0px",
+        },
+      );
+      io.observe(el);
+    };
+
+    attach();
+    const mq = window.matchMedia("(max-width: 767px)");
+    mq.addEventListener("change", attach);
+    return () => {
+      mq.removeEventListener("change", attach);
+      io?.disconnect();
+    };
   }, []);
 
   const poster = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
@@ -75,7 +96,7 @@ export function YouTubeAutoplay({
             sizes="100vw"
             priority={false}
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+          <div className="absolute inset-0 flex items-center justify-center bg-transparent md:bg-black/25">
             <span className="sr-only">Video loads when in view</span>
           </div>
         </>

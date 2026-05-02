@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ParallaxProjectStack } from "@/components/parallax-project-stack";
 import { LogoTicker } from "@/components/logo-ticker";
 import { RulerRule } from "@/components/ruler-rule";
-import { SectionDots } from "@/components/section-dots";
 import { projects } from "@/lib/projects";
 import { siteConfig } from "@/lib/site";
 
@@ -25,15 +24,9 @@ const services = [
 
 export default function HomePage() {
   const year = new Date().getFullYear();
-  const dotSectionIds = [
-    "intro",
-    ...projects.map((p) => `panel-${p.slug}`),
-  ];
 
   return (
     <>
-      <SectionDots sectionIds={dotSectionIds} />
-
       <main>
         <section
           id="intro"

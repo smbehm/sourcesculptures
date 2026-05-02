@@ -263,14 +263,36 @@ function ParallaxProjectSection({
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        setPlay(e.isIntersecting && e.intersectionRatio > 0.12);
-      },
-      { threshold: [0, 0.08, 0.15, 0.35] },
-    );
-    io.observe(root);
-    return () => io.disconnect();
+
+    let io: IntersectionObserver | null = null;
+
+    const attach = () => {
+      io?.disconnect();
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      /** Mobile: start embed earlier while scrolling; desktop: previous tighter gate. */
+      const minRatio = mobile ? 0.03 : 0.12;
+      const thresholds = mobile
+        ? [0, 0.02, 0.04, 0.06, 0.1, 0.14, 0.2, 0.3]
+        : [0, 0.08, 0.15, 0.35];
+      io = new IntersectionObserver(
+        ([e]) => {
+          setPlay(e.isIntersecting && e.intersectionRatio > minRatio);
+        },
+        {
+          threshold: thresholds,
+          rootMargin: mobile ? "12% 0px 12% 0px" : "0px",
+        },
+      );
+      io.observe(root);
+    };
+
+    attach();
+    const mq = window.matchMedia("(max-width: 767px)");
+    mq.addEventListener("change", attach);
+    return () => {
+      mq.removeEventListener("change", attach);
+      io?.disconnect();
+    };
   }, []);
 
   /** Only the caption-aligned panel may play sound when the user has unmuted the site. */
@@ -321,7 +343,7 @@ function ParallaxProjectSection({
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 z-[3] bg-black/28" />
+        <div className="pointer-events-none absolute inset-0 z-[3] bg-transparent md:bg-black/28" />
       </motion.div>
 
       <PanelProjectLink slug={project.slug} title={project.title} />
@@ -349,7 +371,7 @@ function PanelProjectLink({ slug, title }: { slug: string; title: string }) {
     >
       {hint.on && (
         <span
-          className="pointer-events-none absolute z-10 border border-white/30 bg-black/75 px-2 py-1 font-sans text-[9px] tracking-[0.42em] text-white shadow-[0_4px_24px_rgba(0,0,0,0.45)]"
+          className="pointer-events-none absolute z-10 max-md:hidden border border-white/30 bg-black/75 px-2 py-1 font-sans text-[9px] tracking-[0.42em] text-white shadow-[0_4px_24px_rgba(0,0,0,0.45)]"
           style={{ left: hint.x + 16, top: hint.y + 16 }}
         >
           VIEW
