@@ -21,10 +21,17 @@
  * handled by Lenis in layout (see components/lenis-provider.tsx).
  */
 
+html {
+  overflow-x: clip;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 ::selection {

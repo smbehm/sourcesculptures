@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Antonio, Inter } from "next/font/google";
 import "./globals.css";
 import { LenisProvider } from "@/components/lenis-provider";
@@ -18,6 +18,12 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#050505",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -60,13 +66,13 @@ export default function RootLayout({
       lang="en"
       className={`${antonio.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#050505] text-zinc-100">
+      <body className="min-h-full w-full min-w-0 bg-[#050505] text-zinc-100">
         <SiteAudioShell>
           <LenisProvider>
             <JsonLd />
-            <div className="flex min-h-full flex-col">
+            <div className="flex min-h-full w-full min-w-0 flex-col">
               <AmberHeader />
-              <div className="flex-1">{children}</div>
+              <div className="min-w-0 flex-1 overflow-x-clip">{children}</div>
               <SiteFooter />
             </div>
           </LenisProvider>

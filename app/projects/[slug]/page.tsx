@@ -46,7 +46,7 @@ export default async function ProjectPage({ params }: Props) {
   const detailParas = project.overview.slice(1);
 
   return (
-    <main className="pt-20 max-md:pt-0">
+    <main className="w-full min-w-0 pt-20 max-md:pt-0">
       <article>
         <YouTubeAutoplay
           variant="hero"

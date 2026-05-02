@@ -136,11 +136,14 @@ export function YouTubeAutoplay({
 
   if (isHero) {
     return (
-      <div ref={rootRef} className={`relative w-full bg-black ${className}`}>
+      <div
+        ref={rootRef}
+        className={`relative left-1/2 w-screen min-w-0 -translate-x-1/2 bg-black ${className}`}
+      >
         <div className="relative w-full overflow-hidden">
           <div className="relative min-h-[100dvh] w-full md:min-h-[min(56.25vw,85vh)]">
             <div
-              className="absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[56.25vw] md:min-h-[115vh] md:min-w-[177.78vh] md:w-[100vw] md:scale-100 max-md:h-[100dvh] max-md:min-h-[100dvh] max-md:w-[max(100vw,177.78vh)] max-md:min-w-full"
+              className="absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[56.25vw] md:min-h-[115vh] md:min-w-[177.78vh] md:w-[100vw] max-md:h-[100dvh] max-md:min-h-[100dvh] max-md:w-[177.78vh] max-md:min-w-full max-md:max-w-none"
             >
               <div className="absolute inset-0 overflow-hidden bg-black">
                 {!embedReady ? (
