@@ -27,10 +27,10 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="w-full min-w-0">
+      <main>
         <section
           id="intro"
-          className="relative left-1/2 min-h-[100dvh] w-screen min-w-0 -translate-x-1/2 overflow-hidden"
+          className="relative min-h-[100dvh] overflow-hidden"
         >
           <Image
             src={siteConfig.heroImageUrl}
@@ -51,10 +51,7 @@ export default function HomePage() {
           />
 
           <div className="relative flex min-h-[100dvh] flex-col items-center justify-center px-5 pb-40 pt-32 text-center sm:px-8">
-            <h1
-              className="font-display max-w-[min(100%,56rem)] text-balance text-[clamp(2.6rem,12.5vw,9.5rem)] font-bold leading-[0.86] tracking-[-0.02em] text-white uppercase drop-shadow-[0_6px_40px_rgba(0,0,0,0.45)]"
-              suppressHydrationWarning
-            >
+            <h1 className="font-display max-w-[min(100%,56rem)] text-balance text-[clamp(2.6rem,12.5vw,9.5rem)] font-bold leading-[0.86] tracking-[-0.02em] text-white uppercase drop-shadow-[0_6px_40px_rgba(0,0,0,0.45)]">
               {siteConfig.heroLines.map((line) => (
                 <span key={line} className="block">
                   {line}
@@ -66,7 +63,7 @@ export default function HomePage() {
           <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-1.5 px-6 text-center text-[10px] leading-relaxed tracking-[0.2em] text-white/90 uppercase sm:bottom-10 sm:text-[11px] sm:tracking-[0.24em]">
             <span className="text-white/90">{siteConfig.tagline}</span>
             <span className="text-white/60">{siteConfig.location}</span>
-            <span className="text-white/45" suppressHydrationWarning>
+            <span className="text-white/45">
               © {year} {siteConfig.legalName}
             </span>
           </div>

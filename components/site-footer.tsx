@@ -54,10 +54,7 @@ export function SiteFooter() {
           </a>
         </div>
 
-        <p
-          className="text-[10px] tracking-[0.35em] text-white/30 uppercase"
-          suppressHydrationWarning
-        >
+        <p className="text-[10px] tracking-[0.35em] text-white/30 uppercase">
           © {year} {siteConfig.legalName}. All rights reserved.
         </p>
       </div>
