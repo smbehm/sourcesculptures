@@ -64,11 +64,81 @@ function pickProjectForTextMidline(
   return nearest;
 }
 
+const INITIAL_TITLE_FADE_MS = 1000;
+const IDLE_TITLE_FADE_MS = 250;
+
 export function ParallaxProjectStack({ projects }: Props) {
   const { siteMuted } = useSiteAudio();
+  const reduceMotion = useReducedMotion();
   const textMeasureRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<Project>(projects[0]);
   const [showCaption, setShowCaption] = useState(false);
+  /** 1 = visible; fades to 0 after idle / initial delay (unless reduced motion). */
+  const [titleOpacity, setTitleOpacity] = useState(1);
+  const [titleFadeInstant, setTitleFadeInstant] = useState(false);
+  const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idleHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTitleTimers = useCallback(() => {
+    if (initialHideTimerRef.current) {
+      clearTimeout(initialHideTimerRef.current);
+      initialHideTimerRef.current = null;
+    }
+    if (idleHideTimerRef.current) {
+      clearTimeout(idleHideTimerRef.current);
+      idleHideTimerRef.current = null;
+    }
+  }, []);
+
+  const onTitlePointerActivity = useCallback(() => {
+    if (reduceMotion) return;
+    setTitleFadeInstant(true);
+    setTitleOpacity(1);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTitleFadeInstant(false));
+    });
+    clearTitleTimers();
+    idleHideTimerRef.current = setTimeout(() => {
+      setTitleFadeInstant(false);
+      setTitleOpacity(0);
+    }, IDLE_TITLE_FADE_MS);
+  }, [clearTitleTimers, reduceMotion]);
+
+  useEffect(() => {
+    if (!showCaption || reduceMotion) {
+      clearTitleTimers();
+      if (showCaption && reduceMotion) {
+        setTitleOpacity(1);
+      }
+      if (!showCaption) {
+        setTitleOpacity(1);
+        setTitleFadeInstant(false);
+      }
+      return;
+    }
+
+    setTitleFadeInstant(false);
+    setTitleOpacity(1);
+    clearTitleTimers();
+    initialHideTimerRef.current = setTimeout(() => {
+      setTitleOpacity(0);
+    }, INITIAL_TITLE_FADE_MS);
+
+    return () => {
+      clearTitleTimers();
+    };
+  }, [active.slug, showCaption, reduceMotion, clearTitleTimers]);
+
+  useEffect(() => {
+    if (!showCaption || reduceMotion) return;
+
+    const opts: AddEventListenerOptions = { passive: true, capture: true };
+    const onMove = () => onTitlePointerActivity();
+    window.addEventListener("pointermove", onMove, opts);
+    return () => {
+      window.removeEventListener("pointermove", onMove, opts);
+    };
+  }, [showCaption, reduceMotion, onTitlePointerActivity]);
 
   const updateScrollUi = useCallback(() => {
     const intro = document.getElementById("intro");
@@ -132,7 +202,17 @@ export function ParallaxProjectStack({ projects }: Props) {
           aria-atomic="true"
         >
           <div className="mx-auto flex min-h-[11rem] w-full max-w-[min(96vw,52rem)] flex-col items-center justify-center px-5 text-center">
-            <div ref={textMeasureRef}>
+            <div
+              ref={textMeasureRef}
+              className={
+                titleFadeInstant
+                  ? "transition-none"
+                  : "transition-opacity duration-300 ease-out"
+              }
+              style={{
+                opacity: reduceMotion ? 1 : titleOpacity,
+              }}
+            >
               <CaptionBody project={active} />
             </div>
           </div>
