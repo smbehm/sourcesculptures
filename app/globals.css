@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Lenis adds html.lenis — required for smooth scroll math */
+@import "lenis/dist/lenis.css";
+
+:root {
+  --background: #050505;
+  --foreground: #f5f5f5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-antonio);
+}
+
+/*
+ * Do NOT use scroll-behavior: smooth or CSS scroll-snap on the document root —
+ * they fight the wheel and feel “sticky” vs Framer. Smooth scrolling is
+ * handled by Lenis in layout (see components/lenis-provider.tsx).
+ */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.font-display {
+  font-family: var(--font-antonio), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
