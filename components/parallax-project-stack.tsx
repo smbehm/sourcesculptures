@@ -265,9 +265,9 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      <div className="relative bg-black max-lg:-mt-2">
+      <div className="relative bg-black max-lg:-mt-[14px]">
         {projects.map((p, i) => (
-          <div key={p.slug} className={i > 0 ? "max-lg:-mt-3" : undefined}>
+          <div key={p.slug} className={i > 0 ? "max-lg:-mt-[18px]" : undefined}>
             <ParallaxProjectSection project={p} priority={i === 0} />
           </div>
         ))}
@@ -379,23 +379,18 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     };
   }, []);
 
-  return (
-    <div
-      id={`panel-${project.slug}`}
-      ref={ref}
-      className="relative isolate h-[135vh] min-h-[100svh] w-full overflow-hidden bg-black md:min-h-[100dvh]"
-    >
-      <motion.div className={motionLayerClass} style={{ y }}>
-        <Image
-          src={project.coverImageUrl}
-          alt=""
-          fill
-          priority={priority}
-          className="object-cover opacity-50"
-          sizes="100vw"
-        />
+  const layerChildren = (
+    <>
+      <Image
+        src={project.coverImageUrl}
+        alt=""
+        fill
+        priority={priority}
+        className="object-cover opacity-50"
+        sizes="100vw"
+      />
 
-        {play && (
+      {play && (
           <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
             <div className="absolute inset-0 z-0 overflow-hidden bg-black">
               {!embedReady ? (
@@ -455,8 +450,25 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 z-[3] bg-transparent md:bg-black/28" />
-      </motion.div>
+      <div className="pointer-events-none absolute inset-0 z-[3] bg-transparent md:bg-black/28" />
+    </>
+  );
+
+  return (
+    <div
+      id={`panel-${project.slug}`}
+      ref={ref}
+      className="relative isolate h-[135vh] min-h-[100svh] w-full overflow-hidden bg-black [transform:translateZ(0)] md:min-h-[100dvh]"
+    >
+      {narrowViewport ? (
+        <div className={`${motionLayerClass} [transform:translate3d(0,0,0)] [backface-visibility:hidden]`}>
+          {layerChildren}
+        </div>
+      ) : (
+        <motion.div className={motionLayerClass} style={{ y }}>
+          {layerChildren}
+        </motion.div>
+      )}
 
       <PanelProjectLink slug={project.slug} title={project.title} />
     </div>

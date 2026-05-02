@@ -20,38 +20,28 @@ import {
 
 export type { VideoQualityTier };
 
-/** Site-wide mute off → unmute + play; mute on → mute. Handles both sync YT.Player and promisified wrappers. */
+/**
+ * Drive YouTube iframe mute state synchronously.
+ * iOS Safari only honors unmute/play when it runs in the same turn as a real user gesture —
+ * do not defer via Promise.then, queueMicrotask, or requestAnimationFrame from the mute button.
+ */
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
-    mute?: () => unknown;
-    unMute?: () => unknown;
-    playVideo?: () => unknown;
-    setVolume?: (n: number) => unknown;
-  };
-  const float = (x: unknown) => {
-    if (x != null && typeof (x as Promise<unknown>).then === "function") {
-      void (x as Promise<unknown>).catch(() => {});
-    }
+    mute?: () => void;
+    unMute?: () => void;
+    playVideo?: () => void;
+    setVolume?: (n: number) => void;
   };
   try {
     if (muted) {
-      float(p.mute?.());
+      p.mute?.();
       return;
     }
-    const u = p.unMute?.();
-    if (u != null && typeof (u as Promise<unknown>).then === "function") {
-      void (u as Promise<unknown>)
-        .then(() => {
-          float(p.setVolume?.(100));
-          float(p.playVideo?.());
-        })
-        .catch(() => {});
-    } else {
-      float(p.setVolume?.(100));
-      float(p.playVideo?.());
-    }
+    p.unMute?.();
+    p.setVolume?.(100);
+    p.playVideo?.();
   } catch {
-    /* noop */
+    /* iframe may be unavailable */
   }
 }
 
@@ -154,16 +144,11 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   );
 
   const toggleMute = useCallback(() => {
-    /**
-     * Use explicit `!siteMuted` (not `setSiteMuted(p => !p)`) so React Strict Mode in dev
-     * cannot double-invoke the updater and cancel the toggle.
-     */
     const next = !siteMuted;
+    siteMutedRef.current = next;
+    /** Same synchronous turn as the button gesture — required for mobile browser audio policy. */
+    applyPolicy(next);
     setSiteMuted(next);
-    queueMicrotask(() => {
-      applyPolicy(next);
-      requestAnimationFrame(() => applyPolicy(next));
-    });
   }, [siteMuted, applyPolicy]);
 
   const registerParallaxPlayer = useCallback(
