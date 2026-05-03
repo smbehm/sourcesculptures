@@ -309,6 +309,11 @@ function ParallaxProjectSection({
 
   useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
   useEffect(() => { if (!play) setShowYtPoster(true); }, [play]);
+  useEffect(() => {
+    if (!play) {
+      registerParallaxPlayer(project.slug, null);
+    }
+  }, [play, project.slug, registerParallaxPlayer]);
 
   useEffect(() => {
     return () => registerParallaxPlayer(project.slug, null);
@@ -388,7 +393,7 @@ function ParallaxProjectSection({
       style={{
         height: "135svh",
         minHeight: "100svh",
-        marginBottom: "-1px",
+        marginBottom: 0,
       }}
     >
       <motion.div className={motionLayerClass} style={{ y }}>

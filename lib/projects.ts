@@ -88,6 +88,24 @@ export const projects: Project[] = [
       { role: "Producer", name: "SOURCEsculptures" },
     ],
   },
+  {
+    slug: "isabelle",
+    title: "Isabelle",
+    year: "2025",
+    category: "Short Film",
+    client: "SOURCEsculptures",
+    label: "Short Film",
+    coverImageUrl:
+      "https://i.ytimg.com/vi/OjU5UZ2_MfM/maxresdefault.jpg",
+    youtubeId: "OjU5UZ2_MfM",
+    overview: [
+      "Isabelle — narrative portrait film placeholder copy.",
+    ],
+    credits: [
+      { role: "Director", name: "SOURCEsculptures" },
+      { role: "Producer", name: "SOURCEsculptures" },
+    ],
+  },
 ];
 
 export function getProjectBySlug(slug: string): Project | undefined {

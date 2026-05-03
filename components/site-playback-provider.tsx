@@ -83,6 +83,22 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   }
 }
 
+function setPlayerPlaybackActive(player: YouTubePlayer, active: boolean) {
+  const p = player as unknown as {
+    playVideo?: () => unknown;
+    pauseVideo?: () => unknown;
+  };
+  try {
+    if (active) {
+      p.playVideo?.();
+    } else {
+      p.pauseVideo?.();
+    }
+  } catch {
+    /* noop */
+  }
+}
+
 /** Call after player ready — mobile Safari/WKWebKit often needs mute before playVideo for autoplay. */
 export function kickMutedYoutubeAutoplay(player: YouTubePlayer) {
   const p = player as unknown as { mute?: () => void; playVideo?: () => void };
@@ -151,6 +167,7 @@ export function SitePlaybackProvider({
         return;
       }
       setPlayerMuted(player, slug !== audibleSlug);
+      setPlayerPlaybackActive(player, slug === audibleSlug);
     });
 
     if (hero) {
