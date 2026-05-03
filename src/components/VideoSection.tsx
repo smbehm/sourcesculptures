@@ -123,10 +123,11 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
   useEffect(() => {
     if (!shouldLoad) return;
     const kick = () => {
-      if (isActive) {
-        post("playVideo");
-        if (globalMuted) post("mute");
-      }
+      // Always kick this video into play on any gesture so iOS never shows
+      // the YouTube center play-button overlay when user scrolls to it.
+      post("playVideo");
+      if (isActive && !globalMuted) post("unMute");
+      else post("mute");
     };
     window.addEventListener("touchstart", kick, { passive: true });
     window.addEventListener("touchend", kick, { passive: true });
