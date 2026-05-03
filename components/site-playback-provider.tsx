@@ -15,6 +15,8 @@ import type { VideoQualityTier } from "@/lib/playback-types";
 import { syncAllSiteVideosMuted, tryPlayAllSiteVideos } from "@/lib/native-video-registry";
 import { usePlaybackMuteStore } from "@/lib/playback-mute-store";
 import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
+import { scheduleMutedYoutubeRetries } from "@/lib/schedule-muted-youtube-retries";
+import { SITE_MEDIA_RESUME_EVENT } from "@/lib/site-media-events";
 import {
   applyPreferredQuality,
   reinforcePreferredQuality,
@@ -281,6 +283,20 @@ export function SitePlaybackProvider({
       window.removeEventListener("scroll", onFirstGesture, optsScroll);
       window.removeEventListener("wheel", onFirstGesture, optsWheel);
     };
+  }, [applyPolicySync]);
+
+  /** Intro overlay blocks the viewport — browsers often skip muted autoplay until it clears. */
+  useEffect(() => {
+    const resume = () => {
+      applyPolicySync(siteMutedRef.current);
+      parallaxPlayersRef.current.forEach((player) =>
+        scheduleMutedYoutubeRetries(player),
+      );
+      const hero = heroPlayerRef.current;
+      if (hero) scheduleMutedYoutubeRetries(hero);
+    };
+    window.addEventListener(SITE_MEDIA_RESUME_EVENT, resume);
+    return () => window.removeEventListener(SITE_MEDIA_RESUME_EVENT, resume);
   }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(

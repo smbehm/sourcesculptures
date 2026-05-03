@@ -11,10 +11,8 @@ import {
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback, patchYtIframeAllow } from "@/components/site-playback-provider";
-import {
-  kickstartMutedYoutubePlayback,
-  safeYoutubePlayVideo,
-} from "@/lib/safe-media-play";
+import { scheduleMutedYoutubeRetries } from "@/lib/schedule-muted-youtube-retries";
+import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -297,8 +295,9 @@ function ParallaxProjectSection({
 
   const ytOpts = useMemo(
     () => ({
-      width: "100%",
-      height: "100%",
+      /* Numeric size helps YT.Player initialise; layout still fills via CSS. */
+      width: 1280,
+      height: 720,
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
@@ -421,14 +420,12 @@ function ParallaxProjectSection({
                     title=""
                     className="absolute inset-0 z-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
-                    loading={priority ? "eager" : "lazy"}
+                    loading="eager"
                     onReady={(e) => {
                       patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
-                      queueMicrotask(() =>
-                        kickstartMutedYoutubePlayback(e.target),
-                      );
+                      scheduleMutedYoutubeRetries(e.target);
                       // Signal the preloader that the first YT player is ready
                       if (priority) {
                         window.dispatchEvent(new Event("yt-player-ready"));

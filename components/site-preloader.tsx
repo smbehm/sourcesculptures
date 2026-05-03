@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { SITE_MEDIA_RESUME_EVENT } from "@/lib/site-media-events";
+
 /*
   Preloader hides when BOTH conditions are true:
   1. Minimum display time has elapsed (so it doesn't flash on fast connections).
@@ -28,8 +30,13 @@ export function SitePreloader() {
     const finish = () => {
       if (done) return;
       done = true;
+      /** Retry muted embed playback once the overlay stops blocking the viewport (see SitePlaybackProvider). */
+      queueMicrotask(() => {
+        window.dispatchEvent(new Event(SITE_MEDIA_RESUME_EVENT));
+      });
       if (prefersReduced) {
         setPhase("gone");
+        window.dispatchEvent(new Event(SITE_MEDIA_RESUME_EVENT));
       } else {
         setPhase("fading");
       }
@@ -64,7 +71,11 @@ export function SitePreloader() {
 
   return (
     <div
-      onTransitionEnd={() => setPhase("gone")}
+      onTransitionEnd={(e) => {
+        if (e.propertyName !== "opacity") return;
+        setPhase("gone");
+        window.dispatchEvent(new Event(SITE_MEDIA_RESUME_EVENT));
+      }}
       style={{
         position: "fixed",
         inset: 0,
