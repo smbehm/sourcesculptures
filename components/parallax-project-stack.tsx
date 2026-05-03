@@ -12,9 +12,9 @@ import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useSitePlayback,
-  patchYtIframeAllow,
   kickMutedYoutubeAutoplay,
 } from "@/components/site-playback-provider";
+import { YoutubeIframeApiPlayer } from "@/components/youtube-iframe-api-player";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -416,19 +416,22 @@ function ParallaxProjectSection({
                 />
               ) : (
                 <>
-                  <YouTube
+                  <YoutubeIframeApiPlayer
                     videoId={project.youtubeId}
-                    opts={ytOpts}
                     title=""
-                    className="absolute inset-0 z-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full"
+                    playerVars={ytOpts.playerVars}
+                    width={ytOpts.width as number}
+                    height={ytOpts.height as number}
+                    className="absolute inset-0 z-0 h-full w-full [&>div:first-child]:absolute [&>div:first-child]:inset-0 [&>div:first-child]:h-full [&>div:first-child]:w-full"
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading={priority ? "eager" : "lazy"}
-                    onReady={(e) => {
-                      const p = e.target;
-                      patchYtIframeAllow(p);
+                    onReady={(p) => {
                       registerParallaxPlayer(project.slug, p);
                       reinforcePlaybackQuality(p);
                       kickMutedYoutubeAutoplay(p);
+                    }}
+                    onAutoplayBlocked={({ target }) => {
+                      kickMutedYoutubeAutoplay(target);
                     }}
                     onStateChange={(e) => {
                       if (e.data === YouTube.PlayerState.PLAYING) {

@@ -5,11 +5,12 @@ import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useSitePlayback,
-  patchYtIframeAllow,
   kickMutedYoutubeAutoplay,
 } from "@/components/site-playback-provider";
+import { YoutubeIframeApiPlayer } from "@/components/youtube-iframe-api-player";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
+import type { YouTubePlayer } from "react-youtube";
 
 type YouTubeAutoplayProps = {
   videoId: string;
@@ -44,7 +45,7 @@ export function YouTubeAutoplay({
         origin: embedOrigin,
       }),
     }),
-    [embedOrigin]
+    [embedOrigin],
   );
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export function YouTubeAutoplay({
         {
           threshold: thresholds,
           rootMargin: mobile ? "12% 0px 12% 0px" : "0px",
-        }
+        },
       );
       io.observe(el);
     };
@@ -95,40 +96,27 @@ export function YouTubeAutoplay({
 
   const poster = youtubePosterSrc(videoId);
 
-  const handleHeroReady = (e: {
-    target: import("react-youtube").YouTubePlayer;
-  }) => {
-    const p = e.target;
-    patchYtIframeAllow(p);
+  const handleHeroReady = (p: YouTubePlayer) => {
     registerHeroPlayer(p);
     reinforcePlaybackQuality(p);
     kickMutedYoutubeAutoplay(p);
   };
 
-  const handleInlineReady = (e: {
-    target: import("react-youtube").YouTubePlayer;
-  }) => {
-    const p = e.target;
-    patchYtIframeAllow(p);
+  const handleInlineReady = (p: YouTubePlayer) => {
     reinforcePlaybackQuality(p);
     kickMutedYoutubeAutoplay(p);
   };
 
-  const handleEnd = (e: {
-    target: import("react-youtube").YouTubePlayer;
-  }) => {
+  const handleEnd = (e: { target: YouTubePlayer }) => {
     try {
       e.target.seekTo(0, true);
-      e.target.playVideo();
+      kickMutedYoutubeAutoplay(e.target);
     } catch {
       /* noop */
     }
   };
 
-  const handleStateChange = (e: {
-    data: number;
-    target: import("react-youtube").YouTubePlayer;
-  }) => {
+  const handleStateChange = (e: { data: number; target: YouTubePlayer }) => {
     if (e.data === YouTube.PlayerState.PLAYING) {
       reinforcePlaybackQuality(e.target);
       setShowYtPoster(false);
@@ -136,7 +124,7 @@ export function YouTubeAutoplay({
   };
 
   const sharedTubeClasses =
-    "absolute inset-0 h-full w-full [&>div]:absolute [&>div]:inset-0 [&>div]:h-full [&>div]:w-full";
+    "absolute inset-0 h-full w-full z-0 [&>div:first-child]:absolute [&>div:first-child]:inset-0 [&>div:first-child]:h-full [&>div:first-child]:w-full";
 
   const posterLayer = showYtPoster && embedReady && (
     <Image
@@ -167,14 +155,19 @@ export function YouTubeAutoplay({
                   />
                 ) : (
                   <>
-                    <YouTube
+                    <YoutubeIframeApiPlayer
                       videoId={videoId}
-                      opts={ytOpts}
                       title={title}
-                      loading="eager"
-                      className={`${sharedTubeClasses} z-0`}
+                      playerVars={ytOpts.playerVars}
+                      width={ytOpts.width}
+                      height={ytOpts.height}
+                      className={sharedTubeClasses}
                       iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+                      loading="eager"
                       onReady={handleHeroReady}
+                      onAutoplayBlocked={({ target }) =>
+                        kickMutedYoutubeAutoplay(target)
+                      }
                       onStateChange={handleStateChange}
                       onEnd={handleEnd}
                     />
@@ -210,14 +203,19 @@ export function YouTubeAutoplay({
           />
         ) : (
           <>
-            <YouTube
+            <YoutubeIframeApiPlayer
               videoId={videoId}
-              opts={ytOpts}
               title={title}
-              loading="eager"
-              className={`${sharedTubeClasses} z-0`}
+              playerVars={ytOpts.playerVars}
+              width={ytOpts.width}
+              height={ytOpts.height}
+              className={sharedTubeClasses}
               iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
+              loading="eager"
               onReady={handleInlineReady}
+              onAutoplayBlocked={({ target }) =>
+                kickMutedYoutubeAutoplay(target)
+              }
               onStateChange={handleStateChange}
               onEnd={handleEnd}
             />
