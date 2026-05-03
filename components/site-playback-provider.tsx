@@ -68,8 +68,8 @@ export function patchYtIframeAllow(player: YouTubePlayer) {
 
 /**
  * Mute or request audible playback.
- * When `unlockAudio` is false and `muted` is false, only `playVideo()` runs so embeds
- * stay muted (browser autoplay policy). Never call `unMute` outside a gesture.
+ * For muted autoplay (unlockAudio false), WebKit requires mute() before playVideo().
+ * Never call unMute unless unlockAudio — real gesture / scroll-driven unlock only.
  */
 function setPlayerMuted(
   player: YouTubePlayer,
@@ -88,6 +88,7 @@ function setPlayerMuted(
       return;
     }
     if (!unlockAudio) {
+      p.mute?.();
       safeYoutubePlayVideo(p);
       return;
     }
@@ -229,13 +230,18 @@ export function SitePlaybackProvider({
   }, [applyPolicySync]);
 
   /**
-   * Toggle mute — full audio unlock path runs synchronously in the tap/click handler.
+   * Toggle site mute preference.
+   * Audio unlock only when turning sound ON — not when muting, and not tied to starting playback.
    */
   const toggleMute = useCallback(() => {
     const next = !siteMutedRef.current;
     siteMutedRef.current = next;
     usePlaybackMuteStore.setState({ siteMuted: next });
-    applyPolicySync(next, { unlockAudio: true });
+    if (next) {
+      applyPolicySync(true);
+    } else {
+      applyPolicySync(false, { unlockAudio: true });
+    }
   }, [applyPolicySync]);
 
   // Sync mute across tabs (no gesture — never unlock audio remotely)
