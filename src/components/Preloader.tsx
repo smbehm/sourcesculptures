@@ -210,17 +210,8 @@ const Preloader = () => {
         const alpha = (p.kind === 0 ? 0.85 : 0.6) * fade;
         const r = p.size;
 
-        // Tiny soft halo (much smaller than before)
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2);
-        grad.addColorStop(0, `hsla(${p.hue}, 100%, 70%, ${alpha * 0.6})`);
-        grad.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bright pin-point core
-        ctx.fillStyle = `hsla(48, 100%, 88%, ${alpha})`;
+        // Single solid pin-point — no per-particle gradient allocation
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${alpha})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
