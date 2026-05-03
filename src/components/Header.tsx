@@ -16,7 +16,7 @@ const Header = () => {
     { label: "Home", to: "/" },
     ...projects.map((p) => ({ label: p.title, to: `/projects/${p.slug}` })),
     { label: "About", to: "/about" },
-    { label: "Contact", to: "/about#cta" },
+    { label: "Contact", to: "/contact" },
   ];
 
   return (
