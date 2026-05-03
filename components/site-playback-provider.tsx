@@ -136,9 +136,11 @@ export function SitePlaybackProvider({
 
     parallaxPlayersRef.current.forEach((player, slug) => {
       applyPreferredQuality(player, q);
-      const silence =
-        audibleSlug === null ? true : slug !== audibleSlug;
-      setPlayerMuted(player, silence);
+      /** Until scroll picks an audible strip, don't call mute() — it prevents muted autoplay from starting. */
+      if (audibleSlug === null) {
+        return;
+      }
+      setPlayerMuted(player, slug !== audibleSlug);
     });
 
     if (hero) {
