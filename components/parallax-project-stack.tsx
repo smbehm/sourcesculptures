@@ -367,6 +367,11 @@ function ParallaxProjectSection({
                       if (e.data === YouTube.PlayerState.PLAYING) {
                         reinforcePlaybackQuality(e.target);
                         setShowYtPoster(false);
+                      } else if (
+                        e.data === YouTube.PlayerState.BUFFERING ||
+                        e.data === YouTube.PlayerState.UNSTARTED
+                      ) {
+                        setShowYtPoster(true);
                       }
                     }}
                     onEnd={(e) => {

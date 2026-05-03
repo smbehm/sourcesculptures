@@ -143,6 +143,7 @@ export function SitePlaybackProvider({
   const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
+  const interactionUnlockedRef = useRef(false);
 
   useEffect(() => {
     videoQualityRef.current = videoQuality;
@@ -168,6 +169,7 @@ export function SitePlaybackProvider({
     const q = videoQualityRef.current;
     const hero = heroPlayerRef.current;
     const audibleSlug = hero ? null : activeParallaxSlugRef.current;
+    const allowAudio = interactionUnlockedRef.current;
 
     parallaxPlayersRef.current.forEach((player, slug) => {
       applyPreferredQuality(player, q);
@@ -176,15 +178,34 @@ export function SitePlaybackProvider({
         return;
       }
       const isActive = slug === audibleSlug;
-      setPlayerMuted(player, !isActive);
+      setPlayerMuted(player, !isActive || !allowAudio);
       setPlayerPlaybackActive(player, slug === audibleSlug);
     });
 
     if (hero) {
       applyPreferredQuality(hero, q);
-      setPlayerMuted(hero, false);
+      setPlayerMuted(hero, !allowAudio);
     }
   }, []);
+
+  useEffect(() => {
+    const unlock = () => {
+      if (interactionUnlockedRef.current) return;
+      interactionUnlockedRef.current = true;
+      applyPolicySync();
+    };
+    const opts: AddEventListenerOptions = { once: true, passive: true, capture: true };
+    window.addEventListener("wheel", unlock, opts);
+    window.addEventListener("touchmove", unlock, opts);
+    window.addEventListener("pointermove", unlock, opts);
+    window.addEventListener("keydown", unlock, { once: true, capture: true });
+    return () => {
+      window.removeEventListener("wheel", unlock, true);
+      window.removeEventListener("touchmove", unlock, true);
+      window.removeEventListener("pointermove", unlock, true);
+      window.removeEventListener("keydown", unlock, true);
+    };
+  }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(
     (slug: string | null) => {

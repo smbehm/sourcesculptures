@@ -132,6 +132,7 @@ export function YoutubeIframeApiPlayer({
         };
 
         const created = new w.YT.Player(hostId, {
+          host: "https://www.youtube-nocookie.com",
           videoId,
           width,
           height,
