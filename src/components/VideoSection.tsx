@@ -108,17 +108,14 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     setTimeout(() => setReady(true), 600);
   };
 
-  // React to active/mute changes
+  // React to active/mute changes. Never pause — pausing makes YouTube show
+  // a large center pause/play overlay that we cannot style across origins.
+  // Instead, keep all videos playing and only toggle mute on the active one.
   useEffect(() => {
     if (!shouldLoad || !ready) return;
-    if (isActive) {
-      post("playVideo");
-      if (globalMuted) post("mute");
-      else post("unMute");
-    } else {
-      post("mute");
-      post("pauseVideo");
-    }
+    post("playVideo");
+    if (isActive && !globalMuted) post("unMute");
+    else post("mute");
   }, [isActive, globalMuted, shouldLoad, ready]);
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
