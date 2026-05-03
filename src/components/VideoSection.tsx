@@ -136,8 +136,10 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
             className="absolute left-1/2 top-1/2"
             style={{
               transform: "translate(-50%, -50%)",
-              width: "max(100vw, calc(100svh * 16 / 9))",
-              height: "max(100svh, calc(100vw * 9 / 16))",
+              // Oversize ~20% so YouTube's title bar (top) and any UI (bottom)
+              // are clipped off-screen on every device/orientation.
+              width: "calc(max(100vw, calc(100svh * 16 / 9)) * 1.2)",
+              height: "calc(max(100svh, calc(100vw * 9 / 16)) * 1.2)",
             }}
           >
             <iframe
