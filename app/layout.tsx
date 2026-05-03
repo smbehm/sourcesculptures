@@ -6,6 +6,7 @@ import { AmberHeader } from "@/components/amber-header";
 import { SiteAudioShell } from "@/components/site-audio-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SitePreloader } from "@/components/site-preloader";
+import { DeployVersionBadge } from "@/components/deploy-version-badge";
 import { siteConfig } from "@/lib/site";
 import { JsonLd } from "@/components/json-ld";
 
@@ -68,7 +69,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${antonio.variable} ${inter.variable} h-full antialiased`}
+      className={`${antonio.variable} ${inter.variable} min-h-full antialiased`}
     >
       <body className="min-h-full bg-black text-zinc-100">
         {/* Preloader must be first — renders above everything at z-9999 */}
@@ -82,6 +83,7 @@ export default function RootLayout({
               <SiteFooter />
             </div>
           </SiteAudioShell>
+          <DeployVersionBadge />
         </LenisProvider>
       </body>
     </html>

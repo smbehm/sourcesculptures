@@ -22,15 +22,30 @@
  * handled by Lenis in layout (see components/lenis-provider.tsx).
  */
 
+/*
+ * Single document scroll: `overflow-x: hidden` on both html and body makes each
+ * axis pair recompute (y → auto) and you get nested scrollbars. Use `clip` for
+ * horizontal bleed only, and let only the root handle vertical scroll.
+ */
 html {
-  /* iOS: reduce 1px gaps between overflow/transform layers while scrolling */
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+  overflow-y: auto;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: clip;
+  overflow-y: visible;
+  min-height: 100%;
+}
+
+/* Native video only — Next/Image `fill` uses absolute sizing and must not be clamped */
+video {
+  max-width: 100%;
+  height: auto;
 }
 
 ::selection {

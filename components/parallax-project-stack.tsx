@@ -239,7 +239,7 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      <div className="relative overflow-x-hidden bg-black">
+      <div className="relative overflow-x-clip bg-black">
         {projects.map((p, i) => (
           <ParallaxProjectSection
             key={p.slug}
