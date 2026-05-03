@@ -20,7 +20,15 @@ import {
 
 export type { VideoQualityTier };
 
-function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
+/**
+ * @param unlockAudio - Only true from the mute toggle handler (real user gesture).
+ *   Calling unMute outside a gesture breaks muted autoplay on iOS/Android (playback can stop).
+ */
+function setPlayerMuted(
+  player: YouTubePlayer,
+  muted: boolean,
+  unlockAudio = false,
+) {
   const p = player as unknown as {
     mute?: () => unknown;
     unMute?: () => unknown;
@@ -30,6 +38,14 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   if (muted) {
     try {
       p.mute?.();
+    } catch {
+      /* noop */
+    }
+    return;
+  }
+  if (!unlockAudio) {
+    try {
+      p.playVideo?.();
     } catch {
       /* noop */
     }
@@ -86,25 +102,30 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     siteMutedRef.current = siteMuted;
   }, [videoQuality, siteMuted]);
 
-  const applyPolicySync = useCallback((muted: boolean) => {
-    const q = videoQualityRef.current;
-    const activeSlug = activeParallaxSlugRef.current;
+  const applyPolicySync = useCallback(
+    (muted: boolean, options?: { allowAudioUnlock?: boolean }) => {
+      const q = videoQualityRef.current;
+      const activeSlug = activeParallaxSlugRef.current;
+      const unlock = options?.allowAudioUnlock ?? false;
 
-    parallaxPlayersRef.current.forEach((player, slug) => {
-      applyPreferredQuality(player, q);
-      if (muted) {
-        setPlayerMuted(player, true);
-      } else {
-        setPlayerMuted(player, slug !== activeSlug);
+      parallaxPlayersRef.current.forEach((player, slug) => {
+        applyPreferredQuality(player, q);
+        if (muted) {
+          setPlayerMuted(player, true);
+        } else {
+          const silent = slug !== activeSlug;
+          setPlayerMuted(player, silent, !silent && unlock);
+        }
+      });
+
+      const hero = heroPlayerRef.current;
+      if (hero) {
+        applyPreferredQuality(hero, q);
+        setPlayerMuted(hero, muted, !muted && unlock);
       }
-    });
-
-    const hero = heroPlayerRef.current;
-    if (hero) {
-      applyPreferredQuality(hero, q);
-      setPlayerMuted(hero, muted);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const setActiveParallaxSlug = useCallback((slug: string | null) => {
     activeParallaxSlugRef.current = slug;
@@ -155,7 +176,7 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     setSiteMuted((prev) => {
       const next = !prev;
       siteMutedRef.current = next;
-      applyPolicySync(next);
+      applyPolicySync(next, { allowAudioUnlock: true });
       return next;
     });
   }, [applyPolicySync]);
