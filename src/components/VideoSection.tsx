@@ -112,6 +112,26 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     }
   }, [isActive, globalMuted, shouldLoad, ready]);
 
+  // iOS Safari blocks programmatic autoplay until a user gesture.
+  // On the first touch/click anywhere, re-issue play to the active video.
+  useEffect(() => {
+    if (!shouldLoad) return;
+    const kick = () => {
+      if (isActive) {
+        post("playVideo");
+        if (globalMuted) post("mute");
+      }
+    };
+    window.addEventListener("touchstart", kick, { passive: true });
+    window.addEventListener("touchend", kick, { passive: true });
+    window.addEventListener("click", kick);
+    return () => {
+      window.removeEventListener("touchstart", kick);
+      window.removeEventListener("touchend", kick);
+      window.removeEventListener("click", kick);
+    };
+  }, [shouldLoad, isActive, globalMuted]);
+
   return (
     <section
       ref={sectionRef}
@@ -136,8 +156,10 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
             className="absolute left-1/2 top-1/2"
             style={{
               transform: "translate(-50%, -50%)",
-              width: "max(100vw, calc(100svh * 16 / 9))",
-              height: "max(100svh, calc(100vw * 9 / 16))",
+              // Oversize ~20% so YouTube's title bar (top) and any UI (bottom)
+              // are clipped off-screen on every device/orientation.
+              width: "calc(max(100vw, calc(100svh * 16 / 9)) * 1.2)",
+              height: "calc(max(100svh, calc(100vw * 9 / 16)) * 1.2)",
             }}
           >
             <iframe
