@@ -5,7 +5,7 @@ import { useProjects, type ProjectRow } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Search, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminProjectsList = () => {
@@ -63,17 +63,17 @@ const AdminProjectsList = () => {
       </header>
 
       <div className="border border-border rounded-md overflow-hidden">
-        <div className="grid grid-cols-[80px_90px_1fr_1.2fr_180px_90px_60px] text-[11px] uppercase tracking-cinema text-muted-foreground bg-secondary/40 px-4 py-3 border-b border-border">
+        <div className="grid grid-cols-[80px_90px_1fr_1.2fr_180px_90px_120px] text-[11px] uppercase tracking-cinema text-muted-foreground bg-secondary/40 px-4 py-3 border-b border-border">
           <div>Featured</div>
           <div>Status</div>
           <div>Title</div>
           <div>Slug</div>
           <div>Client</div>
           <div>Year</div>
-          <div></div>
+          <div>Actions</div>
         </div>
         {rows.map((p) => (
-          <div key={p.id} className="grid grid-cols-[80px_90px_1fr_1.2fr_180px_90px_60px] items-center px-4 py-3 border-b border-border last:border-0 hover:bg-secondary/30">
+          <div key={p.id} className="grid grid-cols-[80px_90px_1fr_1.2fr_180px_90px_120px] items-center px-4 py-3 border-b border-border last:border-0 hover:bg-secondary/30">
             <div><Switch checked={p.featured} onCheckedChange={() => toggleFeatured(p)} /></div>
             <button onClick={() => toggleStatus(p)} className={`text-xs px-2 py-1 rounded w-fit ${p.status === "live" ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"}`}>
               {p.status}
@@ -83,6 +83,9 @@ const AdminProjectsList = () => {
             <div className="text-sm truncate">{p.client ?? "—"}</div>
             <div className="text-sm">{p.year ?? "—"}</div>
             <div className="flex items-center gap-1 justify-end">
+              <Link to={`/admin/projects/${p.id}`} className="inline-flex items-center gap-1 px-2 py-1 text-xs text-foreground hover:text-accent">
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Link>
               <a href={`/projects/${p.slug}`} target="_blank" rel="noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground"><ExternalLink className="h-4 w-4" /></a>
               <button onClick={() => onDelete(p)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
             </div>
