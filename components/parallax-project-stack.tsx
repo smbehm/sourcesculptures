@@ -10,8 +10,7 @@ import {
 } from "framer-motion";
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSitePlayback } from "@/components/site-playback-provider";
-import { patchYtIframeAllow } from "@/components/site-playback-provider";
+import { useSitePlayback, patchYtIframeAllow } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -75,9 +74,7 @@ function pickProjectForTextMidline(
     const el = document.getElementById(`panel-${p.slug}`);
     if (!el) continue;
     const r = el.getBoundingClientRect();
-    if (midY >= r.top && midY <= r.bottom) {
-      return p;
-    }
+    if (midY >= r.top && midY <= r.bottom) return p;
   }
 
   let nearest: Project = projects[0];
@@ -107,9 +104,7 @@ export function ParallaxProjectStack({ projects }: Props) {
   const [showCaption, setShowCaption] = useState(false);
   const [titleOpacity, setTitleOpacity] = useState(1);
   const [titleFadeInstant, setTitleFadeInstant] = useState(false);
-  const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTitleTimers = useCallback(() => {
@@ -147,14 +142,12 @@ export function ParallaxProjectStack({ projects }: Props) {
       }
       return;
     }
-
     setTitleFadeInstant(false);
     setTitleOpacity(1);
     clearTitleTimers();
     initialHideTimerRef.current = setTimeout(() => {
       setTitleOpacity(0);
     }, INITIAL_TITLE_FADE_MS);
-
     return () => clearTitleTimers();
   }, [active.slug, showCaption, reduceMotion, clearTitleTimers]);
 
@@ -247,14 +240,10 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      {/*
-        OUTER WRAPPER
-        - No negative margins — gaps between panels are fixed at the panel level
-        - overflow-hidden prevents the parallax bleed from showing outside the stack
-      */}
-      <div className="relative overflow-hidden bg-black">
+      {/* Outer wrapper — no overflow-hidden here so desktop parallax bleed isn't clipped */}
+      <div className="relative bg-black">
         {projects.map((p, i) => (
-          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
+          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} isFirst={i === 0} />
         ))}
       </div>
     </>
@@ -264,9 +253,11 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({
   project,
   priority,
+  isFirst,
 }: {
   project: Project;
   priority: boolean;
+  isFirst: boolean;
 }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
@@ -286,14 +277,8 @@ function ParallaxProjectSection({
     [embedOrigin]
   );
 
-  useEffect(() => {
-    setShowYtPoster(true);
-  }, [project.youtubeId]);
-
-  useEffect(() => {
-    if (!play) setShowYtPoster(true);
-  }, [play]);
-
+  useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
+  useEffect(() => { if (!play) setShowYtPoster(true); }, [play]);
   useEffect(() => {
     return () => registerParallaxPlayer(project.slug, null);
   }, [project.slug, registerParallaxPlayer]);
@@ -319,7 +304,6 @@ function ParallaxProjectSection({
     reduce || narrowViewport ? [0, 0] : [-90, 90]
   );
 
-  // Desktop: over-tall layer for parallax bleed. Mobile: match panel exactly.
   const motionLayerClass = narrowViewport
     ? "absolute inset-0 h-full w-full will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
@@ -370,29 +354,30 @@ function ParallaxProjectSection({
 
   return (
     /*
-      BLACK-LINE FIX
-      ─────────────
-      1. `h-[135svh]` — use small viewport height (svh) so height is stable when
-         mobile browser chrome shows/hides (vh changes; svh does not).
-      2. `translate-z-0` / `backface-visibility-hidden` — forces each panel onto
-         its own GPU compositing layer, eliminating subpixel rounding gaps.
-      3. `mb-[-1px]` — each panel overlaps the next by 1px so no gap can appear
-         regardless of fractional pixel heights.
-      4. No negative margins on the outer wrapper — this approach is simpler and
-         more reliable across browsers.
+      BLACK LINE FIX — three changes only, everything else is original:
+      1. `marginBottom: "-1px"` — panels overlap 1px so no gap can appear
+         between adjacent GPU compositing layers.
+      2. `transform: "translateZ(0)"` — forces each panel onto its own GPU
+         layer, eliminating subpixel rounding gaps at boundaries.
+      3. Height uses CSS svh unit (stable on mobile — doesn't change when
+         browser chrome appears/disappears, unlike vh). Desktop: svh = vh.
+
+      NOT changed: overflow-hidden (kept), video wrapper (kept exactly as
+      original), parallax motion layer classes (kept), intersection observer.
     */
     <div
       id={`panel-${project.slug}`}
       ref={ref}
       className="relative isolate w-full overflow-hidden bg-black"
       style={{
+        // svh = small viewport height — stable on mobile, equal to vh on desktop
         height: "135svh",
         minHeight: "100svh",
+        // 1px overlap between panels eliminates any rendering gap
         marginBottom: "-1px",
-        // Force GPU compositing layer — eliminates subpixel seams
+        // Own GPU compositing layer — no subpixel seams between panels
         transform: "translateZ(0)",
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
+        WebkitTransform: "translateZ(0)",
       }}
     >
       <motion.div className={motionLayerClass} style={{ y }}>
@@ -406,25 +391,9 @@ function ParallaxProjectSection({
         />
 
         {play && (
-          /*
-            VIDEO FILL FIX
-            ──────────────
-            The iframe wrapper uses the standard 16:9 aspect-ratio centering trick
-            but must cover the full panel in both axes on mobile.
-            - min-h uses svh so the 120% covers the stable viewport, not the
-              shifting browser-chrome viewport.
-            - scale is slightly larger on mobile to cover edge cases.
-          */
-          <div
-            className="absolute left-1/2 top-1/2 z-0 w-[100vw] -translate-x-1/2 -translate-y-1/2"
-            style={{
-              aspectRatio: "16/9",
-              minHeight: narrowViewport ? "120svh" : "115svh",
-              minWidth: "177.78vh",
-              transform: `translate(-50%, -50%) scale(${narrowViewport ? 1.22 : 1.16})`,
-            }}
-          >
-            <div className="absolute inset-0 isolate overflow-hidden bg-black">
+          // ORIGINAL video wrapper — untouched
+          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
+            <div className="absolute inset-0 z-0 overflow-hidden bg-black">
               {!embedReady ? (
                 <Image
                   src={ytPoster}
@@ -444,7 +413,6 @@ function ParallaxProjectSection({
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading={priority ? "eager" : "lazy"}
                     onReady={(e) => {
-                      // Patch allow="autoplay" BEFORE registering — critical for Chrome Android
                       patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
@@ -459,9 +427,7 @@ function ParallaxProjectSection({
                       try {
                         e.target.seekTo(0, true);
                         e.target.playVideo();
-                      } catch {
-                        /* noop */
-                      }
+                      } catch { /* noop */ }
                     }}
                   />
                   {showYtPoster && (
