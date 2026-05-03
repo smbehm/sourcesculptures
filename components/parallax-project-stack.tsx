@@ -460,10 +460,6 @@ function ParallaxProjectSection({
                       priority={priority}
                     />
                   )}
-                  <div
-                    className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
-                    aria-hidden
-                  />
                 </>
               )}
             </div>

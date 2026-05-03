@@ -74,9 +74,17 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
     if (muted) {
       p.mute?.();
     } else {
+      p.playVideo?.();
       p.unMute?.();
       p.setVolume?.(100);
-      p.playVideo?.();
+      window.setTimeout(() => {
+        try {
+          p.unMute?.();
+          p.setVolume?.(100);
+        } catch {
+          /* noop */
+        }
+      }, 140);
     }
   } catch {
     /* noop — iframe may be mid-teardown */
@@ -164,6 +172,7 @@ export function SitePlaybackProvider({
     parallaxPlayersRef.current.forEach((player, slug) => {
       applyPreferredQuality(player, q);
       if (audibleSlug === null) {
+        setPlayerPlaybackActive(player, false);
         return;
       }
       setPlayerMuted(player, slug !== audibleSlug);
