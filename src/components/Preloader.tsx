@@ -130,14 +130,35 @@ const Preloader = () => {
             aspectRatio: "565.25 / 931.8",
           }}
         >
-          {/* Soft golden halo behind icon */}
+          {/* God rays emitting from WITHIN the icon — strength follows fill */}
           <div
-            className="absolute inset-[-80%]"
+            className="pointer-events-none absolute left-1/2 top-1/2"
+            style={{
+              width: "260vmax",
+              height: "260vmax",
+              transform: "translate(-50%, -50%)",
+              opacity: glow,
+              transition: "opacity 500ms ease",
+              mixBlendMode: "screen",
+              background:
+                "conic-gradient(from 0deg, rgba(255,200,90,0) 0deg, rgba(255,210,120,0.6) 3deg, rgba(255,200,90,0) 9deg, rgba(255,200,90,0) 26deg, rgba(255,210,120,0.5) 31deg, rgba(255,200,90,0) 38deg, rgba(255,200,90,0) 58deg, rgba(255,210,120,0.55) 64deg, rgba(255,200,90,0) 71deg, rgba(255,200,90,0) 92deg, rgba(255,210,120,0.45) 99deg, rgba(255,200,90,0) 106deg, rgba(255,200,90,0) 132deg, rgba(255,210,120,0.55) 139deg, rgba(255,200,90,0) 147deg, rgba(255,200,90,0) 172deg, rgba(255,210,120,0.5) 179deg, rgba(255,200,90,0) 187deg, rgba(255,200,90,0) 212deg, rgba(255,210,120,0.55) 219deg, rgba(255,200,90,0) 227deg, rgba(255,200,90,0) 252deg, rgba(255,210,120,0.5) 259deg, rgba(255,200,90,0) 267deg, rgba(255,200,90,0) 292deg, rgba(255,210,120,0.55) 299deg, rgba(255,200,90,0) 307deg, rgba(255,200,90,0) 332deg, rgba(255,210,120,0.6) 339deg, rgba(255,200,90,0) 347deg)",
+              WebkitMaskImage:
+                "radial-gradient(closest-side, black 0%, black 4%, rgba(0,0,0,0.6) 18%, transparent 70%)",
+              maskImage:
+                "radial-gradient(closest-side, black 0%, black 4%, rgba(0,0,0,0.6) 18%, transparent 70%)",
+              animation: "raysSpin 60s linear infinite",
+              filter: "blur(2px)",
+            }}
+          />
+
+          {/* Soft golden halo behind icon — grows with fill */}
+          <div
+            className="pointer-events-none absolute inset-[-120%]"
             style={{
               background:
-                "radial-gradient(50% 55% at 50% 60%, rgba(255,196,90,0.55), rgba(255,170,60,0.18) 35%, transparent 70%)",
-              filter: "blur(20px)",
-              opacity: 0.3 + glow * 0.7,
+                "radial-gradient(50% 55% at 50% 50%, rgba(255,196,90,0.7), rgba(255,170,60,0.22) 30%, transparent 65%)",
+              filter: "blur(24px)",
+              opacity: 0.15 + glow * 0.85,
               transition: "opacity 400ms ease",
               mixBlendMode: "screen",
             }}
