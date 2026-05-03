@@ -24,7 +24,10 @@ const AdminLayout = () => {
     <div className="min-h-screen flex w-full bg-background text-foreground">
       <aside className="w-60 shrink-0 border-r border-border flex flex-col">
         <div className="px-5 py-5 border-b border-border">
-          <div className="font-display uppercase text-sm tracking-cinema">SOURCEsculptures</div>
+          <div className="font-display uppercase text-sm tracking-cinema leading-tight">
+            <div>SOURCE</div>
+            <div>SCULPTURES</div>
+          </div>
           <div className="text-[11px] text-muted-foreground mt-1">Admin CMS</div>
         </div>
         <nav className="flex-1 p-3 space-y-1">

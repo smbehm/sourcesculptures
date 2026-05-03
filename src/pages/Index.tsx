@@ -33,14 +33,25 @@ const Index = () => {
               if (!media.url && !media.youtubeId) return null;
 
               return (
-                <ProjectMediaSection
-                  key={p.id}
-                  media={media}
-                  title={p.title}
-                  href={`/projects/${p.slug}`}
-                  poster={getMediaPoster(media, p.title)}
-                  deferUntilScroll={i === 0}
-                />
+                <div key={p.id} className="relative">
+                  <ProjectMediaSection
+                    media={media}
+                    title={p.title}
+                    href={`/projects/${p.slug}`}
+                    poster={getMediaPoster(media, p.title)}
+                    deferUntilScroll={i === 0}
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-6 sm:px-10 pb-10 sm:pb-14 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                    <h2 className="font-display uppercase text-white font-bold leading-[0.95] text-[clamp(1.75rem,5vw,3.5rem)] drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                      {p.title}
+                    </h2>
+                    {p.brief_description ? (
+                      <p className="mt-3 max-w-2xl text-white/85 text-sm sm:text-base leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                        {p.brief_description}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
               );
             })}
           </div>
