@@ -387,7 +387,8 @@ const Preloader = () => {
               </g>
             )}
           </svg>
-
+        </div>
+      </div>
 
       {/* Mouse-reactive ember/spark canvas */}
       <canvas
