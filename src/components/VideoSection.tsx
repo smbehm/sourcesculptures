@@ -187,13 +187,13 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         loading="lazy"
         decoding="async"
         className="video-cover"
-        style={{ opacity: ready && isActive ? 0 : 1, transition: "opacity 500ms ease" }}
+        style={{ opacity: isActive && playing ? 0 : 1, transition: "opacity 500ms ease" }}
       />
 
       {src && (
         <div
           className="absolute inset-0 overflow-hidden"
-          style={{ opacity: ready && isActive ? 1 : 0, transition: "opacity 500ms ease" }}
+          style={{ opacity: isActive && playing ? 1 : 0, transition: "opacity 500ms ease" }}
           aria-hidden={!isActive}
         >
           <div
