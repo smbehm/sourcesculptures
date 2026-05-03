@@ -21,24 +21,22 @@ const Preloader = () => {
     return () => window.removeEventListener("preview-video-ready", onReady);
   }, []);
 
-  // Drive progress: ramps to ~85% over 3s, snaps to 100% when video is ready
-  // (or hard timeout at 7s so we never strand the user).
+  // Drive progress: gradual ramp from 0 → ~92% over ~7s with an ease curve
+  // that lingers in the middle so the fill feels deliberate, not snappy.
+  // Snaps to 100% only after the first video is ready (or 11s hard cap).
   useEffect(() => {
     let raf = 0;
     const tick = () => {
       const elapsed = performance.now() - startedAt.current;
-      // Smooth ease-out toward 85% over ~3000ms
-      const ramp = Math.min(1, elapsed / 3000);
-      const eased = 1 - Math.pow(1 - ramp, 2);
-      let target = eased * 85;
+      const t = Math.min(1, elapsed / 7000);
+      // ease-in-out cubic — slower start, slow middle plateau, gentle finish
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      let target = eased * 92;
 
-      if (videoReadyRef.current && elapsed > 800) target = 100;
-      if (elapsed > 7000) target = 100;
+      if (videoReadyRef.current && elapsed > 1500) target = 100;
+      if (elapsed > 11000) target = 100;
 
-      setProgress((p) => {
-        const next = Math.max(p, target);
-        return next;
-      });
+      setProgress((p) => Math.max(p, target));
 
       if (target >= 100) return;
       raf = requestAnimationFrame(tick);
