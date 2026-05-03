@@ -4,19 +4,15 @@ import VideoSection from "@/components/VideoSection";
 import About from "@/components/About";
 import Clients from "@/components/Clients";
 import CTA from "@/components/CTA";
+import Header from "@/components/Header";
+import SoundToggle from "@/components/SoundToggle";
+import { SoundProvider } from "@/context/SoundContext";
 
 const projects = [
   {
-    youtubeId: "Bv-a_7zH88o",
-    eyebrow: "Documentary",
-    title: "Source Spirits",
-    subtitle: "A long-form portrait of place, ritual, and craft — distilled into moving image.",
-    href: "https://sourcesculptures.com/projects/source-spirits-no-art/",
-  },
-  {
     youtubeId: "lDyARVNEOAc",
     eyebrow: "Short Film",
-    title: "The Veil",
+    title: "Obsidian",
     subtitle: "An editorial study in light, fabric and silence.",
     href: "https://sourcesculptures.com/projects/the-veil/",
   },
@@ -39,26 +35,24 @@ const projects = [
 const Index = () => {
   useEffect(() => {
     document.title = "SOURCEsculptures — Cinematic Storytelling Studio";
-    const meta =
-      document.querySelector('meta[name="description"]') ||
-      Object.assign(document.createElement("meta"), { name: "description" });
-    meta.setAttribute(
-      "content",
-      "SOURCEsculptures — a cinematic videography studio crafting brand films, documentaries, editorial and wedding films."
-    );
-    if (!meta.parentElement) document.head.appendChild(meta);
   }, []);
 
   return (
-    <main className="relative w-full overflow-x-hidden bg-background text-foreground">
-      <Hero />
-      {projects.map((p) => (
-        <VideoSection key={p.youtubeId} {...p} />
-      ))}
-      <About />
-      <Clients />
-      <CTA />
-    </main>
+    <SoundProvider>
+      <Header />
+      <SoundToggle />
+      <main className="relative w-full overflow-x-hidden bg-background text-foreground">
+        <Hero />
+        <div id="work">
+          {projects.map((p) => (
+            <VideoSection key={p.youtubeId} {...p} />
+          ))}
+        </div>
+        <About />
+        <Clients />
+        <CTA />
+      </main>
+    </SoundProvider>
   );
 };
 

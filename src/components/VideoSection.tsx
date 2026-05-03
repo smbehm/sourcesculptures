@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSound } from "@/context/SoundContext";
 
 interface VideoSectionProps {
   youtubeId: string;
@@ -19,6 +20,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
   const sectionRef = useRef<HTMLElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [ready, setReady] = useState(false);
+  const { muted } = useSound();
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -42,7 +44,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
   const src = shouldLoad
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0`
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
     : undefined;
 
   return (
@@ -72,6 +74,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
             }}
           >
             <iframe
+              key={muted ? "m" : "u"}
               src={src}
               title={title}
               allow="autoplay; encrypted-media; picture-in-picture"
