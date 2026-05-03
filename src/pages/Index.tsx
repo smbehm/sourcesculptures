@@ -38,11 +38,11 @@ function CaptionBody({ project }: { project: ProjectRow }) {
   const subtitle = getSubtitle(project);
   return (
     <div className="flex flex-col items-center">
-      <h2 className="font-display text-balance text-[clamp(2.5rem,11vw,8.5rem)] font-bold leading-[0.9] tracking-[-0.02em] text-white uppercase drop-shadow-[0_8px_48px_rgba(0,0,0,0.55)]">
+      <h2 className="font-display text-balance text-[clamp(1.25rem,5.5vw,4.25rem)] font-bold leading-[0.9] tracking-[-0.02em] text-white uppercase drop-shadow-[0_8px_48px_rgba(0,0,0,0.55)]">
         {project.title}
       </h2>
       {subtitle && (
-        <p className="mt-5 text-[10px] tracking-[0.34em] text-white/90 uppercase sm:text-[11px]">
+        <p className="mt-5 text-[15px] tracking-[0.34em] text-white/90 uppercase sm:text-[17px]">
           {subtitle}
         </p>
       )}
