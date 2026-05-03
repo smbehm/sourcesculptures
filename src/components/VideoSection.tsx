@@ -69,7 +69,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       ioRatio.disconnect();
       unregister(id);
     };
-  }, [id, reportRatio, unregister]);
+  }, [id, reportRatio, unregister, scrolled]);
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
