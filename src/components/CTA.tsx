@@ -80,29 +80,21 @@ const CTA = () => {
           <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
             Contact
           </span>
-          <h2 className="mt-8 font-display uppercase text-foreground font-bold leading-[0.92] text-[clamp(2.75rem,10vw,7.5rem)] max-w-5xl">
-            Let's create
-            <br />
-            something timeless.
-          </h2>
-
-          <p className="mt-10 text-muted-foreground max-w-xl leading-relaxed text-base sm:text-lg">
-            Whether you're dreaming up a new project, seeking a creative
-            collaborator, or simply curious about our work — we would love to
-            hear from you.
-          </p>
-
-          <div className="mt-14">
-            <button
-              onClick={reveal}
-              className="group inline-flex items-center gap-4 font-display tracking-cinema text-[12px] uppercase text-background bg-foreground px-10 py-5 hover:bg-foreground/90 transition-colors"
-            >
+          <button
+            onClick={reveal}
+            aria-label="Start your story"
+            className="group block text-left mt-8 w-full"
+          >
+            <h2 className="font-display uppercase text-foreground font-bold leading-[0.92] text-[clamp(2.75rem,10vw,7.5rem)] max-w-5xl transition-opacity group-hover:opacity-80">
+              Let's create
+              <br />
+              something timeless.
+            </h2>
+            <span className="mt-10 inline-flex items-center gap-3 font-display tracking-cinema text-[12px] uppercase text-foreground border-b border-foreground pb-2 group-hover:text-accent group-hover:border-accent transition-colors">
               Start your story
-              <span className="transition-transform group-hover:translate-x-1">
-                →
-              </span>
-            </button>
-          </div>
+              <span className="transition-transform group-hover:translate-x-1">→</span>
+            </span>
+          </button>
         </div>
       </div>
 
