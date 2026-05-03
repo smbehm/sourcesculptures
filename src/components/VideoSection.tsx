@@ -128,31 +128,13 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
         </div>
       )}
 
-      <div className="veil" />
-
-      <Wrapper
-        {...wrapperProps}
-        className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center"
-        style={{
-          opacity: titleVisible ? 1 : 0,
-          transform: titleVisible ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 700ms ease, transform 700ms ease",
-        }}
-      >
-        {eyebrow && (
-          <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-4">
-            {eyebrow}
-          </span>
-        )}
-        <h2 className="font-display text-white uppercase font-bold leading-[0.95] tracking-[0.02em] text-[clamp(2.5rem,10vw,7.5rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="mt-5 max-w-xl text-white/80 text-sm sm:text-base leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-      </Wrapper>
+      {href && (
+        <a
+          href={href}
+          aria-label={title}
+          className="absolute inset-0 z-10 block"
+        />
+      )}
     </section>
   );
 };
