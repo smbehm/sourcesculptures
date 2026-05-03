@@ -9,9 +9,11 @@ interface VideoSectionProps {
   subtitle?: string;
   href?: string;
   poster?: string;
+  videoUrl?: string;
+  showControls?: boolean;
 }
 
-const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => {
+const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls = false }: VideoSectionProps) => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -64,7 +66,7 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
   // NOTE: We intentionally DO NOT pass loop=1&playlist=ID — that makes YouTube render
   // the center prev/pause/next overlay buttons on mobile. We loop manually via postMessage.
   const src = shouldLoad
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&cc_load_policy=0&enablejsapi=1`
+    ? (videoUrl ?? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=${showControls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=${showControls ? 0 : 1}&fs=${showControls ? 1 : 0}&showinfo=0&cc_load_policy=0&enablejsapi=1`)
     : undefined;
 
   const post = (func: string, args: unknown[] = []) => {
