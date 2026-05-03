@@ -120,11 +120,8 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     return () => window.removeEventListener("message", onMessage);
   }, [shouldLoad]);
 
-  // Subscribe to YT events once iframe loads. Strategy:
-  //  1. Start playing muted immediately so YouTube buffers a few seconds.
-  //  2. After ~3.5s, pause — keeping the buffer ready so playback is instant
-  //     when the user scrolls to it. The poster stays on top so the brief
-  //     pause-overlay flash is hidden behind it.
+  // Subscribe to YT events once iframe loads. Keep playback running muted in
+  // the background so scroll handoffs never trigger YouTube's pause overlay.
   const handleIframeLoad = () => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
@@ -132,26 +129,24 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     post("playVideo");
     post("mute");
     setTimeout(() => setReady(true), 400);
-    // Pause once we've buffered enough — only if not the active video
-    setTimeout(() => {
-      if (!isActive) post("pauseVideo");
-    }, 3500);
   };
 
-  // React to active/mute changes — play when active, pause otherwise.
+  // React to active/mute changes without pausing, so native pause controls
+  // never get a chance to appear during scroll transitions.
   useEffect(() => {
     if (!shouldLoad || !ready) return;
     post("setPlaybackQuality", [desiredQuality]);
-    if (isActive) {
-      post("playVideo");
-      if (!globalMuted) post("unMute");
-      else post("mute");
-      const t1 = setTimeout(() => post("setPlaybackQuality", [desiredQuality]), 1500);
-      return () => clearTimeout(t1);
+    post("playVideo");
+    if (isActive && !globalMuted) {
+      post("unMute");
     } else {
-      post("pauseVideo");
       post("mute");
     }
+    const t1 = setTimeout(() => {
+      post("playVideo");
+      post("setPlaybackQuality", [desiredQuality]);
+    }, 1500);
+    return () => clearTimeout(t1);
   }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
