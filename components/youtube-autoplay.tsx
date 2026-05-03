@@ -34,6 +34,15 @@ export function YouTubeAutoplay({
   const [active, setActive] = useState(isHero);
   /** Hide YouTube thumbnail layer once the iframe is actually playing (avoids black flash). */
   const [showYtPoster, setShowYtPoster] = useState(true);
+  const [narrowViewport, setNarrowViewport] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setNarrowViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const ytOpts = useMemo(
     () => ({
@@ -42,9 +51,10 @@ export function YouTubeAutoplay({
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
+        isMobile: narrowViewport,
       }),
     }),
-    [embedOrigin],
+    [embedOrigin, narrowViewport],
   );
 
   useEffect(() => {

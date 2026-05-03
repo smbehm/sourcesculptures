@@ -268,9 +268,9 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      <div className="relative bg-black max-lg:-mt-[14px]">
+      <div className="relative overflow-hidden bg-black">
         {projects.map((p, i) => (
-          <div key={p.slug} className={i > 0 ? "max-lg:-mt-[18px]" : undefined}>
+          <div key={p.slug} className="-mt-px first:mt-0">
             <ParallaxProjectSection project={p} priority={i === 0} />
           </div>
         ))}
@@ -286,6 +286,15 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
+  const [narrowViewport, setNarrowViewport] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setNarrowViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
@@ -293,9 +302,13 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     () => ({
       width: "100%",
       height: "100%",
-      playerVars: buildYoutubePlayerVars({ startMuted: true, origin: embedOrigin }),
+      playerVars: buildYoutubePlayerVars({
+        startMuted: true,
+        origin: embedOrigin,
+        isMobile: narrowViewport,
+      }),
     }),
-    [embedOrigin],
+    [embedOrigin, narrowViewport],
   );
 
   useEffect(() => {
@@ -310,16 +323,6 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     return () => registerParallaxPlayer(project.slug, null);
   }, [project.slug, registerParallaxPlayer]);
 
-  const [narrowViewport, setNarrowViewport] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const sync = () => setNarrowViewport(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
@@ -333,7 +336,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
   );
 
   const motionLayerClass = narrowViewport
-    ? "absolute inset-0 h-full w-full will-change-transform"
+    ? "absolute inset-0 h-full w-full bg-black will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
   useEffect(() => {
@@ -394,8 +397,14 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
       />
 
       {play && (
-          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
-            <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+          <div
+            className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[120svh] min-w-[177.78vh] w-[100vw]"
+            style={{
+              minHeight: "max(120svh, 120%)",
+              transform: `translate(-50%, -50%) scale(${narrowViewport ? 1.22 : 1.16})`,
+            }}
+          >
+            <div className="absolute inset-0 isolate z-0 overflow-hidden bg-black">
               {!embedReady ? (
                 <Image
                   src={ytPoster}

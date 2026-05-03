@@ -29,6 +29,7 @@ function getPlayer(player: YouTubePlayer) {
     getAvailableQualityLevels?: () => YtQuality[];
     setPlaybackQuality?: (q: YtQuality) => void;
     getPlaybackQuality?: () => YtQuality;
+    getPlayerState?: () => number;
   };
 }
 
@@ -39,7 +40,17 @@ function getPlayer(player: YouTubePlayer) {
 export function applyPreferredQuality(
   player: YouTubePlayer,
   tier: VideoQualityTier,
+  opts?: { requirePlaying?: boolean },
 ): void {
+  if (opts?.requirePlaying) {
+    try {
+      const st = getPlayer(player).getPlayerState?.();
+      if (st !== 1) return;
+    } catch {
+      return;
+    }
+  }
+
   const p = getPlayer(player);
   const order = tier === "hd2160" ? ORDER_4K : ORDER_HD;
   try {
@@ -65,8 +76,11 @@ export function reinforcePreferredQuality(
   player: YouTubePlayer,
   tier: VideoQualityTier,
 ): void {
-  const delays = [0, 120, 400, 1200];
+  const delays = [0, 250, 800, 2000, 4000];
   for (const ms of delays) {
-    window.setTimeout(() => applyPreferredQuality(player, tier), ms);
+    window.setTimeout(
+      () => applyPreferredQuality(player, tier, { requirePlaying: ms > 0 }),
+      ms,
+    );
   }
 }
