@@ -24,9 +24,11 @@ export type YoutubeIframeApiPlayerProps = {
 };
 
 /**
- * Uses the official `YT.Player` constructor with `events.onAutoplayBlocked` — not the
- * promise-wrapped `youtube-player` package inside react-youtube — so autoplay + mute
- * line up with browser policies (see Google IFrame API docs).
+ * Uses the official `YT.Player` constructor with `events.onAutoplayBlocked`.
+ *
+ * **Important:** Callback props are stored in refs so parent re-renders (e.g. pointermove on
+ * an ancestor) do NOT re-run this effect — otherwise `YT.Player` would be destroyed/rebuilt
+ * and video would freeze or restart.
  */
 export function YoutubeIframeApiPlayer({
   videoId,
@@ -47,6 +49,24 @@ export function YoutubeIframeApiPlayer({
   const playerInstanceRef = useRef<YouTubePlayer | null>(null);
   const destroyedRef = useRef(false);
 
+  const onReadyRef = useRef(onReady);
+  const onStateChangeRef = useRef(onStateChange);
+  const onEndRef = useRef(onEnd);
+  const onAutoplayBlockedRef = useRef(onAutoplayBlocked);
+  const titleRef = useRef(title);
+  const iframeClassNameRef = useRef(iframeClassName);
+  const loadingRef = useRef(loading);
+
+  onReadyRef.current = onReady;
+  onStateChangeRef.current = onStateChange;
+  onEndRef.current = onEnd;
+  onAutoplayBlockedRef.current = onAutoplayBlocked;
+  titleRef.current = title;
+  iframeClassNameRef.current = iframeClassName;
+  loadingRef.current = loading;
+
+  const playerVarsKey = JSON.stringify(playerVars);
+
   useEffect(() => {
     destroyedRef.current = false;
     playerInstanceRef.current = null;
@@ -57,15 +77,21 @@ export function YoutubeIframeApiPlayer({
           player as unknown as { getIframe?: () => HTMLIFrameElement }
         ).getIframe?.();
         if (!iframe) return;
-        if (iframeClassName) iframe.setAttribute("class", iframeClassName);
-        if (loading) iframe.setAttribute("loading", loading);
-        if (title) iframe.setAttribute("title", title);
+        if (iframeClassNameRef.current) {
+          iframe.setAttribute("class", iframeClassNameRef.current);
+        }
+        if (loadingRef.current) iframe.setAttribute("loading", loadingRef.current);
+        if (titleRef.current) iframe.setAttribute("title", titleRef.current);
       } catch {
         /* noop */
       }
     };
 
     let cancelled = false;
+    const parsedPlayerVars = JSON.parse(playerVarsKey) as Record<
+      string,
+      string | number
+    >;
 
     void ensureYoutubeIframeApiLoaded()
       .then(() => {
@@ -85,20 +111,23 @@ export function YoutubeIframeApiPlayer({
             playerInstanceRef.current = ev.target;
             applyIframeDom(ev.target);
             patchYtIframeAllow(ev.target);
-            onReady(ev.target);
+            onReadyRef.current(ev.target);
           },
           onStateChange: (ev: { target: YouTubePlayer; data: number }) => {
-            onStateChange?.({
+            onStateChangeRef.current?.({
               data: ev.data,
               target: ev.target,
             });
-            if (onEnd && ev.data === YouTube.PlayerState.ENDED) {
-              onEnd({ target: ev.target });
+            if (
+              onEndRef.current &&
+              ev.data === YouTube.PlayerState.ENDED
+            ) {
+              onEndRef.current({ target: ev.target });
             }
           },
           onAutoplayBlocked: (ev: { target: YouTubePlayer }) => {
             playerInstanceRef.current = ev.target;
-            onAutoplayBlocked?.({ target: ev.target });
+            onAutoplayBlockedRef.current?.({ target: ev.target });
           },
         };
 
@@ -106,7 +135,7 @@ export function YoutubeIframeApiPlayer({
           videoId,
           width,
           height,
-          playerVars,
+          playerVars: parsedPlayerVars,
           events: events as Record<string, unknown>,
         }) as unknown as YouTubePlayer & { destroy?: () => void };
 
@@ -130,20 +159,7 @@ export function YoutubeIframeApiPlayer({
       }
       playerInstanceRef.current = null;
     };
-  }, [
-    videoId,
-    height,
-    width,
-    hostId,
-    title,
-    iframeClassName,
-    loading,
-    onReady,
-    onStateChange,
-    onEnd,
-    onAutoplayBlocked,
-    playerVars,
-  ]);
+  }, [videoId, height, width, hostId, playerVarsKey]);
 
   return (
     <div className={className}>

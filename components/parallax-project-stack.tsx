@@ -36,38 +36,37 @@ function CaptionBody({ project }: { project: Project }) {
   );
 }
 
+/**
+ * Which strip gets audio: the panel whose box contains a **horizontal scan line** near the
+ * **bottom** of the viewport. That matches “next video takes over as it enters from the bottom”
+ * while scrolling down. If the line falls in a gap between tall panels, pick the **nearest** strip.
+ */
 function pickAudibleParallaxSlug(projects: Project[]): string | null {
   const vh = window.innerHeight;
-  const midY = vh * 0.5;
-  let bestSlug: string | null = null;
-  let bestScore = 0;
-  let bestDist = Infinity;
+  /** ~10% from bottom — incoming reel crosses here first */
+  const scanY = vh - Math.min(96, vh * 0.1);
+
+  let hit: string | null = null;
+  let nearestSlug: string | null = null;
+  let nearestDist = Infinity;
 
   for (const p of projects) {
     const el = document.getElementById(`panel-${p.slug}`);
     if (!el) continue;
     const r = el.getBoundingClientRect();
-    const visTop = Math.max(r.top, 0);
-    const visBottom = Math.min(r.bottom, vh);
-    const vis = Math.max(0, visBottom - visTop);
-    if (vis < 1) continue;
-
-    const overlapRatio = vis / Math.min(r.height, vh);
-    const center = (r.top + r.bottom) / 2;
-    const dist = Math.abs(center - midY);
-
-    if (
-      overlapRatio > bestScore + 0.02 ||
-      (overlapRatio >= bestScore - 0.02 && dist < bestDist)
-    ) {
-      bestScore = overlapRatio;
-      bestDist = dist;
-      bestSlug = p.slug;
+    if (scanY >= r.top && scanY <= r.bottom) {
+      hit = p.slug;
+      break;
+    }
+    const mid = (r.top + r.bottom) / 2;
+    const d = Math.abs(mid - scanY);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearestSlug = p.slug;
     }
   }
 
-  if (!bestSlug || bestScore < 0.1) return null;
-  return bestSlug;
+  return hit ?? nearestSlug;
 }
 
 function pickProjectForTextMidline(projects: Project[], midY: number): Project {
