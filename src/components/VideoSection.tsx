@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSound } from "@/context/SoundContext";
+import { useActiveVideo } from "@/context/ActiveVideoContext";
 
 interface VideoSectionProps {
   youtubeId: string;
@@ -12,14 +13,21 @@ interface VideoSectionProps {
 
 const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: VideoSectionProps) => {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [ready, setReady] = useState(false);
   const [titleVisible, setTitleVisible] = useState(false);
-  const { muted } = useSound();
+  const { muted: globalMuted } = useSound();
+  const { activeId, reportRatio, unregister } = useActiveVideo();
 
+  const id = `video-${youtubeId}`;
+  const isActive = activeId === id;
+
+  // Build thresholds from 0..1 in fine steps for smooth ratio reporting
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+
     const ioLoad = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -34,28 +42,50 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
     );
     ioLoad.observe(el);
 
-    const ioTitle = new IntersectionObserver(
+    const thresholds = Array.from({ length: 21 }, (_, i) => i / 20);
+    const ioRatio = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          // Title visible only when section is mostly in view
+          reportRatio(id, e.intersectionRatio);
           setTitleVisible(e.intersectionRatio > 0.55);
         }
       },
-      { threshold: [0, 0.25, 0.55, 0.75, 1] }
+      { threshold: thresholds }
     );
-    ioTitle.observe(el);
+    ioRatio.observe(el);
 
     return () => {
       ioLoad.disconnect();
-      ioTitle.disconnect();
+      ioRatio.disconnect();
+      unregister(id);
     };
-  }, []);
+  }, [id, reportRatio, unregister]);
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
+  // Always load muted (autoplay policy); we control play/pause + mute via postMessage
   const src = shouldLoad
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
     : undefined;
+
+  const post = (func: string, args: unknown[] = []) => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(JSON.stringify({ event: "command", func, args }), "*");
+  };
+
+  // React to active/mute changes
+  useEffect(() => {
+    if (!shouldLoad) return;
+    if (isActive) {
+      post("playVideo");
+      if (globalMuted) post("mute");
+      else post("unMute");
+    } else {
+      post("pauseVideo");
+      post("mute");
+    }
+  }, [isActive, globalMuted, shouldLoad, ready]);
 
   const Wrapper: any = href ? "a" : "div";
   const wrapperProps = href ? { href } : {};
@@ -85,7 +115,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
             }}
           >
             <iframe
-              key={muted ? "m" : "u"}
+              ref={iframeRef}
               src={src}
               title={title}
               allow="autoplay; encrypted-media; picture-in-picture"
