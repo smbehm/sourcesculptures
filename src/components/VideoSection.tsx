@@ -60,9 +60,11 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
-  // Always autoplay muted with no controls; we control play/pause + mute via postMessage
+  // Always autoplay muted with no controls; we control play/pause + mute via postMessage.
+  // NOTE: We intentionally DO NOT pass loop=1&playlist=ID — that makes YouTube render
+  // the center prev/pause/next overlay buttons on mobile. We loop manually via postMessage.
   const src = shouldLoad
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&cc_load_policy=0&enablejsapi=1`
     : undefined;
 
   const post = (func: string, args: unknown[] = []) => {
@@ -71,7 +73,7 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     win.postMessage(JSON.stringify({ event: "command", func, args }), "*");
   };
 
-  // Listen for YT iframe "onReady" via postMessage
+  // Listen for YT iframe events via postMessage
   useEffect(() => {
     if (!shouldLoad) return;
     const onMessage = (ev: MessageEvent) => {
@@ -80,6 +82,13 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
         const data = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
         if (data?.event === "onReady" || data?.event === "infoDelivery") {
           setReady(true);
+        }
+        // Manual loop: when video ends (state 0), seek to 0 and play again
+        const info = data?.info;
+        const playerState = data?.event === "onStateChange" ? data?.info : info?.playerState;
+        if (playerState === 0) {
+          post("seekTo", [0, true]);
+          post("playVideo");
         }
       } catch {
         /* ignore */
