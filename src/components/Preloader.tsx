@@ -112,26 +112,7 @@ const Preloader = () => {
         />
       </div>
 
-      {/* God rays — emit from the icon position, ramp with progress */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          width: "220vmax",
-          height: "220vmax",
-          opacity: glow * 0.95,
-          transition: "opacity 600ms ease",
-          mixBlendMode: "screen",
-          background:
-            "conic-gradient(from 0deg, rgba(255,200,90,0) 0deg, rgba(255,200,90,0.55) 4deg, rgba(255,200,90,0) 10deg, rgba(255,200,90,0) 28deg, rgba(255,200,90,0.45) 33deg, rgba(255,200,90,0) 40deg, rgba(255,200,90,0) 60deg, rgba(255,200,90,0.5) 66deg, rgba(255,200,90,0) 73deg, rgba(255,200,90,0) 95deg, rgba(255,200,90,0.4) 102deg, rgba(255,200,90,0) 109deg, rgba(255,200,90,0) 135deg, rgba(255,200,90,0.5) 142deg, rgba(255,200,90,0) 150deg, rgba(255,200,90,0) 175deg, rgba(255,200,90,0.45) 182deg, rgba(255,200,90,0) 190deg, rgba(255,200,90,0) 215deg, rgba(255,200,90,0.5) 222deg, rgba(255,200,90,0) 230deg, rgba(255,200,90,0) 255deg, rgba(255,200,90,0.45) 262deg, rgba(255,200,90,0) 270deg, rgba(255,200,90,0) 295deg, rgba(255,200,90,0.5) 302deg, rgba(255,200,90,0) 310deg, rgba(255,200,90,0) 335deg, rgba(255,200,90,0.55) 342deg, rgba(255,200,90,0) 350deg)",
-          // Soften rays toward the source to avoid a hard center
-          WebkitMaskImage:
-            "radial-gradient(closest-side, transparent 6%, black 30%, transparent 80%)",
-          maskImage:
-            "radial-gradient(closest-side, transparent 6%, black 30%, transparent 80%)",
-          animation: "raysSpin 40s linear infinite",
-          filter: "blur(2px)",
-        }}
-      />
+      {/* God rays are rendered inside the icon container below */}
 
       {/* Center stage: zooms into the light when done */}
       <div
