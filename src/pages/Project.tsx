@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import VideoSection from "@/components/VideoSection";
 import { SoundProvider } from "@/context/SoundContext";
+import { ActiveVideoProvider } from "@/context/ActiveVideoContext";
 import { getProject, projects } from "@/data/projects";
 
 const Project = () => {
