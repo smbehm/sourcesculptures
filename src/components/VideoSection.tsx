@@ -10,35 +10,45 @@ interface VideoSectionProps {
   poster?: string;
 }
 
-/**
- * Fullscreen cinematic YouTube section.
- * - Lazy-mounts the iframe only when the section is near the viewport
- * - Uses YouTube's native loop (playlist=ID) + autoplay + mute + playsinline
- * - Uses 100svh + transform/scale wrapper so the video covers without bars on mobile
- */
 const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: VideoSectionProps) => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [ready, setReady] = useState(false);
+  const [titleVisible, setTitleVisible] = useState(false);
   const { muted } = useSound();
 
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
+    const ioLoad = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
             setShouldLoad(true);
-            io.disconnect();
+            ioLoad.disconnect();
             break;
           }
         }
       },
-      { rootMargin: "200% 0px 200% 0px" }
+      { rootMargin: "150% 0px 150% 0px" }
     );
-    io.observe(el);
-    return () => io.disconnect();
+    ioLoad.observe(el);
+
+    const ioTitle = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          // Title visible only when section is mostly in view
+          setTitleVisible(e.intersectionRatio > 0.55);
+        }
+      },
+      { threshold: [0, 0.25, 0.55, 0.75, 1] }
+    );
+    ioTitle.observe(el);
+
+    return () => {
+      ioLoad.disconnect();
+      ioTitle.disconnect();
+    };
   }, []);
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
@@ -47,12 +57,14 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
     ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
     : undefined;
 
+  const Wrapper: any = href ? "a" : "div";
+  const wrapperProps = href ? { href } : {};
+
   return (
     <section
       ref={sectionRef}
       className="relative w-full h-screen-stable overflow-hidden bg-background"
     >
-      {/* Poster (always present, prevents flash/gaps) */}
       <img
         src={posterSrc}
         alt={title}
@@ -62,7 +74,6 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
         style={{ opacity: ready ? 0 : 1, transition: "opacity 700ms ease" }}
       />
 
-      {/* Iframe scaled to cover (YouTube preserves 16:9 letterbox; we scale up) */}
       {src && (
         <div className="absolute inset-0 overflow-hidden">
           <div
@@ -87,11 +98,17 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
         </div>
       )}
 
-      {/* Veil for text legibility */}
       <div className="veil" />
 
-      {/* Centered title overlay */}
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center pointer-events-none">
+      <Wrapper
+        {...wrapperProps}
+        className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center"
+        style={{
+          opacity: titleVisible ? 1 : 0,
+          transform: titleVisible ? "translateY(0)" : "translateY(16px)",
+          transition: "opacity 700ms ease, transform 700ms ease",
+        }}
+      >
         {eyebrow && (
           <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-4">
             {eyebrow}
@@ -105,7 +122,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
             {subtitle}
           </p>
         )}
-      </div>
+      </Wrapper>
     </section>
   );
 };
