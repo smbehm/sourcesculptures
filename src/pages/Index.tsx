@@ -41,22 +41,16 @@ const Index = () => {
                     poster={getMediaPoster(media, p.title)}
                     deferUntilScroll={i === 0}
                   />
-                  <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-end p-6 sm:p-10 md:p-16">
-                    <div className="absolute inset-0 veil" aria-hidden="true" />
+                  <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
                     <div className="relative">
-                      {p.categories?.[0] ? (
-                        <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-3 block">
-                          {p.categories[0]}
-                        </span>
-                      ) : null}
-                      <h2 className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,9vw,7rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
+                      <h2 className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,7vw,5.5rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
                         {p.title}
                       </h2>
-                      {p.brief_description ? (
-                        <p className="mt-4 max-w-xl text-white/80 text-sm sm:text-base leading-relaxed">
-                          {p.brief_description}
-                        </p>
-                      ) : null}
+                      <div className="mt-4 font-display tracking-[0.2em] text-[11px] sm:text-xs uppercase text-white/80 flex items-center justify-center gap-2">
+                        {p.year ? <span>{p.year}</span> : null}
+                        {p.year && p.categories?.[0] ? <span aria-hidden="true">·</span> : null}
+                        {p.categories?.[0] ? <span>{p.categories[0]}</span> : null}
+                      </div>
                     </div>
                   </div>
                 </section>
