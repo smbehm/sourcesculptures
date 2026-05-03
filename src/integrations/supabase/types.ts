@@ -32,14 +32,22 @@ export type Database = {
           credit_title_4: string | null
           credit_title_5: string | null
           credit_title_6: string | null
+          credits: Json
           featured: boolean
           gallery: string[]
+          gallery_items: Json
           id: string
           main_image_url: string | null
+          main_media_type: string
+          main_video_file: string | null
+          main_video_source: string
           main_video_url: string | null
           main_video_youtube_id: string | null
           overview: string | null
           preview_image_url: string | null
+          preview_media_type: string
+          preview_video_file: string | null
+          preview_video_source: string
           preview_video_url: string | null
           preview_video_youtube_id: string | null
           show_main_video_controls: boolean
@@ -52,8 +60,12 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          video_2_file: string | null
+          video_2_source: string
           video_2_url: string | null
           video_2_youtube_id: string | null
+          video_3_file: string | null
+          video_3_source: string
           video_3_url: string | null
           video_3_youtube_id: string | null
           year: number | null
@@ -75,14 +87,22 @@ export type Database = {
           credit_title_4?: string | null
           credit_title_5?: string | null
           credit_title_6?: string | null
+          credits?: Json
           featured?: boolean
           gallery?: string[]
+          gallery_items?: Json
           id?: string
           main_image_url?: string | null
+          main_media_type?: string
+          main_video_file?: string | null
+          main_video_source?: string
           main_video_url?: string | null
           main_video_youtube_id?: string | null
           overview?: string | null
           preview_image_url?: string | null
+          preview_media_type?: string
+          preview_video_file?: string | null
+          preview_video_source?: string
           preview_video_url?: string | null
           preview_video_youtube_id?: string | null
           show_main_video_controls?: boolean
@@ -95,8 +115,12 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          video_2_file?: string | null
+          video_2_source?: string
           video_2_url?: string | null
           video_2_youtube_id?: string | null
+          video_3_file?: string | null
+          video_3_source?: string
           video_3_url?: string | null
           video_3_youtube_id?: string | null
           year?: number | null
@@ -118,14 +142,22 @@ export type Database = {
           credit_title_4?: string | null
           credit_title_5?: string | null
           credit_title_6?: string | null
+          credits?: Json
           featured?: boolean
           gallery?: string[]
+          gallery_items?: Json
           id?: string
           main_image_url?: string | null
+          main_media_type?: string
+          main_video_file?: string | null
+          main_video_source?: string
           main_video_url?: string | null
           main_video_youtube_id?: string | null
           overview?: string | null
           preview_image_url?: string | null
+          preview_media_type?: string
+          preview_video_file?: string | null
+          preview_video_source?: string
           preview_video_url?: string | null
           preview_video_youtube_id?: string | null
           show_main_video_controls?: boolean
@@ -138,8 +170,12 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          video_2_file?: string | null
+          video_2_source?: string
           video_2_url?: string | null
           video_2_youtube_id?: string | null
+          video_3_file?: string | null
+          video_3_source?: string
           video_3_url?: string | null
           video_3_youtube_id?: string | null
           year?: number | null
