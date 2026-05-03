@@ -29,6 +29,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     return () => window.removeEventListener("scroll", onScroll);
   }, [deferUntilScroll, scrolled]);
   const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const { muted: globalMuted } = useSound();
   const { activeId, reportRatio, unregister } = useActiveVideo();
 
@@ -104,6 +105,9 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         // Manual loop: when video ends (state 0), seek to 0 and play again
         const info = data?.info;
         const playerState = data?.event === "onStateChange" ? data?.info : info?.playerState;
+        if (typeof playerState === "number") {
+          setPlaying(playerState === 1);
+        }
         if (playerState === 0) {
           post("seekTo", [0, true]);
           post("playVideo");
@@ -183,13 +187,13 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         loading="lazy"
         decoding="async"
         className="video-cover"
-        style={{ opacity: ready && isActive ? 0 : 1, transition: "opacity 500ms ease" }}
+        style={{ opacity: isActive && playing ? 0 : 1, transition: "opacity 500ms ease" }}
       />
 
       {src && (
         <div
           className="absolute inset-0 overflow-hidden"
-          style={{ opacity: ready && isActive ? 1 : 0, transition: "opacity 500ms ease" }}
+          style={{ opacity: isActive && playing ? 1 : 0, transition: "opacity 500ms ease" }}
           aria-hidden={!isActive}
         >
           <div
