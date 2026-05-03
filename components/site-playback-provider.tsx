@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -21,51 +20,49 @@ import {
 export type { VideoQualityTier };
 
 /**
- * @param unlockAudio - True only inside a real user gesture (mute toggle, or first
- *   pointer/touch after hydration when the site is not muted). Calling unMute outside
- *   that breaks muted autoplay on iOS/Android (playback can stop).
+ * Patch `allow="autoplay"` onto the YouTube iframe element.
+ * Must be called in onReady. Without this, Chrome Android blocks
+ * audio unlock from outside the iframe.
  */
-function setPlayerMuted(
-  player: YouTubePlayer,
-  muted: boolean,
-  unlockAudio = false,
-) {
+export function patchYtIframeAllow(player: YouTubePlayer) {
+  try {
+    const p = player as unknown as { getIframe?: () => HTMLIFrameElement };
+    const iframe = p.getIframe?.();
+    if (!iframe) return;
+    const cur = iframe.getAttribute("allow") ?? "";
+    if (!cur.includes("autoplay")) {
+      iframe.setAttribute(
+        "allow",
+        [cur, "autoplay"].filter(Boolean).join("; ")
+      );
+    }
+  } catch {
+    /* noop */
+  }
+}
+
+/**
+ * Mute or unmute a player.
+ * ALL calls are synchronous — no .then() chains.
+ * Promise-based YT API wrappers break the iOS user-gesture chain.
+ */
+function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
     mute?: () => unknown;
     unMute?: () => unknown;
-    playVideo?: () => unknown;
     setVolume?: (n: number) => unknown;
+    playVideo?: () => unknown;
   };
-  if (muted) {
-    try {
+  try {
+    if (muted) {
       p.mute?.();
-    } catch {
-      /* noop */
-    }
-    return;
-  }
-  if (!unlockAudio) {
-    try {
+    } else {
+      p.unMute?.();
+      p.setVolume?.(100);
       p.playVideo?.();
-    } catch {
-      /* noop */
     }
-    return;
-  }
-  try {
-    p.unMute?.();
   } catch {
-    /* noop */
-  }
-  try {
-    p.setVolume?.(100);
-  } catch {
-    /* noop */
-  }
-  try {
-    p.playVideo?.();
-  } catch {
-    /* noop */
+    /* noop — iframe may be mid-teardown */
   }
 }
 
@@ -87,140 +84,139 @@ type PlaybackContextValue = {
 
 const PlaybackContext = createContext<PlaybackContextValue | null>(null);
 
-export function SitePlaybackProvider({ children }: { children: React.ReactNode }) {
+export function SitePlaybackProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [siteMuted, setSiteMuted] = useState(false);
-  const [videoQuality, setVideoQualityState] = useState<VideoQualityTier>("hd1080");
-  const [prefsHydrated, setPrefsHydrated] = useState(false);
+  const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
 
+  // Refs for synchronous access inside callbacks (no stale closures)
+  const siteMutedRef = useRef(false);
+  const videoQualityRef = useRef<VideoQualityTier>("hd1080");
   const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
-  const videoQualityRef = useRef(videoQuality);
-  const siteMutedRef = useRef(siteMuted);
-  /** After this runs once, passive policy handles mute routing without needing another gesture unlock. */
-  const initialGestureAudioUnlockRef = useRef(false);
 
-  useLayoutEffect(() => {
-    videoQualityRef.current = videoQuality;
+  // Keep refs in sync with state
+  useEffect(() => {
     siteMutedRef.current = siteMuted;
-  }, [videoQuality, siteMuted]);
-
-  const applyPolicySync = useCallback(
-    (muted: boolean, options?: { allowAudioUnlock?: boolean }) => {
-      const q = videoQualityRef.current;
-      const activeSlug = activeParallaxSlugRef.current;
-      const unlock = options?.allowAudioUnlock ?? false;
-
-      parallaxPlayersRef.current.forEach((player, slug) => {
-        applyPreferredQuality(player, q);
-        if (muted) {
-          setPlayerMuted(player, true);
-        } else {
-          const silent = slug !== activeSlug;
-          setPlayerMuted(player, silent, !silent && unlock);
-        }
-      });
-
-      const hero = heroPlayerRef.current;
-      if (hero) {
-        applyPreferredQuality(hero, q);
-        setPlayerMuted(hero, muted, !muted && unlock);
-      }
-    },
-    [],
-  );
-
-  const setActiveParallaxSlug = useCallback((slug: string | null) => {
-    activeParallaxSlugRef.current = slug;
-    applyPolicySync(siteMutedRef.current);
-  }, [applyPolicySync]);
+  }, [siteMuted]);
 
   useEffect(() => {
+    videoQualityRef.current = videoQuality;
+  }, [videoQuality]);
+
+  // Hydrate mute preference from localStorage
+  useEffect(() => {
     try {
-      const m = localStorage.getItem(STORAGE_MUTE);
-      queueMicrotask(() => {
-        if (m === "0") setSiteMuted(false);
-        else if (m === "1") setSiteMuted(true);
-        setPrefsHydrated(true);
-      });
+      const stored = localStorage.getItem(STORAGE_MUTE);
+      if (stored === "1") {
+        siteMutedRef.current = true;
+        setSiteMuted(true);
+      } else if (stored === "0") {
+        siteMutedRef.current = false;
+        setSiteMuted(false);
+      }
     } catch {
-      queueMicrotask(() => setPrefsHydrated(true));
+      /* noop */
     }
   }, []);
 
+  // Persist to localStorage
   useEffect(() => {
-    const sync = () => setVideoQualityState(preferredTierForViewport());
+    try {
+      localStorage.setItem(STORAGE_MUTE, siteMuted ? "1" : "0");
+    } catch {
+      /* noop */
+    }
+  }, [siteMuted]);
+
+  // Sync mute across tabs
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== STORAGE_MUTE) return;
+      if (e.newValue === "1") {
+        siteMutedRef.current = true;
+        setSiteMuted(true);
+      } else if (e.newValue === "0") {
+        siteMutedRef.current = false;
+        setSiteMuted(false);
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  // Track viewport quality tier
+  useEffect(() => {
+    const sync = () => {
+      const tier = preferredTierForViewport();
+      videoQualityRef.current = tier;
+      setVideoQuality(tier);
+    };
     sync();
     const mq = window.matchMedia("(max-width: 1023px)");
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_MUTE && (e.newValue === "0" || e.newValue === "1")) {
-        setSiteMuted(e.newValue === "1");
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+  /**
+   * Apply the mute policy synchronously — reads only refs.
+   * Safe to call from within a user-gesture event handler on mobile.
+   */
+  const applyPolicySync = useCallback((muted: boolean) => {
+    const q = videoQualityRef.current;
+    const hero = heroPlayerRef.current;
+    const audibleSlug = hero ? null : activeParallaxSlugRef.current;
+
+    parallaxPlayersRef.current.forEach((player, slug) => {
+      applyPreferredQuality(player, q);
+      setPlayerMuted(player, muted || slug !== audibleSlug);
+    });
+
+    if (hero) {
+      applyPreferredQuality(hero, q);
+      setPlayerMuted(hero, muted);
+    }
   }, []);
 
-  useEffect(() => {
-    if (!prefsHydrated) return;
-    try {
-      localStorage.setItem(STORAGE_MUTE, siteMuted ? "1" : "0");
-    } catch {
-      /* noop */
-    }
-  }, [siteMuted, prefsHydrated]);
-
   /**
-   * First pointer or touch after prefs load — if the user wants sound (!siteMuted),
-   * unlock iframe audio in the same gesture so mobile users don’t need the mute control only for that.
+   * Toggle mute.
+   * applyPolicySync is called SYNCHRONOUSLY before any async work —
+   * this preserves the iOS/Android user-gesture activation window.
    */
-  useEffect(() => {
-    if (!prefsHydrated) return;
-
-    const unlockFromGesture = () => {
-      if (initialGestureAudioUnlockRef.current) return;
-      initialGestureAudioUnlockRef.current = true;
-      if (siteMutedRef.current) return;
-      applyPolicySync(false, { allowAudioUnlock: true });
-    };
-
-    window.addEventListener("pointerdown", unlockFromGesture, true);
-    window.addEventListener("touchstart", unlockFromGesture, {
-      capture: true,
-      passive: true,
-    });
-    return () => {
-      window.removeEventListener("pointerdown", unlockFromGesture, true);
-      window.removeEventListener("touchstart", unlockFromGesture, {
-        capture: true,
-      });
-    };
-  }, [applyPolicySync, prefsHydrated]);
-
   const toggleMute = useCallback(() => {
-    setSiteMuted((prev) => {
-      const next = !prev;
-      siteMutedRef.current = next;
-      applyPolicySync(next, { allowAudioUnlock: true });
-      return next;
-    });
+    const next = !siteMutedRef.current;
+    siteMutedRef.current = next;
+    // Apply policy synchronously while still in the gesture handler
+    applyPolicySync(next);
+    // Then schedule the React state update (just for re-render)
+    setSiteMuted(next);
   }, [applyPolicySync]);
+
+  const setActiveParallaxSlug = useCallback(
+    (slug: string | null) => {
+      activeParallaxSlugRef.current = slug;
+      // Re-apply policy so audio follows the newly active panel
+      applyPolicySync(siteMutedRef.current);
+    },
+    [applyPolicySync]
+  );
 
   const registerParallaxPlayer = useCallback(
     (slug: string, player: YouTubePlayer | null) => {
       const m = parallaxPlayersRef.current;
-      if (player) m.set(slug, player);
-      else m.delete(slug);
       if (player) {
+        m.set(slug, player);
+        // Apply current policy to newly registered player
         applyPolicySync(siteMutedRef.current);
+      } else {
+        m.delete(slug);
       }
     },
-    [applyPolicySync],
+    [applyPolicySync]
   );
 
   const registerHeroPlayer = useCallback(
@@ -230,17 +226,17 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
         applyPolicySync(siteMutedRef.current);
       }
     },
-    [applyPolicySync],
+    [applyPolicySync]
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
     reinforcePreferredQuality(player, videoQualityRef.current);
   }, []);
 
-  /** Hydration, tab sync, and quality tier changes (outside the mute button gesture chain). */
+  // Re-apply policy whenever quality tier changes
   useEffect(() => {
-    applyPolicySync(siteMuted);
-  }, [siteMuted, videoQuality, applyPolicySync]);
+    applyPolicySync(siteMutedRef.current);
+  }, [videoQuality, applyPolicySync]);
 
   const value = useMemo(
     () => ({
@@ -258,7 +254,7 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       registerHeroPlayer,
       setActiveParallaxSlug,
       reinforcePlaybackQuality,
-    ],
+    ]
   );
 
   return (
@@ -274,7 +270,7 @@ export function useSitePlayback() {
   return ctx;
 }
 
-/** @deprecated Use useSitePlayback — alias for existing imports */
+/** @deprecated Use useSitePlayback */
 export function useSiteAudio() {
   return useSitePlayback();
 }

@@ -1,70 +1,86 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-
-type Phase = "loading" | "fadeOut" | "gone";
+import { useEffect, useState } from "react";
 
 export function SitePreloader() {
-  const [phase, setPhase] = useState<Phase>("loading");
+  const [phase, setPhase] = useState<"visible" | "fading" | "gone">("visible");
 
   useEffect(() => {
-    const loadPromise = new Promise<void>((resolve) => {
-      if (typeof document === "undefined") {
-        resolve();
-        return;
-      }
-      if (document.readyState === "complete") {
-        resolve();
-        return;
-      }
-      window.addEventListener("load", () => resolve(), { once: true });
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    const minDelay = new Promise<void>((res) => setTimeout(res, 1400));
+    const pageLoad = new Promise<void>((res) => {
+      if (document.readyState === "complete") res();
+      else window.addEventListener("load", () => res(), { once: true });
     });
 
-    const minDelay = new Promise<void>((resolve) => setTimeout(resolve, 1200));
-
-    let cancelled = false;
-    Promise.all([loadPromise, minDelay]).then(() => {
-      if (cancelled) return;
-      const reduced =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduced) {
+    Promise.all([minDelay, pageLoad]).then(() => {
+      if (prefersReduced) {
         setPhase("gone");
       } else {
-        setPhase("fadeOut");
+        setPhase("fading");
       }
     });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const onTransitionEnd = useCallback((e: React.TransitionEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget) return;
-    if (e.propertyName !== "opacity") return;
-    setPhase((p) => (p === "fadeOut" ? "gone" : p));
   }, []);
 
   if (phase === "gone") return null;
 
   return (
     <div
-      suppressHydrationWarning
-      className={`fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black transition-opacity duration-[600ms] ease-out ${
-        phase === "fadeOut" ? "pointer-events-none opacity-0" : "opacity-100"
-      }`}
-      onTransitionEnd={onTransitionEnd}
-      aria-hidden
+      onTransitionEnd={() => setPhase("gone")}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: "#000000",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "28px",
+        opacity: phase === "fading" ? 0 : 1,
+        transition: phase === "fading" ? "opacity 700ms ease-out" : "none",
+        pointerEvents: phase === "fading" ? "none" : "auto",
+      }}
     >
-      <p className="font-display text-xs uppercase tracking-widest text-white">
+      {/* Wordmark */}
+      <span
+        style={{
+          fontFamily: "var(--font-antonio), sans-serif",
+          fontSize: "11px",
+          letterSpacing: "0.45em",
+          color: "rgba(255, 255, 255, 0.9)",
+          textTransform: "uppercase",
+        }}
+      >
         SOURCE
-      </p>
-      <div className="mt-6 flex gap-2" aria-hidden>
-        <span className="site-preloader-dot inline-block h-1.5 w-1.5 rounded-full bg-white/75" />
-        <span className="site-preloader-dot inline-block h-1.5 w-1.5 rounded-full bg-white/75" />
-        <span className="site-preloader-dot inline-block h-1.5 w-1.5 rounded-full bg-white/75" />
+      </span>
+
+      {/* Pulsing dots */}
+      <div style={{ display: "flex", gap: "8px" }}>
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            style={{
+              display: "block",
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              backgroundColor: "rgba(255, 255, 255, 0.35)",
+              animation: `__preloader_pulse 1.3s ease-in-out ${i * 0.22}s infinite`,
+            }}
+          />
+        ))}
       </div>
+
+      <style>{`
+        @keyframes __preloader_pulse {
+          0%, 80%, 100% { opacity: 0.2; transform: scale(0.75); }
+          40%            { opacity: 0.9; transform: scale(1);    }
+        }
+      `}</style>
     </div>
   );
 }

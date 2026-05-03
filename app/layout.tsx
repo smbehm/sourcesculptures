@@ -5,10 +5,9 @@ import { LenisProvider } from "@/components/lenis-provider";
 import { AmberHeader } from "@/components/amber-header";
 import { SiteAudioShell } from "@/components/site-audio-shell";
 import { SiteFooter } from "@/components/site-footer";
-import { siteConfig } from "@/lib/site";
-import { DeployVersionBadge } from "@/components/deploy-version-badge";
-import { JsonLd } from "@/components/json-ld";
 import { SitePreloader } from "@/components/site-preloader";
+import { siteConfig } from "@/lib/site";
+import { JsonLd } from "@/components/json-ld";
 
 const antonio = Antonio({
   variable: "--font-antonio",
@@ -72,6 +71,7 @@ export default function RootLayout({
       className={`${antonio.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-black text-zinc-100">
+        {/* Preloader must be first — renders above everything at z-9999 */}
         <SitePreloader />
         <LenisProvider>
           <SiteAudioShell>
@@ -82,7 +82,6 @@ export default function RootLayout({
               <SiteFooter />
             </div>
           </SiteAudioShell>
-          <DeployVersionBadge />
         </LenisProvider>
       </body>
     </html>

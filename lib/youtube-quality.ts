@@ -4,7 +4,6 @@ import type { VideoQualityTier } from "@/lib/playback-types";
 
 type YtQuality = string;
 
-/** Prefer 4K-capable labels first; YouTube omits levels the upload does not offer. */
 const ORDER_4K: readonly YtQuality[] = [
   "hd2160",
   "hd1440",
@@ -33,24 +32,10 @@ function getPlayer(player: YouTubePlayer) {
   };
 }
 
-/**
- * Picks the best available level matching the user’s HD vs 4K preference.
- * Mobile embeds often ignore or restrict this; desktop generally honors it when the video supports it.
- */
 export function applyPreferredQuality(
   player: YouTubePlayer,
-  tier: VideoQualityTier,
-  opts?: { requirePlaying?: boolean },
+  tier: VideoQualityTier
 ): void {
-  if (opts?.requirePlaying) {
-    try {
-      const st = getPlayer(player).getPlayerState?.();
-      if (st !== 1) return;
-    } catch {
-      return;
-    }
-  }
-
   const p = getPlayer(player);
   const order = tier === "hd2160" ? ORDER_4K : ORDER_HD;
   try {
@@ -67,20 +52,27 @@ export function applyPreferredQuality(
     }
     p.setPlaybackQuality?.(available[0]);
   } catch {
-    /* API may throw while the iframe is tearing down */
+    /* noop — iframe may be tearing down */
   }
 }
 
-/** YouTube frequently accepts quality only after playback has started — retry a few times. */
+/**
+ * YouTube often ignores quality requests until a few seconds after playback
+ * starts. Retry at increasing intervals. The 0ms call is speculative (fires
+ * before playback), remaining calls fire after PLAYING state is confirmed.
+ */
 export function reinforcePreferredQuality(
   player: YouTubePlayer,
-  tier: VideoQualityTier,
+  tier: VideoQualityTier
 ): void {
   const delays = [0, 250, 800, 2000, 4000];
   for (const ms of delays) {
-    window.setTimeout(
-      () => applyPreferredQuality(player, tier, { requirePlaying: ms > 0 }),
-      ms,
-    );
+    window.setTimeout(() => {
+      try {
+        applyPreferredQuality(player, tier);
+      } catch {
+        /* noop */
+      }
+    }, ms);
   }
 }

@@ -1,7 +1,5 @@
 "use client";
 
-/** Parallax panels register with `SitePlaybackProvider`; active slug + mute routing are centralized there. */
-
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,7 +11,7 @@ import {
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
-import { patchYtIframeAllow } from "@/lib/patch-yt-iframe-allow";
+import { patchYtIframeAllow } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -35,15 +33,6 @@ function CaptionBody({ project }: { project: Project }) {
   );
 }
 
-/**
- * Picks the parallax panel whose vertical span contains the **midline of the
- * caption text** (halfway through the title block). The label switches
- * instantly when that midline moves from one panel to the next.
- */
-/**
- * Which parallax panel should own audio: strongest overlap with the viewport,
- * tie-broken by closeness to vertical center.
- */
 function pickAudibleParallaxSlug(projects: Project[]): string | null {
   const vh = window.innerHeight;
   const midY = vh * 0.5;
@@ -80,7 +69,7 @@ function pickAudibleParallaxSlug(projects: Project[]): string | null {
 
 function pickProjectForTextMidline(
   projects: Project[],
-  midY: number,
+  midY: number
 ): Project {
   for (const p of projects) {
     const el = document.getElementById(`panel-${p.slug}`);
@@ -116,10 +105,11 @@ export function ParallaxProjectStack({ projects }: Props) {
   const textMeasureRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<Project>(projects[0]);
   const [showCaption, setShowCaption] = useState(false);
-  /** 1 = visible; fades to 0 after idle / initial delay (unless reduced motion). */
   const [titleOpacity, setTitleOpacity] = useState(1);
   const [titleFadeInstant, setTitleFadeInstant] = useState(false);
-  const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const idleHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTitleTimers = useCallback(() => {
@@ -150,9 +140,7 @@ export function ParallaxProjectStack({ projects }: Props) {
   useEffect(() => {
     if (!showCaption || reduceMotion) {
       clearTitleTimers();
-      if (showCaption && reduceMotion) {
-        setTitleOpacity(1);
-      }
+      if (showCaption && reduceMotion) setTitleOpacity(1);
       if (!showCaption) {
         setTitleOpacity(1);
         setTitleFadeInstant(false);
@@ -167,20 +155,15 @@ export function ParallaxProjectStack({ projects }: Props) {
       setTitleOpacity(0);
     }, INITIAL_TITLE_FADE_MS);
 
-    return () => {
-      clearTitleTimers();
-    };
+    return () => clearTitleTimers();
   }, [active.slug, showCaption, reduceMotion, clearTitleTimers]);
 
   useEffect(() => {
     if (!showCaption || reduceMotion) return;
-
     const opts: AddEventListenerOptions = { passive: true, capture: true };
     const onMove = () => onTitlePointerActivity();
     window.addEventListener("pointermove", onMove, opts);
-    return () => {
-      window.removeEventListener("pointermove", onMove, opts);
-    };
+    return () => window.removeEventListener("pointermove", onMove, opts);
   }, [showCaption, reduceMotion, onTitlePointerActivity]);
 
   const updateScrollUi = useCallback(() => {
@@ -192,7 +175,7 @@ export function ParallaxProjectStack({ projects }: Props) {
 
     const first = document.getElementById(`panel-${projects[0].slug}`);
     const last = document.getElementById(
-      `panel-${projects[projects.length - 1].slug}`,
+      `panel-${projects[projects.length - 1].slug}`
     );
     const inStack =
       !!first &&
@@ -209,9 +192,7 @@ export function ParallaxProjectStack({ projects }: Props) {
     }
 
     const tr = textMeasureRef.current?.getBoundingClientRect();
-    if (!tr || !introPast || !inStack) {
-      return;
-    }
+    if (!tr || !introPast || !inStack) return;
 
     const midY = (tr.top + tr.bottom) / 2;
     setActive(pickProjectForTextMidline(projects, midY));
@@ -258,9 +239,7 @@ export function ParallaxProjectStack({ projects }: Props) {
                   ? "transition-none"
                   : "transition-opacity duration-300 ease-out"
               }
-              style={{
-                opacity: reduceMotion ? 1 : titleOpacity,
-              }}
+              style={{ opacity: reduceMotion ? 1 : titleOpacity }}
             >
               <CaptionBody project={active} />
             </div>
@@ -268,33 +247,33 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
+      {/*
+        OUTER WRAPPER
+        - No negative margins — gaps between panels are fixed at the panel level
+        - overflow-hidden prevents the parallax bleed from showing outside the stack
+      */}
       <div className="relative overflow-hidden bg-black">
         {projects.map((p, i) => (
-          <div key={p.slug} className="-mt-px first:mt-0">
-            <ParallaxProjectSection project={p} priority={i === 0} />
-          </div>
+          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
         ))}
       </div>
     </>
   );
 }
 
-function ParallaxProjectSection({ project, priority }: { project: Project; priority: boolean }) {
+function ParallaxProjectSection({
+  project,
+  priority,
+}: {
+  project: Project;
+  priority: boolean;
+}) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
-  const [narrowViewport, setNarrowViewport] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const sync = () => setNarrowViewport(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
@@ -302,13 +281,9 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     () => ({
       width: "100%",
       height: "100%",
-      playerVars: buildYoutubePlayerVars({
-        startMuted: true,
-        origin: embedOrigin,
-        isMobile: narrowViewport,
-      }),
+      playerVars: buildYoutubePlayerVars({ startMuted: true, origin: embedOrigin }),
     }),
-    [embedOrigin, narrowViewport],
+    [embedOrigin]
   );
 
   useEffect(() => {
@@ -323,20 +298,30 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     return () => registerParallaxPlayer(project.slug, null);
   }, [project.slug, registerParallaxPlayer]);
 
+  const [narrowViewport, setNarrowViewport] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setNarrowViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
 
-  /** Parallax Y exposes seams with touch scroll; desktop keeps drift. */
   const y = useTransform(
     scrollYProgress,
     [0, 1],
-    reduce || narrowViewport ? [0, 0] : [-90, 90],
+    reduce || narrowViewport ? [0, 0] : [-90, 90]
   );
 
+  // Desktop: over-tall layer for parallax bleed. Mobile: match panel exactly.
   const motionLayerClass = narrowViewport
-    ? "absolute inset-0 h-full w-full bg-black will-change-transform"
+    ? "absolute inset-0 h-full w-full will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
   useEffect(() => {
@@ -348,7 +333,6 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     const attach = () => {
       io?.disconnect();
       const mobile = window.matchMedia("(max-width: 767px)").matches;
-      /** Mobile: start embed earlier while scrolling; desktop: previous tighter gate. */
       const minRatio = mobile ? 0.03 : 0.12;
       const thresholds = mobile
         ? [0, 0.02, 0.04, 0.06, 0.1, 0.14, 0.2, 0.3]
@@ -358,7 +342,6 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
           const ratio = e.intersectionRatio;
           const ins = e.isIntersecting;
           if (mobile) {
-            /** Avoid stop/start flicker when URL bar / caption causes tiny ratio swings. */
             setPlay((prev) => {
               if (!ins || ratio < 0.008) return false;
               if (ratio > minRatio) return true;
@@ -371,7 +354,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
         {
           threshold: thresholds,
           rootMargin: mobile ? "15% 0px 15% 0px" : "0px",
-        },
+        }
       );
       io.observe(root);
     };
@@ -385,26 +368,63 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
     };
   }, []);
 
-  const layerChildren = (
-    <>
-      <Image
-        src={project.coverImageUrl}
-        alt=""
-        fill
-        priority={priority}
-        className="object-cover opacity-50"
-        sizes="100vw"
-      />
+  return (
+    /*
+      BLACK-LINE FIX
+      ─────────────
+      1. `h-[135svh]` — use small viewport height (svh) so height is stable when
+         mobile browser chrome shows/hides (vh changes; svh does not).
+      2. `translate-z-0` / `backface-visibility-hidden` — forces each panel onto
+         its own GPU compositing layer, eliminating subpixel rounding gaps.
+      3. `mb-[-1px]` — each panel overlaps the next by 1px so no gap can appear
+         regardless of fractional pixel heights.
+      4. No negative margins on the outer wrapper — this approach is simpler and
+         more reliable across browsers.
+    */
+    <div
+      id={`panel-${project.slug}`}
+      ref={ref}
+      className="relative isolate w-full overflow-hidden bg-black"
+      style={{
+        height: "135svh",
+        minHeight: "100svh",
+        marginBottom: "-1px",
+        // Force GPU compositing layer — eliminates subpixel seams
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+      }}
+    >
+      <motion.div className={motionLayerClass} style={{ y }}>
+        <Image
+          src={project.coverImageUrl}
+          alt=""
+          fill
+          priority={priority}
+          className="object-cover opacity-50"
+          sizes="100vw"
+        />
 
-      {play && (
+        {play && (
+          /*
+            VIDEO FILL FIX
+            ──────────────
+            The iframe wrapper uses the standard 16:9 aspect-ratio centering trick
+            but must cover the full panel in both axes on mobile.
+            - min-h uses svh so the 120% covers the stable viewport, not the
+              shifting browser-chrome viewport.
+            - scale is slightly larger on mobile to cover edge cases.
+          */
           <div
-            className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[120svh] min-w-[177.78vh] w-[100vw]"
+            className="absolute left-1/2 top-1/2 z-0 w-[100vw] -translate-x-1/2 -translate-y-1/2"
             style={{
-              minHeight: "max(120svh, 120%)",
+              aspectRatio: "16/9",
+              minHeight: narrowViewport ? "120svh" : "115svh",
+              minWidth: "177.78vh",
               transform: `translate(-50%, -50%) scale(${narrowViewport ? 1.22 : 1.16})`,
             }}
           >
-            <div className="absolute inset-0 isolate z-0 overflow-hidden bg-black">
+            <div className="absolute inset-0 isolate overflow-hidden bg-black">
               {!embedReady ? (
                 <Image
                   src={ytPoster}
@@ -424,6 +444,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading={priority ? "eager" : "lazy"}
                     onReady={(e) => {
+                      // Patch allow="autoplay" BEFORE registering — critical for Chrome Android
                       patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
@@ -443,7 +464,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
                       }
                     }}
                   />
-                  {showYtPoster ? (
+                  {showYtPoster && (
                     <Image
                       src={ytPoster}
                       alt=""
@@ -452,7 +473,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
                       sizes="100vw"
                       priority={priority}
                     />
-                  ) : null}
+                  )}
                   <div
                     className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
                     aria-hidden
@@ -463,25 +484,8 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
           </div>
         )}
 
-      <div className="pointer-events-none absolute inset-0 z-[3] bg-transparent md:bg-black/28" />
-    </>
-  );
-
-  return (
-    <div
-      id={`panel-${project.slug}`}
-      ref={ref}
-      className="relative isolate h-[135vh] min-h-[100svh] w-full overflow-hidden bg-black [transform:translateZ(0)] md:min-h-[100dvh]"
-    >
-      {narrowViewport ? (
-        <div className={`${motionLayerClass} [transform:translate3d(0,0,0)] [backface-visibility:hidden]`}>
-          {layerChildren}
-        </div>
-      ) : (
-        <motion.div className={motionLayerClass} style={{ y }}>
-          {layerChildren}
-        </motion.div>
-      )}
+        <div className="pointer-events-none absolute inset-0 z-[3] bg-transparent md:bg-black/28" />
+      </motion.div>
 
       <PanelProjectLink slug={project.slug} title={project.title} />
     </div>
@@ -498,11 +502,7 @@ function PanelProjectLink({ slug, title }: { slug: string; title: string }) {
       aria-label={`View project: ${title}`}
       onMouseMove={(e) => {
         const b = e.currentTarget.getBoundingClientRect();
-        setHint({
-          x: e.clientX - b.left,
-          y: e.clientY - b.top,
-          on: true,
-        });
+        setHint({ x: e.clientX - b.left, y: e.clientY - b.top, on: true });
       }}
       onMouseLeave={() => setHint((s) => ({ ...s, on: false }))}
     >

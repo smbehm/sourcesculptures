@@ -1,12 +1,10 @@
 "use client";
 
-/** Site-wide mute and “who gets audio” rules live in `components/site-playback-provider.tsx`. */
-
 import Image from "next/image";
 import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
-import { patchYtIframeAllow } from "@/lib/patch-yt-iframe-allow";
+import { patchYtIframeAllow } from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -32,17 +30,7 @@ export function YouTubeAutoplay({
   const rootRef = useRef<HTMLDivElement>(null);
   const isHero = variant === "hero";
   const [active, setActive] = useState(isHero);
-  /** Hide YouTube thumbnail layer once the iframe is actually playing (avoids black flash). */
   const [showYtPoster, setShowYtPoster] = useState(true);
-  const [narrowViewport, setNarrowViewport] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const sync = () => setNarrowViewport(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   const ytOpts = useMemo(
     () => ({
@@ -51,10 +39,9 @@ export function YouTubeAutoplay({
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
-        isMobile: narrowViewport,
       }),
     }),
-    [embedOrigin, narrowViewport],
+    [embedOrigin]
   );
 
   useEffect(() => {
@@ -89,7 +76,7 @@ export function YouTubeAutoplay({
         {
           threshold: thresholds,
           rootMargin: mobile ? "12% 0px 12% 0px" : "0px",
-        },
+        }
       );
       io.observe(el);
     };
@@ -105,18 +92,24 @@ export function YouTubeAutoplay({
 
   const poster = youtubePosterSrc(videoId);
 
-  const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+  const handleHeroReady = (e: {
+    target: import("react-youtube").YouTubePlayer;
+  }) => {
     patchYtIframeAllow(e.target);
     registerHeroPlayer(e.target);
     reinforcePlaybackQuality(e.target);
   };
 
-  const handleInlineReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+  const handleInlineReady = (e: {
+    target: import("react-youtube").YouTubePlayer;
+  }) => {
     patchYtIframeAllow(e.target);
     reinforcePlaybackQuality(e.target);
   };
 
-  const handleEnd = (e: { target: import("react-youtube").YouTubePlayer }) => {
+  const handleEnd = (e: {
+    target: import("react-youtube").YouTubePlayer;
+  }) => {
     try {
       e.target.seekTo(0, true);
       e.target.playVideo();
