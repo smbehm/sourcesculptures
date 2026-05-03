@@ -116,7 +116,7 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     post("playVideo");
     // Request 4K on desktop, 720p HD on mobile/tablet.
     const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches;
-    post("setPlaybackQuality", [isMobile ? "hd720" : "hd2160"]);
+    post("setPlaybackQuality", [isMobile ? "hd1080" : "hd2160"]);
     if (isActive && !globalMuted) post("unMute");
     else post("mute");
   }, [isActive, globalMuted, shouldLoad, ready]);
