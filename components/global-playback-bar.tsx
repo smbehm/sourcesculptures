@@ -12,46 +12,48 @@ export function GlobalPlaybackBar() {
     toggleMute();
   }, [toggleMute]);
 
+  const audioLabel = siteMuted ? "Unmute audio" : "Mute audio";
+
   return (
     <div
-      className="fixed bottom-6 right-6 z-[100] md:bottom-8 md:right-8"
+      className="pointer-events-none fixed bottom-[max(1.5rem,env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-[100] md:bottom-[max(2rem,env(safe-area-inset-bottom,0px))] md:right-[max(1.75rem,env(safe-area-inset-right,0px))]"
       role="region"
-      aria-label="Site video playback"
+      aria-label="Site audio"
     >
-      <div className="flex flex-row items-stretch rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md">
-        <button
-          type="button"
-          data-site-mute-control
-          onTouchStart={() => {
-            touchHandledRef.current = true;
-          }}
-          onTouchCancel={() => {
-            touchHandledRef.current = false;
-          }}
-          onTouchEnd={() => {
-            runToggle();
-          }}
-          onClick={() => {
-            if (touchHandledRef.current) {
+      <div className="pointer-events-auto rounded-full bg-black/55 p-2.5 shadow-[0_16px_48px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.12)] ring-1 ring-white/10 backdrop-blur-md md:p-3">
+        <div className="flex flex-row items-stretch rounded-full border border-white/20 bg-black/40 p-0.5 shadow-inner">
+          <button
+            type="button"
+            data-site-mute-control
+            onTouchStart={() => {
+              touchHandledRef.current = true;
+            }}
+            onTouchCancel={() => {
               touchHandledRef.current = false;
-              return;
-            }
-            runToggle();
-          }}
-          aria-pressed={!siteMuted}
-          title={siteMuted ? "Unmute video audio" : "Mute video audio"}
-          style={{
-            touchAction: "manipulation",
-            WebkitTapHighlightColor: "transparent",
-            cursor: "pointer",
-          }}
-          className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10"
-        >
-          <span className="sr-only">
-            {siteMuted ? "Unmute video audio" : "Mute video audio"}
-          </span>
-          {siteMuted ? <SpeakerMutedIcon /> : <SpeakerIcon />}
-        </button>
+            }}
+            onTouchEnd={() => {
+              runToggle();
+            }}
+            onClick={() => {
+              if (touchHandledRef.current) {
+                touchHandledRef.current = false;
+                return;
+              }
+              runToggle();
+            }}
+            aria-label={audioLabel}
+            aria-pressed={!siteMuted}
+            title={audioLabel}
+            style={{
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              cursor: "pointer",
+            }}
+            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-white transition hover:bg-white/10"
+          >
+            {siteMuted ? <SpeakerMutedIcon /> : <SpeakerIcon />}
+          </button>
+        </div>
       </div>
     </div>
   );

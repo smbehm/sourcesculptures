@@ -236,7 +236,7 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      <div className="relative bg-black">
+      <div className="relative overflow-x-hidden bg-black">
         {projects.map((p, i) => (
           <ParallaxProjectSection
             key={p.slug}
@@ -401,7 +401,7 @@ function ParallaxProjectSection({
         />
 
         {play && (
-          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
+          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] min-h-[115vh] w-[min(100vw,177.78vh)] max-w-[100vw] min-w-0 -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
             <div className="absolute inset-0 z-0 overflow-hidden bg-black">
               {!embedReady ? (
                 <Image

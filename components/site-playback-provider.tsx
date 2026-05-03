@@ -266,23 +266,33 @@ export function SitePlaybackProvider({
     };
     const optsTouch = { capture: true, passive: true } as const;
     const optsScroll = { capture: true, passive: true } as const;
+    const optsWheel = { capture: true, passive: true } as const;
     window.addEventListener("touchstart", onFirstGesture, optsTouch);
     window.addEventListener("click", onFirstGesture, true);
     window.addEventListener("scroll", onFirstGesture, optsScroll);
+    window.addEventListener("wheel", onFirstGesture, optsWheel);
     return () => {
       window.removeEventListener("touchstart", onFirstGesture, optsTouch);
       window.removeEventListener("click", onFirstGesture, true);
       window.removeEventListener("scroll", onFirstGesture, optsScroll);
+      window.removeEventListener("wheel", onFirstGesture, optsWheel);
     };
   }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(
     (slug: string | null) => {
+      const prev = activeParallaxSlugRef.current;
       activeParallaxSlugRef.current = slug;
-      // Re-apply policy so audio follows the newly active panel
-      applyPolicySync(siteMutedRef.current);
+      const slugChanged = prev !== slug;
+      /** Scroll-driven panel changes count as user interaction for iframe audio handoff (desktop wheel + mobile scroll). */
+      const unlockFromParallax =
+        slugChanged && slug !== null && !siteMutedRef.current;
+      applyPolicySync(
+        siteMutedRef.current,
+        unlockFromParallax ? { unlockAudio: true } : undefined,
+      );
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const registerParallaxPlayer = useCallback(

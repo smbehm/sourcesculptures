@@ -16,7 +16,7 @@ test.describe("Home (mobile viewport)", () => {
     await expect(page.locator('[id^="panel-"]').first()).toBeVisible();
 
     await expect(
-      page.getByRole("region", { name: /site video playback/i }),
+      page.getByRole("region", { name: /site audio/i }),
     ).toBeVisible();
   });
 });
