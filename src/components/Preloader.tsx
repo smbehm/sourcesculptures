@@ -388,27 +388,6 @@ const Preloader = () => {
             )}
           </svg>
 
-          {/* Bright top edge "wave" of the fill */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              WebkitMaskImage: `url(${iconUrl})`,
-              maskImage: `url(${iconUrl})`,
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              background:
-                "linear-gradient(to top, transparent 0%, transparent 60%, rgba(255,255,210,0.95) 78%, transparent 82%)",
-              clipPath: `inset(${Math.max(0, 100 - fillPct - 4)}% 0 ${Math.max(0, fillPct - 2)}% 0)`,
-              mixBlendMode: "screen",
-              opacity: fillPct > 2 ? 1 : 0,
-            }}
-          />
-        </div>
-      </div>
 
       {/* Mouse-reactive ember/spark canvas */}
       <canvas
