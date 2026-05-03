@@ -338,41 +338,55 @@ const Preloader = () => {
             }}
           />
 
-          {/* Dark silhouette of the icon */}
-          <div
-            className="absolute inset-0"
+          {/* Inline SVG icon with rising golden fill (mobile-safe) */}
+          <svg
+            viewBox="0 0 565.25 931.8"
+            preserveAspectRatio="xMidYMid meet"
+            className="absolute inset-0 h-full w-full"
             style={{
-              WebkitMaskImage: `url(${iconUrl})`,
-              maskImage: `url(${iconUrl})`,
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              background: "#0b0b0b",
-            }}
-          />
-
-          {/* Golden fill that rises from the bottom */}
-          <div
-            className="absolute inset-0"
-            style={{
-              WebkitMaskImage: `url(${iconUrl})`,
-              maskImage: `url(${iconUrl})`,
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              background:
-                "linear-gradient(to top, #fff2c2 0%, #ffd06a 30%, #ff9a2a 70%, #ff6a00 100%)",
-              clipPath: `inset(${100 - fillPct}% 0 0 0)`,
-              transition: "clip-path 350ms ease-out",
               filter: `drop-shadow(0 0 ${8 + glow * 32}px rgba(255,180,80,${0.4 + glow * 0.5}))`,
             }}
-          />
+          >
+            <defs>
+              <linearGradient id="goldFill" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#fff2c2" />
+                <stop offset="30%" stopColor="#ffd06a" />
+                <stop offset="70%" stopColor="#ff9a2a" />
+                <stop offset="100%" stopColor="#ff6a00" />
+              </linearGradient>
+              <clipPath id="riseClip">
+                <rect
+                  x="0"
+                  y={931.8 * (1 - fillPct / 100)}
+                  width="565.25"
+                  height={931.8 * (fillPct / 100)}
+                  style={{ transition: "y 350ms ease-out, height 350ms ease-out" } as React.CSSProperties}
+                />
+              </clipPath>
+            </defs>
+            {/* Dark silhouette */}
+            <path d={ICON_PATH} fill="#0b0b0b" fillRule="evenodd" />
+            {/* Rising golden fill */}
+            <g clipPath="url(#riseClip)">
+              <path d={ICON_PATH} fill="url(#goldFill)" fillRule="evenodd" />
+            </g>
+            {/* Bright top edge wave */}
+            {fillPct > 2 && fillPct < 100 && (
+              <g
+                clipPath="url(#riseClip)"
+                style={{ mixBlendMode: "screen" } as React.CSSProperties}
+              >
+                <rect
+                  x="0"
+                  y={931.8 * (1 - fillPct / 100)}
+                  width="565.25"
+                  height="14"
+                  fill="rgba(255,255,210,0.95)"
+                  style={{ transition: "y 350ms ease-out" } as React.CSSProperties}
+                />
+              </g>
+            )}
+          </svg>
 
           {/* Bright top edge "wave" of the fill */}
           <div
