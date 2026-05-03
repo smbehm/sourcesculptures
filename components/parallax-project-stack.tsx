@@ -66,10 +66,7 @@ function pickAudibleParallaxSlug(projects: Project[]): string | null {
   return bestSlug;
 }
 
-function pickProjectForTextMidline(
-  projects: Project[],
-  midY: number
-): Project {
+function pickProjectForTextMidline(projects: Project[], midY: number): Project {
   for (const p of projects) {
     const el = document.getElementById(`panel-${p.slug}`);
     if (!el) continue;
@@ -167,9 +164,7 @@ export function ParallaxProjectStack({ projects }: Props) {
     const introPast = ir.bottom < window.innerHeight * 0.42;
 
     const first = document.getElementById(`panel-${projects[0].slug}`);
-    const last = document.getElementById(
-      `panel-${projects[projects.length - 1].slug}`
-    );
+    const last = document.getElementById(`panel-${projects[projects.length - 1].slug}`);
     const inStack =
       !!first &&
       !!last &&
@@ -240,10 +235,13 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      {/* Outer wrapper — no overflow-hidden here so desktop parallax bleed isn't clipped */}
+      {/*
+        Outer wrapper: no overflow-hidden — desktop parallax motion layer bleeds
+        outside each panel intentionally; each panel's own overflow-hidden clips it.
+      */}
       <div className="relative bg-black">
         {projects.map((p, i) => (
-          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} isFirst={i === 0} />
+          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
         ))}
       </div>
     </>
@@ -253,11 +251,9 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({
   project,
   priority,
-  isFirst,
 }: {
   project: Project;
   priority: boolean;
-  isFirst: boolean;
 }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
@@ -265,23 +261,6 @@ function ParallaxProjectSection({
   const reduce = useReducedMotion();
   const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
-
-  const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
-
-  const ytOpts = useMemo(
-    () => ({
-      width: "100%",
-      height: "100%",
-      playerVars: buildYoutubePlayerVars({ startMuted: true, origin: embedOrigin }),
-    }),
-    [embedOrigin]
-  );
-
-  useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
-  useEffect(() => { if (!play) setShowYtPoster(true); }, [play]);
-  useEffect(() => {
-    return () => registerParallaxPlayer(project.slug, null);
-  }, [project.slug, registerParallaxPlayer]);
 
   const [narrowViewport, setNarrowViewport] = useState(false);
 
@@ -292,6 +271,28 @@ function ParallaxProjectSection({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
+
+  const ytOpts = useMemo(
+    () => ({
+      width: "100%",
+      height: "100%",
+      playerVars: buildYoutubePlayerVars({
+        startMuted: true,
+        origin: embedOrigin,
+        isMobile: narrowViewport,
+      }),
+    }),
+    [embedOrigin, narrowViewport]
+  );
+
+  useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
+  useEffect(() => { if (!play) setShowYtPoster(true); }, [play]);
+
+  useEffect(() => {
+    return () => registerParallaxPlayer(project.slug, null);
+  }, [project.slug, registerParallaxPlayer]);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -304,8 +305,13 @@ function ParallaxProjectSection({
     reduce || narrowViewport ? [0, 0] : [-90, 90]
   );
 
+  /*
+    Mobile motion layer gets bg-black so the panel background colour never
+    shows through at seams between panels. Desktop keeps it transparent so
+    the parallax bleed area (–11% / +11%) is visible at panel edges.
+  */
   const motionLayerClass = narrowViewport
-    ? "absolute inset-0 h-full w-full will-change-transform"
+    ? "absolute inset-0 h-full w-full bg-black will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
   useEffect(() => {
@@ -354,30 +360,27 @@ function ParallaxProjectSection({
 
   return (
     /*
-      BLACK LINE FIX — three changes only, everything else is original:
-      1. `marginBottom: "-1px"` — panels overlap 1px so no gap can appear
-         between adjacent GPU compositing layers.
-      2. `transform: "translateZ(0)"` — forces each panel onto its own GPU
-         layer, eliminating subpixel rounding gaps at boundaries.
-      3. Height uses CSS svh unit (stable on mobile — doesn't change when
-         browser chrome appears/disappears, unlike vh). Desktop: svh = vh.
+      BLACK-LINE FIX (mobile):
+      ─────────────────────────
+      • height: 135svh — "small viewport height" is stable on mobile; vh changes
+        when the browser address bar hides/shows, creating fractional-px gaps.
+        On desktop svh = vh so behaviour is identical.
+      • marginBottom: -1px — each panel overlaps the next by 1px so no gap
+        can appear between panels regardless of sub-pixel rounding.
 
-      NOT changed: overflow-hidden (kept), video wrapper (kept exactly as
-      original), parallax motion layer classes (kept), intersection observer.
+      NOT added: transform / translateZ(0) — that would break Framer Motion's
+      useScroll on desktop by interfering with Lenis's scroll transform stack.
+      The isolate class (already present) creates the stacking context we need
+      without the side effects of a 3D transform.
     */
     <div
       id={`panel-${project.slug}`}
       ref={ref}
       className="relative isolate w-full overflow-hidden bg-black"
       style={{
-        // svh = small viewport height — stable on mobile, equal to vh on desktop
         height: "135svh",
         minHeight: "100svh",
-        // 1px overlap between panels eliminates any rendering gap
         marginBottom: "-1px",
-        // Own GPU compositing layer — no subpixel seams between panels
-        transform: "translateZ(0)",
-        WebkitTransform: "translateZ(0)",
       }}
     >
       <motion.div className={motionLayerClass} style={{ y }}>
@@ -391,7 +394,6 @@ function ParallaxProjectSection({
         />
 
         {play && (
-          // ORIGINAL video wrapper — untouched
           <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
             <div className="absolute inset-0 z-0 overflow-hidden bg-black">
               {!embedReady ? (
