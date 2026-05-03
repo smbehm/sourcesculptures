@@ -60,11 +60,10 @@ export default function HomePage() {
             </h1>
           </div>
 
-          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-1.5 px-6 text-center text-[10px] leading-relaxed tracking-[0.2em] text-white/90 uppercase sm:bottom-10 sm:text-[11px] sm:tracking-[0.24em]">
-            <span className="text-white/90">{siteConfig.tagline}</span>
-            <span className="text-white/60">{siteConfig.location}</span>
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-1.5 px-6 text-center text-[10px] leading-relaxed tracking-wide text-white/90 sm:bottom-10 sm:text-[11px]">
+            <span className="text-white/90">By: Rey Jaffet & Sean Behm</span>
             <span className="text-white/45">
-              © {year} {siteConfig.legalName}
+              © {year} {siteConfig.name}
             </span>
           </div>
         </section>
