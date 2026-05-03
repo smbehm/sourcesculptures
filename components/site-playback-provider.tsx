@@ -33,7 +33,6 @@ const IFRAME_ALLOW_FEATURES = [
 
 /**
  * Patch iframe `allow` so autoplay / encrypted-media work across mobile browsers.
- * Chrome Android historically needed `autoplay`; iOS WebKit benefits from the full set.
  */
 export function patchYtIframeAllow(player: YouTubePlayer) {
   try {
@@ -62,9 +61,7 @@ export function patchYtIframeAllow(player: YouTubePlayer) {
 }
 
 /**
- * Mute or unmute a player.
- * ALL calls are synchronous — no .then() chains.
- * Promise-based YT API wrappers break the iOS user-gesture chain.
+ * Mute or unmute a player (synchronous — preserves mobile gesture chains).
  */
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
@@ -86,16 +83,12 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   }
 }
 
-const STORAGE_MUTE = "sourcesculptures:playback:mute";
-
 function preferredTierForViewport(): VideoQualityTier {
   if (typeof window === "undefined") return "hd1080";
   return window.matchMedia("(max-width: 1023px)").matches ? "hd1080" : "hd2160";
 }
 
 type PlaybackContextValue = {
-  siteMuted: boolean;
-  toggleMute: () => void;
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
   setActiveParallaxSlug: (slug: string | null) => void;
@@ -109,67 +102,17 @@ export function SitePlaybackProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [siteMuted, setSiteMuted] = useState(false);
   const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
 
-  // Refs for synchronous access inside callbacks (no stale closures)
-  const siteMutedRef = useRef(false);
   const videoQualityRef = useRef<VideoQualityTier>("hd1080");
   const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
 
-  // Keep refs in sync with state
-  useEffect(() => {
-    siteMutedRef.current = siteMuted;
-  }, [siteMuted]);
-
   useEffect(() => {
     videoQualityRef.current = videoQuality;
   }, [videoQuality]);
 
-  // Hydrate mute preference from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_MUTE);
-      if (stored === "1") {
-        siteMutedRef.current = true;
-        setSiteMuted(true);
-      } else if (stored === "0") {
-        siteMutedRef.current = false;
-        setSiteMuted(false);
-      }
-    } catch {
-      /* noop */
-    }
-  }, []);
-
-  // Persist to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_MUTE, siteMuted ? "1" : "0");
-    } catch {
-      /* noop */
-    }
-  }, [siteMuted]);
-
-  // Sync mute across tabs
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key !== STORAGE_MUTE) return;
-      if (e.newValue === "1") {
-        siteMutedRef.current = true;
-        setSiteMuted(true);
-      } else if (e.newValue === "0") {
-        siteMutedRef.current = false;
-        setSiteMuted(false);
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
-
-  // Track viewport quality tier
   useEffect(() => {
     const sync = () => {
       const tier = preferredTierForViewport();
@@ -183,46 +126,34 @@ export function SitePlaybackProvider({
   }, []);
 
   /**
-   * Apply the mute policy synchronously — reads only refs.
-   * Safe to call from within a user-gesture event handler on mobile.
+   * Route audio to the active parallax strip only, or unmuted hero on project pages.
+   * No site-wide mute control — only spatial routing.
    */
-  const applyPolicySync = useCallback((muted: boolean) => {
+  const applyPolicySync = useCallback(() => {
     const q = videoQualityRef.current;
     const hero = heroPlayerRef.current;
     const audibleSlug = hero ? null : activeParallaxSlugRef.current;
 
     parallaxPlayersRef.current.forEach((player, slug) => {
       applyPreferredQuality(player, q);
-      setPlayerMuted(player, muted || slug !== audibleSlug);
+      if (audibleSlug === null) {
+        return;
+      }
+      setPlayerMuted(player, slug !== audibleSlug);
     });
 
     if (hero) {
       applyPreferredQuality(hero, q);
-      setPlayerMuted(hero, muted);
+      setPlayerMuted(hero, false);
     }
   }, []);
-
-  /**
-   * Toggle mute.
-   * applyPolicySync is called SYNCHRONOUSLY before any async work —
-   * this preserves the iOS/Android user-gesture activation window.
-   */
-  const toggleMute = useCallback(() => {
-    const next = !siteMutedRef.current;
-    siteMutedRef.current = next;
-    // Apply policy synchronously while still in the gesture handler
-    applyPolicySync(next);
-    // Then schedule the React state update (just for re-render)
-    setSiteMuted(next);
-  }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(
     (slug: string | null) => {
       activeParallaxSlugRef.current = slug;
-      // Re-apply policy so audio follows the newly active panel
-      applyPolicySync(siteMutedRef.current);
+      applyPolicySync();
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const registerParallaxPlayer = useCallback(
@@ -230,51 +161,45 @@ export function SitePlaybackProvider({
       const m = parallaxPlayersRef.current;
       if (player) {
         m.set(slug, player);
-        // Apply current policy to newly registered player
-        applyPolicySync(siteMutedRef.current);
+        applyPolicySync();
       } else {
         m.delete(slug);
       }
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const registerHeroPlayer = useCallback(
     (player: YouTubePlayer | null) => {
       heroPlayerRef.current = player;
       if (player) {
-        applyPolicySync(siteMutedRef.current);
+        applyPolicySync();
       }
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
     reinforcePreferredQuality(player, videoQualityRef.current);
   }, []);
 
-  // Re-apply policy whenever quality tier changes
   useEffect(() => {
-    applyPolicySync(siteMutedRef.current);
+    applyPolicySync();
   }, [videoQuality, applyPolicySync]);
 
   const value = useMemo(
     () => ({
-      siteMuted,
-      toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
       reinforcePlaybackQuality,
     }),
     [
-      siteMuted,
-      toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
       reinforcePlaybackQuality,
-    ]
+    ],
   );
 
   return (
