@@ -156,12 +156,11 @@ const Preloader = () => {
     const MAX_PARTICLES = isSmall ? 700 : 1600;
 
     let raf = 0;
-    let stopped = false;
     const loop = () => {
-      if (stopped) return;
       const intensity = 0.4 + progressRef.current / 100;
       const room = MAX_PARTICLES - particles.length;
-      if (room > 0) {
+      // Stop spawning once we're effectively done — let field drain naturally
+      if (room > 0 && progressRef.current < 99.5) {
         const emberCount = Math.min(room, Math.round((isSmall ? 4 : 8) * intensity));
         const sparkCount = Math.min(room - emberCount, Math.round((isSmall ? 8 : 16) * intensity));
         for (let i = 0; i < emberCount; i++) spawnEmber();
