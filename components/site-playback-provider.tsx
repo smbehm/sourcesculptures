@@ -62,11 +62,15 @@ export function patchYtIframeAllow(player: YouTubePlayer) {
 }
 
 /**
- * Mute or unmute a player.
- * ALL calls are synchronous — no .then() chains.
- * Promise-based YT API wrappers break the iOS user-gesture chain.
+ * Mute or request audible playback.
+ * When `unlockAudio` is false and `muted` is false, only `playVideo()` runs so embeds
+ * stay muted (browser autoplay policy). Never call `unMute` outside a gesture.
  */
-function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
+function setPlayerMuted(
+  player: YouTubePlayer,
+  muted: boolean,
+  unlockAudio = false,
+) {
   const p = player as unknown as {
     mute?: () => unknown;
     unMute?: () => unknown;
@@ -76,11 +80,15 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   try {
     if (muted) {
       p.mute?.();
-    } else {
-      p.unMute?.();
-      p.setVolume?.(100);
-      p.playVideo?.();
+      return;
     }
+    if (!unlockAudio) {
+      p.playVideo?.();
+      return;
+    }
+    p.unMute?.();
+    p.setVolume?.(100);
+    p.playVideo?.();
   } catch {
     /* noop — iframe may be mid-teardown */
   }
@@ -118,6 +126,9 @@ export function SitePlaybackProvider({
   const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
+  const initialGestureUnlockDoneRef = useRef(false);
+  /** After a real unlock gesture, panel switches may call unMute (desktop + post-unlock iOS). */
+  const sessionAudioUnlockedRef = useRef(false);
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -153,22 +164,6 @@ export function SitePlaybackProvider({
     }
   }, [siteMuted]);
 
-  // Sync mute across tabs
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key !== STORAGE_MUTE) return;
-      if (e.newValue === "1") {
-        siteMutedRef.current = true;
-        setSiteMuted(true);
-      } else if (e.newValue === "0") {
-        siteMutedRef.current = false;
-        setSiteMuted(false);
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
-
   // Track viewport quality tier
   useEffect(() => {
     const sync = () => {
@@ -184,36 +179,81 @@ export function SitePlaybackProvider({
 
   /**
    * Apply the mute policy synchronously — reads only refs.
-   * Safe to call from within a user-gesture event handler on mobile.
+   * Use `unlockAudio: true` only from real user gestures (toggle, first tap).
    */
-  const applyPolicySync = useCallback((muted: boolean) => {
-    const q = videoQualityRef.current;
-    const hero = heroPlayerRef.current;
-    const audibleSlug = hero ? null : activeParallaxSlugRef.current;
+  const applyPolicySync = useCallback(
+    (muted: boolean, opts?: { unlockAudio?: boolean }) => {
+      const gestureUnlock = opts?.unlockAudio ?? false;
+      if (muted) {
+        sessionAudioUnlockedRef.current = false;
+      } else if (gestureUnlock) {
+        sessionAudioUnlockedRef.current = true;
+      }
+      const unlock =
+        gestureUnlock || (!muted && sessionAudioUnlockedRef.current);
 
-    parallaxPlayersRef.current.forEach((player, slug) => {
-      applyPreferredQuality(player, q);
-      setPlayerMuted(player, muted || slug !== audibleSlug);
-    });
+      const q = videoQualityRef.current;
+      const hero = heroPlayerRef.current;
+      const audibleSlug = hero ? null : activeParallaxSlugRef.current;
 
-    if (hero) {
-      applyPreferredQuality(hero, q);
-      setPlayerMuted(hero, muted);
-    }
-  }, []);
+      parallaxPlayersRef.current.forEach((player, slug) => {
+        applyPreferredQuality(player, q);
+        const silence = muted || slug !== audibleSlug;
+        if (silence) {
+          setPlayerMuted(player, true);
+        } else {
+          setPlayerMuted(player, false, unlock);
+        }
+      });
+
+      if (hero) {
+        applyPreferredQuality(hero, q);
+        setPlayerMuted(hero, muted, !muted && unlock);
+      }
+    },
+    [],
+  );
 
   /**
-   * Toggle mute.
-   * applyPolicySync is called SYNCHRONOUSLY before any async work —
-   * this preserves the iOS/Android user-gesture activation window.
+   * Toggle mute — full audio unlock path runs synchronously in the tap/click handler.
    */
   const toggleMute = useCallback(() => {
     const next = !siteMutedRef.current;
     siteMutedRef.current = next;
-    // Apply policy synchronously while still in the gesture handler
-    applyPolicySync(next);
-    // Then schedule the React state update (just for re-render)
+    applyPolicySync(next, { unlockAudio: true });
     setSiteMuted(next);
+  }, [applyPolicySync]);
+
+  // Sync mute across tabs (no gesture — never unlock audio remotely)
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== STORAGE_MUTE) return;
+      if (e.newValue === "1") {
+        siteMutedRef.current = true;
+        setSiteMuted(true);
+        applyPolicySync(true);
+      } else if (e.newValue === "0") {
+        siteMutedRef.current = false;
+        setSiteMuted(false);
+        applyPolicySync(false);
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [applyPolicySync]);
+
+  /** First tap anywhere (except mute control) unlocks iframe audio on mobile WebKit */
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      if (initialGestureUnlockDoneRef.current) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.("[data-site-mute-control]")) return;
+      if (siteMutedRef.current) return;
+      initialGestureUnlockDoneRef.current = true;
+      applyPolicySync(false, { unlockAudio: true });
+    };
+    window.addEventListener("pointerdown", onPointerDown, true);
+    return () => window.removeEventListener("pointerdown", onPointerDown, true);
   }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(

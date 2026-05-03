@@ -6,6 +6,7 @@ import { AmberHeader } from "@/components/amber-header";
 import { SiteAudioShell } from "@/components/site-audio-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SitePreloader } from "@/components/site-preloader";
+import { DeployVersionBadge } from "@/components/deploy-version-badge";
 import { siteConfig } from "@/lib/site";
 import { JsonLd } from "@/components/json-ld";
 
@@ -82,6 +83,7 @@ export default function RootLayout({
               <SiteFooter />
             </div>
           </SiteAudioShell>
+          <DeployVersionBadge />
         </LenisProvider>
       </body>
     </html>

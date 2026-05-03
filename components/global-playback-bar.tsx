@@ -21,6 +21,7 @@ export function GlobalPlaybackBar() {
       <div className="flex flex-row items-stretch rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md">
         <button
           type="button"
+          data-site-mute-control
           onTouchStart={() => {
             touchHandledRef.current = true;
           }}
