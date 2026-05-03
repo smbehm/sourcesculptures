@@ -5,7 +5,10 @@ import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { patchYtIframeAllow } from "@/components/site-playback-provider";
-import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
+import {
+  kickstartMutedYoutubePlayback,
+  safeYoutubePlayVideo,
+} from "@/lib/safe-media-play";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -99,6 +102,7 @@ export function YouTubeAutoplay({
     patchYtIframeAllow(e.target);
     registerHeroPlayer(e.target);
     reinforcePlaybackQuality(e.target);
+    queueMicrotask(() => kickstartMutedYoutubePlayback(e.target));
   };
 
   const handleInlineReady = (e: {
@@ -106,6 +110,7 @@ export function YouTubeAutoplay({
   }) => {
     patchYtIframeAllow(e.target);
     reinforcePlaybackQuality(e.target);
+    queueMicrotask(() => kickstartMutedYoutubePlayback(e.target));
   };
 
   const handleEnd = (e: {

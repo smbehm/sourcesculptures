@@ -189,7 +189,11 @@ export function SitePlaybackProvider({
 
       parallaxPlayersRef.current.forEach((player, slug) => {
         applyPreferredQuality(player, q);
-        const silence = muted || slug !== audibleSlug;
+        /* When `audibleSlug` is still null (before scroll settles), do not treat every panel as
+         * “silent” — `slug !== null` was always true and forced mute()-only, killing autoplay. */
+        const silence =
+          muted ||
+          (audibleSlug !== null && slug !== audibleSlug);
         if (silence) {
           setPlayerMuted(player, true);
         } else {

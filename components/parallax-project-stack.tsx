@@ -11,7 +11,10 @@ import {
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback, patchYtIframeAllow } from "@/components/site-playback-provider";
-import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
+import {
+  kickstartMutedYoutubePlayback,
+  safeYoutubePlayVideo,
+} from "@/lib/safe-media-play";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -273,7 +276,6 @@ function ParallaxProjectSection({
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const [showYtPoster, setShowYtPoster] = useState(true);
-
   const [narrowViewport, setNarrowViewport] = useState(false);
 
   useEffect(() => {
@@ -300,10 +302,9 @@ function ParallaxProjectSection({
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
-        isMobile: narrowViewport,
       }),
     }),
-    [embedOrigin, narrowViewport]
+    [embedOrigin]
   );
 
   useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
@@ -425,6 +426,9 @@ function ParallaxProjectSection({
                       patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
+                      queueMicrotask(() =>
+                        kickstartMutedYoutubePlayback(e.target),
+                      );
                       // Signal the preloader that the first YT player is ready
                       if (priority) {
                         window.dispatchEvent(new Event("yt-player-ready"));

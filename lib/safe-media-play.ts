@@ -17,6 +17,17 @@ export function safeVideoPlay(video: HTMLVideoElement): void {
 
 type MinimalYtPlayer = { playVideo?: () => unknown };
 
+/** Ensures muted autoplay starts after API readiness (pairs with `mute:1` playerVars). */
+export function kickstartMutedYoutubePlayback(player: MinimalYtPlayer): void {
+  try {
+    const p = player as unknown as { mute?: () => void };
+    p.mute?.();
+    safeYoutubePlayVideo(player);
+  } catch {
+    /* noop */
+  }
+}
+
 export function safeYoutubePlayVideo(player: MinimalYtPlayer): void {
   try {
     const ret = player.playVideo?.();
