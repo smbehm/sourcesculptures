@@ -181,19 +181,29 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       ref={sectionRef}
       className="relative w-full h-screen-stable overflow-hidden bg-background"
     >
+      {/* Poster: snaps in instantly when video becomes inactive (covers any
+          YT overlay flash), fades out smoothly only when video is playing. */}
       <img
         src={posterSrc}
         alt={title}
         loading="lazy"
         decoding="async"
         className="video-cover"
-        style={{ opacity: isActive && playing ? 0 : 1, transition: "opacity 500ms ease" }}
+        style={{
+          opacity: isActive && playing ? 0 : 1,
+          transition: isActive && playing ? "opacity 500ms ease" : "none",
+        }}
       />
 
       {src && (
         <div
           className="absolute inset-0 overflow-hidden"
-          style={{ opacity: isActive && playing ? 1 : 0, transition: "opacity 500ms ease" }}
+          style={{
+            // Fade in when playing, vanish instantly when not — so YouTube's
+            // pause/play overlay never has a chance to be visible.
+            opacity: isActive && playing ? 1 : 0,
+            transition: isActive && playing ? "opacity 500ms ease" : "none",
+          }}
           aria-hidden={!isActive}
         >
           <div
