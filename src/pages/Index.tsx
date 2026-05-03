@@ -9,9 +9,12 @@ import { useProjects } from "@/hooks/useProjects";
 import About from "@/components/About";
 import Clients from "@/components/Clients";
 import CTA from "@/components/CTA";
+import ProjectMediaSection from "@/components/ProjectMediaSection";
+import { getMediaPoster, resolvePreviewMedia } from "@/lib/projectMedia";
 
 const Index = () => {
   const { data: projects = [] } = useProjects();
+  const featuredProjects = projects.filter((project) => project.featured);
 
   useEffect(() => {
     document.title = "SOURCEsculptures — Cinematic Storytelling Studio";
@@ -25,16 +28,17 @@ const Index = () => {
         <main className="relative w-full overflow-x-hidden bg-background text-foreground">
           <Hero />
           <div id="work">
-            {projects.map((p) => {
-              const yt = p.preview_video_youtube_id || p.main_video_youtube_id;
-              if (!yt) return null;
+            {featuredProjects.map((p) => {
+              const media = resolvePreviewMedia(p);
+              if (!media.url && !media.youtubeId) return null;
+
               return (
-                <VideoSection
+                <ProjectMediaSection
                   key={p.id}
-                  youtubeId={yt}
-                  eyebrow={p.categories[0] ?? p.brief_description ?? undefined}
+                  media={media}
                   title={p.title}
                   href={`/projects/${p.slug}`}
+                  poster={getMediaPoster(media, p.title)}
                 />
               );
             })}

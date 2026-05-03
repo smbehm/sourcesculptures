@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { Navigate, useParams, Link } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import Header from "@/components/Header";
+import ProjectMediaSection from "@/components/ProjectMediaSection";
 import SoundToggle from "@/components/SoundToggle";
-import VideoSection from "@/components/VideoSection";
-import { SoundProvider } from "@/context/SoundContext";
 import { ActiveVideoProvider } from "@/context/ActiveVideoContext";
+import { SoundProvider } from "@/context/SoundContext";
 import { useProject, useProjects } from "@/hooks/useProjects";
+import { extractYoutubeId, getMediaPoster, resolveExtraVideo, resolveMainMedia, resolvePreviewMedia } from "@/lib/projectMedia";
 
 const Project = () => {
   const { slug = "" } = useParams();
@@ -20,37 +21,39 @@ const Project = () => {
   if (isLoading) return <div className="min-h-screen bg-background" />;
   if (!project) return <Navigate to="/" replace />;
 
-  const mainYt = project.main_video_youtube_id || project.preview_video_youtube_id;
-
-  const extractYtId = (s: string) => {
-    const m = s?.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/))([\w-]{11})/);
-    return m ? m[1] : s;
-  };
+  const mainMedia = resolveMainMedia(project);
+  const previewMedia = resolvePreviewMedia(project);
 
   type GalleryItem = { type: "image" | "video"; url: string; caption?: string };
-  const galleryItems: GalleryItem[] = Array.isArray((project as any).gallery_items) && (project as any).gallery_items.length > 0
-    ? ((project as any).gallery_items as GalleryItem[])
-    : (project.gallery && project.gallery.length > 0
-        ? project.gallery.map((url) => ({ type: "image" as const, url }))
-        : mainYt
+  const galleryItems: GalleryItem[] = Array.isArray(project.gallery_items) && project.gallery_items.length > 0
+    ? (project.gallery_items as unknown as GalleryItem[])
+    : project.gallery.length > 0
+      ? project.gallery.map((url) => ({ type: "image" as const, url }))
+      : mainMedia.youtubeId
         ? [
-            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/maxresdefault.jpg` },
-            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/hqdefault.jpg` },
-            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/sddefault.jpg` },
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/maxresdefault.jpg` },
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/hqdefault.jpg` },
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/sddefault.jpg` },
           ]
-        : []);
+        : [];
+
+  const extraVideos = [2, 3]
+    .map((slot) => ({ slot, media: resolveExtraVideo(project, slot as 2 | 3) }))
+    .filter((item) => item.media && (item.media.url || item.media.youtubeId)) as { slot: number; media: NonNullable<ReturnType<typeof resolveExtraVideo>> }[];
 
   const idx = projects.findIndex((p) => p.slug === project.slug);
   const next = projects[(idx + 1) % Math.max(projects.length, 1)] ?? project;
 
-  const creditsArr = Array.isArray((project as any).credits) ? (project as any).credits as { title: string; name: string }[] : [];
+  const creditsArr = Array.isArray(project.credits) ? (project.credits as unknown as { title: string; name: string }[]) : [];
   const legacyCredits = [1, 2, 3, 4, 5, 6]
     .map((n) => ({
-      title: (project as any)[`credit_title_${n}`] as string | null,
-      name: (project as any)[`credit_name_${n}`] as string | null,
+      title: project[`credit_title_${n}` as keyof typeof project] as string | null,
+      name: project[`credit_name_${n}` as keyof typeof project] as string | null,
     }))
     .filter((c) => c.title && c.name) as { title: string; name: string }[];
   const credits = creditsArr.length > 0 ? creditsArr : legacyCredits;
+
+  const heroMedia = mainMedia.url || mainMedia.youtubeId ? mainMedia : previewMedia;
 
   return (
     <SoundProvider>
@@ -58,11 +61,12 @@ const Project = () => {
         <Header />
         <SoundToggle />
         <main className="relative w-full overflow-x-hidden bg-background text-foreground">
-          {mainYt && (
-            <VideoSection
-              youtubeId={mainYt}
-              eyebrow={project.categories[0] ?? project.brief_description ?? undefined}
+          {(heroMedia.url || heroMedia.youtubeId) && (
+            <ProjectMediaSection
+              media={heroMedia}
               title={project.title}
+              poster={getMediaPoster(heroMedia, project.title)}
+              showControls={project.show_main_video_controls}
             />
           )}
 
@@ -70,8 +74,14 @@ const Project = () => {
             <div>
               <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">Overview</span>
               <h1 className="mt-6 font-display uppercase text-foreground font-bold leading-[0.95] text-[clamp(2rem,5vw,3.5rem)]">
-                {project.brief_description || project.title}
+                {project.title}
               </h1>
+              <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                {project.brief_description && <span>{project.brief_description}</span>}
+                {project.client && <span>Client: {project.client}</span>}
+                {project.year && <span>Year: {project.year}</span>}
+                {project.categories.length > 0 && <span>{project.categories.join(" • ")}</span>}
+              </div>
               {project.overview && (
                 <p className="mt-8 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
                   {project.overview}
@@ -85,9 +95,9 @@ const Project = () => {
                 </div>
                 <dl className="space-y-3">
                   {credits.map((c, i) => (
-                    <div key={i} className="flex justify-between text-sm">
+                    <div key={i} className="flex justify-between text-sm gap-4">
                       <dt className="text-muted-foreground">{c.title}</dt>
-                      <dd className="text-foreground">{c.name}</dd>
+                      <dd className="text-foreground text-right">{c.name}</dd>
                     </div>
                   ))}
                 </dl>
@@ -95,14 +105,24 @@ const Project = () => {
             )}
           </section>
 
+          {extraVideos.map(({ slot, media }) => (
+            <ProjectMediaSection
+              key={slot}
+              media={media}
+              title={`${project.title} video ${slot}`}
+              poster={getMediaPoster(media, `${project.title} video ${slot}`)}
+              showControls={slot === 2 ? project.show_video_2_controls : project.show_video_3_controls}
+            />
+          ))}
+
           {galleryItems.length > 0 && (
-            <section className="px-6 sm:px-10 pb-28 sm:pb-40">
+            <section className="px-6 sm:px-10 py-20 sm:py-28">
               <div className="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {galleryItems.map((item, i) => (
                   <figure key={i} className="relative aspect-[4/5] overflow-hidden bg-muted">
                     {item.type === "video" ? (
                       <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${extractYtId(item.url)}?rel=0&modestbranding=1`}
+                        src={`https://www.youtube-nocookie.com/embed/${extractYoutubeId(item.url) ?? item.url}?rel=0&modestbranding=1`}
                         title={item.caption || `${project.title} clip ${i + 1}`}
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen
