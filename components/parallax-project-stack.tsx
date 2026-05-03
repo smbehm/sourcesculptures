@@ -58,8 +58,8 @@ function pickAudibleParallaxSlug(projects: Project[]): string | null {
       hit = p.slug;
       break;
     }
-    const mid = (r.top + r.bottom) / 2;
-    const d = Math.abs(mid - scanY);
+
+    const d = scanY < r.top ? r.top - scanY : scanY - r.bottom;
     if (d < nearestDist) {
       nearestDist = d;
       nearestSlug = p.slug;
@@ -244,15 +244,6 @@ export function ParallaxProjectStack({ projects }: Props) {
             key={p.slug}
             project={p}
             priority={i === 0}
-            /*
-              Pre-warm: mount the YouTube iframe for the first 2 panels
-              immediately (before IntersectionObserver fires) so the player
-              is initialised and buffering by the time the user scrolls to it.
-              Panel 0 is above the fold — always pre-warmed.
-              Panel 1 is just off-screen — pre-warm so scrolling into it is instant.
-              Panels 2+ load on scroll as normal.
-            */
-            preWarm={i <= 1}
           />
         ))}
       </div>
@@ -263,12 +254,9 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({
   project,
   priority,
-  preWarm,
 }: {
   project: Project;
   priority: boolean;
-  /** Mount the YT iframe immediately — don't wait for IntersectionObserver. */
-  preWarm: boolean;
 }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
@@ -285,12 +273,7 @@ function ParallaxProjectSection({
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  /*
-    play: true  → render the YouTube iframe
-    Pre-warmed panels start as true immediately.
-    Other panels flip to true when IntersectionObserver fires.
-  */
-  const [play, setPlay] = useState(preWarm);
+  const play = true;
 
   const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
@@ -308,7 +291,6 @@ function ParallaxProjectSection({
   );
 
   useEffect(() => { setShowYtPoster(true); }, [project.youtubeId]);
-  useEffect(() => { if (!play) setShowYtPoster(true); }, [play]);
 
   useEffect(() => {
     return () => registerParallaxPlayer(project.slug, null);
@@ -329,57 +311,6 @@ function ParallaxProjectSection({
     ? "absolute inset-0 h-full w-full bg-black will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
-  useEffect(() => {
-    // Pre-warmed panels don't need IntersectionObserver — they're always playing.
-    if (preWarm) return;
-
-    const root = ref.current;
-    if (!root) return;
-
-    let io: IntersectionObserver | null = null;
-
-    const attach = () => {
-      io?.disconnect();
-      const mobile = window.matchMedia("(max-width: 767px)").matches;
-      const minRatio = mobile ? 0.03 : 0.12;
-      const thresholds = mobile
-        ? [0, 0.02, 0.04, 0.06, 0.1, 0.14, 0.2, 0.3]
-        : [0, 0.08, 0.15, 0.35];
-      io = new IntersectionObserver(
-        ([e]) => {
-          const ratio = e.intersectionRatio;
-          const ins = e.isIntersecting;
-          if (mobile) {
-            setPlay((prev) => {
-              if (!ins || ratio < 0.008) return false;
-              if (ratio > minRatio) return true;
-              return prev;
-            });
-          } else {
-            setPlay(ins && ratio > minRatio);
-          }
-        },
-        {
-          threshold: thresholds,
-          /*
-            Large rootMargin: start loading the iframe well before the panel
-            scrolls into view, so it's ready when the user arrives.
-          */
-          rootMargin: mobile ? "40% 0px 40% 0px" : "25% 0px 25% 0px",
-        }
-      );
-      io.observe(root);
-    };
-
-    attach();
-    const mq = window.matchMedia("(max-width: 767px)");
-    mq.addEventListener("change", attach);
-    return () => {
-      mq.removeEventListener("change", attach);
-      io?.disconnect();
-    };
-  }, [preWarm]);
-
   return (
     <div
       id={`panel-${project.slug}`}
@@ -388,7 +319,7 @@ function ParallaxProjectSection({
       style={{
         height: "135svh",
         minHeight: "100svh",
-        marginBottom: "-1px",
+        marginBottom: 0,
       }}
     >
       <motion.div className={motionLayerClass} style={{ y }}>
@@ -436,6 +367,11 @@ function ParallaxProjectSection({
                       if (e.data === YouTube.PlayerState.PLAYING) {
                         reinforcePlaybackQuality(e.target);
                         setShowYtPoster(false);
+                      } else if (
+                        e.data === YouTube.PlayerState.BUFFERING ||
+                        e.data === YouTube.PlayerState.UNSTARTED
+                      ) {
+                        setShowYtPoster(true);
                       }
                     }}
                     onEnd={(e) => {
@@ -455,10 +391,6 @@ function ParallaxProjectSection({
                       priority={priority}
                     />
                   )}
-                  <div
-                    className="pointer-events-auto absolute inset-0 z-[2] bg-transparent"
-                    aria-hidden
-                  />
                 </>
               )}
             </div>
