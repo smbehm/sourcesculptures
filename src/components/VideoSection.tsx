@@ -29,6 +29,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     return () => window.removeEventListener("scroll", onScroll);
   }, [deferUntilScroll, scrolled]);
   const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const { muted: globalMuted } = useSound();
   const { activeId, reportRatio, unregister } = useActiveVideo();
 
