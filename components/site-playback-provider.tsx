@@ -12,6 +12,9 @@ import {
 import type { YouTubePlayer } from "react-youtube";
 
 import type { VideoQualityTier } from "@/lib/playback-types";
+import { syncAllSiteVideosMuted, tryPlayAllSiteVideos } from "@/lib/native-video-registry";
+import { usePlaybackMuteStore } from "@/lib/playback-mute-store";
+import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
 import {
   applyPreferredQuality,
   reinforcePreferredQuality,
@@ -83,12 +86,12 @@ function setPlayerMuted(
       return;
     }
     if (!unlockAudio) {
-      p.playVideo?.();
+      safeYoutubePlayVideo(p);
       return;
     }
     p.unMute?.();
     p.setVolume?.(100);
-    p.playVideo?.();
+    safeYoutubePlayVideo(p);
   } catch {
     /* noop — iframe may be mid-teardown */
   }
@@ -102,7 +105,6 @@ function preferredTierForViewport(): VideoQualityTier {
 }
 
 type PlaybackContextValue = {
-  siteMuted: boolean;
   toggleMute: () => void;
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
@@ -117,7 +119,6 @@ export function SitePlaybackProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [siteMuted, setSiteMuted] = useState(false);
   const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
 
   // Refs for synchronous access inside callbacks (no stale closures)
@@ -130,6 +131,8 @@ export function SitePlaybackProvider({
   /** After a real unlock gesture, panel switches may call unMute (desktop + post-unlock iOS). */
   const sessionAudioUnlockedRef = useRef(false);
 
+  const siteMuted = usePlaybackMuteStore((s) => s.siteMuted);
+
   // Keep refs in sync with state
   useEffect(() => {
     siteMutedRef.current = siteMuted;
@@ -138,22 +141,6 @@ export function SitePlaybackProvider({
   useEffect(() => {
     videoQualityRef.current = videoQuality;
   }, [videoQuality]);
-
-  // Hydrate mute preference from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_MUTE);
-      if (stored === "1") {
-        siteMutedRef.current = true;
-        setSiteMuted(true);
-      } else if (stored === "0") {
-        siteMutedRef.current = false;
-        setSiteMuted(false);
-      }
-    } catch {
-      /* noop */
-    }
-  }, []);
 
   // Persist to localStorage
   useEffect(() => {
@@ -192,6 +179,10 @@ export function SitePlaybackProvider({
       const unlock =
         gestureUnlock || (!muted && sessionAudioUnlockedRef.current);
 
+      const physicalSiteMuted = muted || !sessionAudioUnlockedRef.current;
+      syncAllSiteVideosMuted(physicalSiteMuted);
+      usePlaybackMuteStore.setState({ physicalSiteMuted: physicalSiteMuted });
+
       const q = videoQualityRef.current;
       const hero = heroPlayerRef.current;
       const audibleSlug = hero ? null : activeParallaxSlugRef.current;
@@ -214,14 +205,31 @@ export function SitePlaybackProvider({
     [],
   );
 
+  // Hydrate mute preference from localStorage and sync physical mute / native videos
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_MUTE);
+      if (stored === "1") {
+        siteMutedRef.current = true;
+        usePlaybackMuteStore.setState({ siteMuted: true });
+      } else if (stored === "0") {
+        siteMutedRef.current = false;
+        usePlaybackMuteStore.setState({ siteMuted: false });
+      }
+    } catch {
+      /* noop */
+    }
+    applyPolicySync(siteMutedRef.current);
+  }, [applyPolicySync]);
+
   /**
    * Toggle mute — full audio unlock path runs synchronously in the tap/click handler.
    */
   const toggleMute = useCallback(() => {
     const next = !siteMutedRef.current;
     siteMutedRef.current = next;
+    usePlaybackMuteStore.setState({ siteMuted: next });
     applyPolicySync(next, { unlockAudio: true });
-    setSiteMuted(next);
   }, [applyPolicySync]);
 
   // Sync mute across tabs (no gesture — never unlock audio remotely)
@@ -230,11 +238,11 @@ export function SitePlaybackProvider({
       if (e.key !== STORAGE_MUTE) return;
       if (e.newValue === "1") {
         siteMutedRef.current = true;
-        setSiteMuted(true);
+        usePlaybackMuteStore.setState({ siteMuted: true });
         applyPolicySync(true);
       } else if (e.newValue === "0") {
         siteMutedRef.current = false;
-        setSiteMuted(false);
+        usePlaybackMuteStore.setState({ siteMuted: false });
         applyPolicySync(false);
       }
     };
@@ -242,18 +250,30 @@ export function SitePlaybackProvider({
     return () => window.removeEventListener("storage", handler);
   }, [applyPolicySync]);
 
-  /** First tap anywhere (except mute control) unlocks iframe audio on mobile WebKit */
+  /**
+   * First touchstart, click, or scroll (excluding mute control) unlocks audio if the user
+   * has not chosen muted via the control / persisted mute (`siteMuted`).
+   */
   useEffect(() => {
-    const onPointerDown = (e: PointerEvent) => {
+    const onFirstGesture = (e: Event) => {
       if (initialGestureUnlockDoneRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest?.("[data-site-mute-control]")) return;
-      if (siteMutedRef.current) return;
+      if (usePlaybackMuteStore.getState().siteMuted) return;
       initialGestureUnlockDoneRef.current = true;
       applyPolicySync(false, { unlockAudio: true });
+      tryPlayAllSiteVideos();
     };
-    window.addEventListener("pointerdown", onPointerDown, true);
-    return () => window.removeEventListener("pointerdown", onPointerDown, true);
+    const optsTouch = { capture: true, passive: true } as const;
+    const optsScroll = { capture: true, passive: true } as const;
+    window.addEventListener("touchstart", onFirstGesture, optsTouch);
+    window.addEventListener("click", onFirstGesture, true);
+    window.addEventListener("scroll", onFirstGesture, optsScroll);
+    return () => {
+      window.removeEventListener("touchstart", onFirstGesture, optsTouch);
+      window.removeEventListener("click", onFirstGesture, true);
+      window.removeEventListener("scroll", onFirstGesture, optsScroll);
+    };
   }, [applyPolicySync]);
 
   const setActiveParallaxSlug = useCallback(
@@ -300,7 +320,6 @@ export function SitePlaybackProvider({
 
   const value = useMemo(
     () => ({
-      siteMuted,
       toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
@@ -308,7 +327,6 @@ export function SitePlaybackProvider({
       reinforcePlaybackQuality,
     }),
     [
-      siteMuted,
       toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
@@ -324,10 +342,11 @@ export function SitePlaybackProvider({
 
 export function useSitePlayback() {
   const ctx = useContext(PlaybackContext);
+  const siteMuted = usePlaybackMuteStore((s) => s.siteMuted);
   if (!ctx) {
     throw new Error("useSitePlayback must be used within SitePlaybackProvider");
   }
-  return ctx;
+  return { ...ctx, siteMuted };
 }
 
 /** @deprecated Use useSitePlayback */

@@ -5,6 +5,7 @@ import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { patchYtIframeAllow } from "@/components/site-playback-provider";
+import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -112,7 +113,7 @@ export function YouTubeAutoplay({
   }) => {
     try {
       e.target.seekTo(0, true);
-      e.target.playVideo();
+      safeYoutubePlayVideo(e.target);
     } catch {
       /* noop */
     }
