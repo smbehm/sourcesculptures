@@ -398,6 +398,80 @@ const Preloader = () => {
         </div>
       </div>
 
+      {/* Mouse-reactive ember/spark canvas */}
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0"
+        style={{ mixBlendMode: "screen" }}
+        aria-hidden="true"
+      />
+
+      {/* Sundial percentage */}
+      <div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+        style={{
+          bottom: "8vh",
+          opacity: done ? 0 : 0.95,
+          transition: "opacity 500ms ease",
+        }}
+      >
+        <div className="relative" style={{ width: 120, height: 150 }}>
+          <svg viewBox="0 0 100 100" width={120} height={120}>
+            <defs>
+              <radialGradient id="dialGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(255,200,100,0.35)" />
+                <stop offset="70%" stopColor="rgba(255,200,100,0)" />
+              </radialGradient>
+              <linearGradient id="gnomon" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fff2c2" />
+                <stop offset="100%" stopColor="#ff8a1a" />
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="48" fill="url(#dialGlow)" opacity={0.4 + glow * 0.6} />
+            <circle cx="50" cy="50" r={sundial.r} fill="none" stroke="rgba(255,210,140,0.35)" strokeWidth="0.6" />
+            <circle cx="50" cy="50" r={sundial.r - 0.5} fill="rgba(0,0,0,0.35)" />
+            {sundial.ticks.map((t, i) => (
+              <line
+                key={i}
+                x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+                stroke={t.major ? "rgba(255,220,160,0.95)" : "rgba(255,220,160,0.5)"}
+                strokeWidth={t.major ? 0.8 : 0.4}
+                strokeLinecap="round"
+              />
+            ))}
+            <circle
+              cx="50" cy="50" r={sundial.r - 3}
+              fill="none"
+              stroke="rgba(255,180,80,0.9)"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * (sundial.r - 3)}
+              strokeDashoffset={2 * Math.PI * (sundial.r - 3) * (1 - fillPct / 100)}
+              transform="rotate(-90 50 50)"
+              style={{ filter: "drop-shadow(0 0 2px rgba(255,180,80,0.9))" }}
+            />
+            <g transform={`rotate(${dialAngle + 90} 50 50)`}>
+              <line x1="50" y1="50" x2="50" y2={50 - sundial.r + 4}
+                stroke="url(#gnomon)" strokeWidth="1.2" strokeLinecap="round"
+                style={{ filter: "drop-shadow(0 0 3px rgba(255,180,80,0.9))" }} />
+              <circle cx="50" cy={50 - sundial.r + 4} r="2.2" fill="#ffe9a8"
+                style={{ filter: "drop-shadow(0 0 5px rgba(255,210,120,1))" }} />
+            </g>
+            <circle cx="50" cy="50" r="1.6" fill="#ffd58a" />
+          </svg>
+          <div
+            className="absolute left-0 right-0 text-center font-display tracking-[0.32em] text-[11px]"
+            style={{
+              top: 124,
+              color: "rgba(255,220,170,0.92)",
+              textShadow: "0 0 10px rgba(255,180,80,0.5)",
+            }}
+          >
+            {String(Math.round(fillPct)).padStart(3, "0")}%
+          </div>
+        </div>
+      </div>
+
       {/* Final flash on completion */}
       <div
         className="pointer-events-none absolute inset-0 bg-white"
