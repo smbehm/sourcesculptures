@@ -60,11 +60,9 @@ export default function HomePage() {
             </h1>
           </div>
 
-          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-1.5 px-6 text-center text-[10px] leading-relaxed tracking-wide text-white/90 sm:bottom-10 sm:text-[11px]">
-            <span className="text-white/90">By: Rey Jaffet & Sean Behm</span>
-            <span className="text-white/45">
-              © {year} {siteConfig.name}
-            </span>
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-1.5 px-6 text-center text-[10px] leading-relaxed tracking-wide text-white/45 sm:bottom-10 sm:text-[11px]">
+            <span>By: Rey Jaffet & Sean Behm</span>
+            <span>© {year} {siteConfig.name}</span>
           </div>
         </section>
 

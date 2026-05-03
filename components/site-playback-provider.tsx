@@ -21,8 +21,9 @@ import {
 export type { VideoQualityTier };
 
 /**
- * @param unlockAudio - Only true from the mute toggle handler (real user gesture).
- *   Calling unMute outside a gesture breaks muted autoplay on iOS/Android (playback can stop).
+ * @param unlockAudio - True only inside a real user gesture (mute toggle, or first
+ *   pointer/touch after hydration when the site is not muted). Calling unMute outside
+ *   that breaks muted autoplay on iOS/Android (playback can stop).
  */
 function setPlayerMuted(
   player: YouTubePlayer,
@@ -96,6 +97,8 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
   const videoQualityRef = useRef(videoQuality);
   const siteMutedRef = useRef(siteMuted);
+  /** After this runs once, passive policy handles mute routing without needing another gesture unlock. */
+  const initialGestureAudioUnlockRef = useRef(false);
 
   useLayoutEffect(() => {
     videoQualityRef.current = videoQuality;
@@ -171,6 +174,33 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       /* noop */
     }
   }, [siteMuted, prefsHydrated]);
+
+  /**
+   * First pointer or touch after prefs load — if the user wants sound (!siteMuted),
+   * unlock iframe audio in the same gesture so mobile users don’t need the mute control only for that.
+   */
+  useEffect(() => {
+    if (!prefsHydrated) return;
+
+    const unlockFromGesture = () => {
+      if (initialGestureAudioUnlockRef.current) return;
+      initialGestureAudioUnlockRef.current = true;
+      if (siteMutedRef.current) return;
+      applyPolicySync(false, { allowAudioUnlock: true });
+    };
+
+    window.addEventListener("pointerdown", unlockFromGesture, true);
+    window.addEventListener("touchstart", unlockFromGesture, {
+      capture: true,
+      passive: true,
+    });
+    return () => {
+      window.removeEventListener("pointerdown", unlockFromGesture, true);
+      window.removeEventListener("touchstart", unlockFromGesture, {
+        capture: true,
+      });
+    };
+  }, [applyPolicySync, prefsHydrated]);
 
   const toggleMute = useCallback(() => {
     setSiteMuted((prev) => {
