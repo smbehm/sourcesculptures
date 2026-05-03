@@ -146,17 +146,27 @@ const Preloader = () => {
       });
     };
 
-    // Pre-seed thousands of tiny particles so the field looks dense immediately
-    for (let i = 0; i < 1800; i++) spawnSpark();
-    for (let i = 0; i < 600; i++) spawnEmber();
+    // Lower seed counts on mobile/low-power devices
+    const isSmall = window.innerWidth < 768;
+    const seedSpark = isSmall ? 350 : 800;
+    const seedEmber = isSmall ? 120 : 280;
+    for (let i = 0; i < seedSpark; i++) spawnSpark();
+    for (let i = 0; i < seedEmber; i++) spawnEmber();
+
+    const MAX_PARTICLES = isSmall ? 700 : 1600;
 
     let raf = 0;
+    let stopped = false;
     const loop = () => {
+      if (stopped) return;
       const intensity = 0.4 + progressRef.current / 100;
-      const emberCount = Math.round(14 * intensity);
-      const sparkCount = Math.round(28 * intensity);
-      for (let i = 0; i < emberCount; i++) spawnEmber();
-      for (let i = 0; i < sparkCount; i++) spawnSpark();
+      const room = MAX_PARTICLES - particles.length;
+      if (room > 0) {
+        const emberCount = Math.min(room, Math.round((isSmall ? 4 : 8) * intensity));
+        const sparkCount = Math.min(room - emberCount, Math.round((isSmall ? 8 : 16) * intensity));
+        for (let i = 0; i < emberCount; i++) spawnEmber();
+        for (let i = 0; i < sparkCount; i++) spawnSpark();
+      }
 
       // Soft trail fade
       ctx.globalCompositeOperation = "destination-out";
