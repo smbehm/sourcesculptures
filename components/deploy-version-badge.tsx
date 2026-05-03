@@ -1,6 +1,6 @@
 import { getDeployVersionLabel } from "@/lib/deploy-version";
 
-/** Temporary on-screen build id — remove when you no longer need deploy verification. */
+/** On-screen deploy id (commit + Vercel deployment), auto from env at build time. */
 export function DeployVersionBadge() {
   const label = getDeployVersionLabel();
 

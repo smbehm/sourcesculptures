@@ -1,9 +1,30 @@
-import { SITE_BUILD_NUMBER } from "./build-version";
-
-/** Label shown after “build ” on the deploy badge (SSR / build-time). */
+/**
+ * Deploy badge label — **fully automatic** on Vercel (no manual bump).
+ * Baked in at `next build`, so desktop and phone show the same string after deploy.
+ *
+ * - Commit SHA changes when you push new code.
+ * - Deployment suffix changes on every Vercel deploy (including redeploys of the same commit).
+ *
+ * Optional override: set `NEXT_PUBLIC_DEPLOY_VERSION` in Vercel project env.
+ */
 export function getDeployVersionLabel(): string {
   const explicit = process.env.NEXT_PUBLIC_DEPLOY_VERSION?.trim();
   if (explicit) return explicit;
 
-  return String(SITE_BUILD_NUMBER);
+  const rawSha =
+    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.trim() ??
+    process.env.VERCEL_GIT_COMMIT_SHA?.trim();
+  const sha = rawSha && rawSha.length >= 7 ? rawSha.slice(0, 7) : null;
+
+  const rawDpl = process.env.VERCEL_DEPLOYMENT_ID?.trim();
+  const dplShort =
+    rawDpl && rawDpl.length >= 4
+      ? rawDpl.replace(/^dpl_/, "").slice(-6)
+      : null;
+
+  if (sha && dplShort) return `${sha} · ${dplShort}`;
+  if (sha) return sha;
+  if (dplShort) return dplShort;
+
+  return "local";
 }
