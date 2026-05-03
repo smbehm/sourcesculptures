@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 
 const links = [
-  { label: "Work", href: "#work" },
-  { label: "Artists", href: "#about" },
-  { label: "Concept", href: "#about" },
+  { label: "Home", href: "#intro" },
+  { label: "Source Spirits — No Art", href: "#source-spirits" },
+  { label: "The Veil", href: "#the-veil" },
+  { label: "Infirna", href: "#infirna" },
+  { label: "Together", href: "#together" },
+  { label: "Isabelle", href: "#isabelle" },
+  { label: "About", href: "#about" },
   { label: "Contact", href: "#cta" },
 ];
 
@@ -41,17 +45,17 @@ const Header = () => {
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
-        <nav className="flex h-full w-full flex-col items-center justify-center gap-8 px-6">
+        <nav className="flex h-full w-full flex-col items-center justify-center gap-5 sm:gap-7 px-6 overflow-y-auto py-24">
           {links.map((l, i) => (
             <a
               key={l.label}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="font-display uppercase text-foreground hover:text-accent transition-colors text-[clamp(2.5rem,8vw,5rem)] font-bold leading-none"
+              className="font-display uppercase text-foreground hover:text-accent transition-colors text-[clamp(1.5rem,5vw,3.5rem)] font-bold leading-none text-center"
               style={{
                 transform: open ? "translateY(0)" : "translateY(20px)",
                 opacity: open ? 1 : 0,
-                transition: `transform 600ms ease ${i * 70}ms, opacity 600ms ease ${i * 70}ms`,
+                transition: `transform 600ms ease ${i * 60}ms, opacity 600ms ease ${i * 60}ms`,
               }}
             >
               {l.label}

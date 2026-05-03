@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Hero from "@/components/Hero";
-import VideoSection from "@/components/VideoSection";
+import ProjectBlock from "@/components/ProjectBlock";
 import About from "@/components/About";
 import Clients from "@/components/Clients";
 import CTA from "@/components/CTA";
@@ -10,25 +10,49 @@ import { SoundProvider } from "@/context/SoundContext";
 
 const projects = [
   {
+    id: "source-spirits",
     youtubeId: "aoD2vFN5wFw",
+    eyebrow: "Brand Film",
+    title: "Source Spirits — No Art",
+    description:
+      "A cinematic introduction to Source Spirits. A study in restraint — bottle, light, and movement composed as a single sculpted gesture.",
+    href: "https://sourcesculptures.com/projects/source-spirits/",
+  },
+  {
+    id: "the-veil",
+    youtubeId: "lDyARVNEOAc",
     eyebrow: "Short Film",
-    title: "Obsidian",
-    subtitle: "An editorial study in light, fabric and silence.",
+    title: "The Veil",
+    description:
+      "An editorial study in light, fabric and silence. Slow, deliberate frames that let texture and breath carry the narrative.",
     href: "https://sourcesculptures.com/projects/the-veil/",
   },
   {
+    id: "infirna",
     youtubeId: "XQzXnpOq_uY",
     eyebrow: "Brand Film",
     title: "Infirna",
-    subtitle: "A meditation on form — sculpted in motion.",
+    description:
+      "A meditation on form — sculpted in motion. Crafted to feel both intimate and monumental, with a focus on material and atmosphere.",
     href: "https://sourcesculptures.com/projects/infirna/",
   },
   {
+    id: "together",
     youtubeId: "hEqjP3YHiCc",
     eyebrow: "Editorial",
     title: "Together",
-    subtitle: "Intimate frames from a day shared.",
+    description:
+      "Intimate frames from a day shared. A documentary-led approach that holds onto the small, unrepeatable moments between people.",
     href: "https://sourcesculptures.com/projects/together/",
+  },
+  {
+    id: "isabelle",
+    youtubeId: "OjU5UZ2_MfM",
+    eyebrow: "Portrait",
+    title: "Isabelle",
+    description:
+      "A portrait film built around presence and quiet attention. Composed with a single subject, natural light, and unhurried pacing.",
+    href: "https://sourcesculptures.com/projects/isabelle/",
   },
 ];
 
@@ -45,7 +69,7 @@ const Index = () => {
         <Hero />
         <div id="work">
           {projects.map((p) => (
-            <VideoSection key={p.youtubeId} {...p} />
+            <ProjectBlock key={p.id} {...p} />
           ))}
         </div>
         <About />

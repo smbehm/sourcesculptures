@@ -90,30 +90,20 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
       {/* Veil for text legibility */}
       <div className="veil" />
 
-      {/* Text overlay */}
-      <div className="relative z-10 flex h-full w-full flex-col items-start justify-end p-6 sm:p-10 md:p-16">
+      {/* Centered title overlay */}
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center pointer-events-none">
         {eyebrow && (
-          <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-3">
+          <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-4">
             {eyebrow}
           </span>
         )}
-        <h2 className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,9vw,7rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
+        <h2 className="font-display text-white uppercase font-bold leading-[0.95] tracking-[0.02em] text-[clamp(2.5rem,10vw,7.5rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-4 max-w-xl text-white/80 text-sm sm:text-base leading-relaxed">
+          <p className="mt-5 max-w-xl text-white/80 text-sm sm:text-base leading-relaxed">
             {subtitle}
           </p>
-        )}
-        {href && (
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 font-display tracking-cinema text-[11px] uppercase text-white/90 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors"
-          >
-            View Project →
-          </a>
         )}
       </div>
     </section>
