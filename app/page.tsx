@@ -50,13 +50,14 @@ export default function HomePage() {
             aria-hidden
           />
 
-          <div className="relative flex min-h-[100svh] flex-col items-center justify-center px-5 pb-40 pt-32 text-center sm:px-8 md:min-h-[100dvh]">
-            <h1 className="font-display max-w-[min(100%,56rem)] text-balance text-[clamp(2.6rem,12.5vw,9.5rem)] font-bold leading-[0.86] tracking-[-0.02em] text-white uppercase drop-shadow-[0_6px_40px_rgba(0,0,0,0.45)]">
-              {siteConfig.heroLines.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
+          <div className="relative flex min-h-[100svh] flex-col items-center justify-center px-5 pb-44 pt-32 text-center sm:px-8 md:min-h-[100dvh] md:pb-40">
+            <h1 className="font-display mx-auto flex max-w-[min(100%,56rem)] flex-col items-center text-center uppercase drop-shadow-[0_6px_40px_rgba(0,0,0,0.45)]">
+              <span className="block text-balance text-[clamp(2.75rem,14vw,6rem)] font-bold leading-[0.86] tracking-[-0.02em] text-white">
+                {siteConfig.heroLines[0]}
+              </span>
+              <span className="mx-auto mt-[0.12em] block w-fit max-w-[min(100%,15ch)] text-balance text-[clamp(1.15rem,6.2vw,2.95rem)] font-bold leading-[1.05] tracking-[0.14em] text-white">
+                {siteConfig.heroLines[1]}
+              </span>
             </h1>
           </div>
 
@@ -125,7 +126,6 @@ export default function HomePage() {
           >
             Start your story
           </Link>
-          <RulerRule className="mx-auto mt-16 max-w-lg opacity-70" />
         </section>
       </main>
     </>

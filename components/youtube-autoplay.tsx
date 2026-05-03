@@ -3,8 +3,11 @@
 import Image from "next/image";
 import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSitePlayback } from "@/components/site-playback-provider";
-import { patchYtIframeAllow } from "@/components/site-playback-provider";
+import {
+  useSitePlayback,
+  patchYtIframeAllow,
+  kickMutedYoutubeAutoplay,
+} from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -99,11 +102,7 @@ export function YouTubeAutoplay({
     patchYtIframeAllow(p);
     registerHeroPlayer(p);
     reinforcePlaybackQuality(p);
-    try {
-      p.playVideo();
-    } catch {
-      /* noop */
-    }
+    kickMutedYoutubeAutoplay(p);
   };
 
   const handleInlineReady = (e: {
@@ -112,11 +111,7 @@ export function YouTubeAutoplay({
     const p = e.target;
     patchYtIframeAllow(p);
     reinforcePlaybackQuality(p);
-    try {
-      p.playVideo();
-    } catch {
-      /* noop */
-    }
+    kickMutedYoutubeAutoplay(p);
   };
 
   const handleEnd = (e: {
@@ -159,8 +154,8 @@ export function YouTubeAutoplay({
       <div ref={rootRef} className={`relative w-full bg-black ${className}`}>
         <div className="relative w-full overflow-hidden">
           <div className="relative min-h-[56.25vw] w-full md:min-h-[min(56.25vw,85vh)]">
-            <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2">
-              <div className="absolute inset-0 overflow-hidden bg-black">
+            <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-100 md:scale-[1.16]">
+              <div className="absolute inset-0 overflow-visible bg-black md:overflow-hidden">
                 {!embedReady ? (
                   <Image
                     src={poster}

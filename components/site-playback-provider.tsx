@@ -83,6 +83,17 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   }
 }
 
+/** Call after player ready — mobile Safari/WKWebKit often needs mute before playVideo for autoplay. */
+export function kickMutedYoutubeAutoplay(player: YouTubePlayer) {
+  const p = player as unknown as { mute?: () => void; playVideo?: () => void };
+  try {
+    p.mute?.();
+    p.playVideo?.();
+  } catch {
+    /* noop */
+  }
+}
+
 function preferredTierForViewport(): VideoQualityTier {
   if (typeof window === "undefined") return "hd1080";
   return window.matchMedia("(max-width: 1023px)").matches ? "hd1080" : "hd2160";
@@ -126,8 +137,8 @@ export function SitePlaybackProvider({
   }, []);
 
   /**
-   * Route audio to the active parallax panel only, or to the hero on project pages.
-   * No global mute UI — whichever strip is “audible” plays sound.
+   * Route audio to the active parallax strip only, or unmuted hero on project pages.
+   * No site-wide mute control — only spatial routing.
    */
   const applyPolicySync = useCallback(() => {
     const q = videoQualityRef.current;
@@ -136,7 +147,6 @@ export function SitePlaybackProvider({
 
     parallaxPlayersRef.current.forEach((player, slug) => {
       applyPreferredQuality(player, q);
-      /** Until scroll picks an audible strip, don't call mute() — it prevents muted autoplay from starting. */
       if (audibleSlug === null) {
         return;
       }

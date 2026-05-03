@@ -10,7 +10,11 @@ import {
 } from "framer-motion";
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSitePlayback, patchYtIframeAllow } from "@/components/site-playback-provider";
+import {
+  useSitePlayback,
+  patchYtIframeAllow,
+  kickMutedYoutubeAutoplay,
+} from "@/components/site-playback-provider";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -399,8 +403,8 @@ function ParallaxProjectSection({
         />
 
         {play && (
-          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-[1.16]">
-            <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+          <div className="absolute left-1/2 top-1/2 z-0 h-[56.25vw] max-w-none min-h-[115vh] min-w-[177.78vh] w-[100vw] -translate-x-1/2 -translate-y-1/2 scale-100 md:scale-[1.16]">
+            <div className="absolute inset-0 z-0 overflow-visible bg-black md:overflow-hidden">
               {!embedReady ? (
                 <Image
                   src={ytPoster}
@@ -424,20 +428,9 @@ function ParallaxProjectSection({
                       patchYtIframeAllow(p);
                       registerParallaxPlayer(project.slug, p);
                       reinforcePlaybackQuality(p);
-                      try {
-                        p.playVideo();
-                      } catch {
-                        /* noop */
-                      }
+                      kickMutedYoutubeAutoplay(p);
                     }}
                     onStateChange={(e) => {
-                      if (e.data === YouTube.PlayerState.UNSTARTED) {
-                        try {
-                          e.target.playVideo();
-                        } catch {
-                          /* noop */
-                        }
-                      }
                       if (e.data === YouTube.PlayerState.PLAYING) {
                         reinforcePlaybackQuality(e.target);
                         setShowYtPoster(false);
@@ -446,7 +439,7 @@ function ParallaxProjectSection({
                     onEnd={(e) => {
                       try {
                         e.target.seekTo(0, true);
-                        e.target.playVideo();
+                        kickMutedYoutubeAutoplay(e.target);
                       } catch { /* noop */ }
                     }}
                   />
