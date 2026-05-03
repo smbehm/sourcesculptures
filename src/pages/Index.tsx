@@ -5,6 +5,9 @@ import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/context/SoundContext";
 import { projects } from "@/data/projects";
+import About from "@/components/About";
+import Clients from "@/components/Clients";
+import CTA from "@/components/CTA";
 
 const Index = () => {
   useEffect(() => {
@@ -28,6 +31,9 @@ const Index = () => {
             />
           ))}
         </div>
+        <About />
+        <Clients />
+        <CTA />
       </main>
     </SoundProvider>
   );
