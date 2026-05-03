@@ -10,7 +10,8 @@
 export function getDeployVersionLabel(): string {
   const explicit = process.env.NEXT_PUBLIC_DEPLOY_VERSION?.trim();
   if (explicit) return explicit;
-  const buildStamp = process.env.NEXT_PUBLIC_BUILD_STAMP?.trim();
+  const buildStamp =
+    process.env.NEXT_PUBLIC_BUILD_STAMP?.trim() ?? new Date().toISOString();
   const stampShort = buildStamp ? buildStamp.slice(0, 16).replace("T", " ") : null;
 
   const rawSha =
