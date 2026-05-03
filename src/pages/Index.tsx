@@ -228,7 +228,7 @@ const Index = () => {
                     title={p.title}
                     href={`/projects/${p.slug}`}
                     poster={getMediaPoster(media, p.title)}
-                    deferUntilScroll={i === 0}
+                    deferUntilScroll={false}
                   />
                 </section>
               );
