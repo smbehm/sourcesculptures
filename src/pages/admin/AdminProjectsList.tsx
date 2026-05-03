@@ -32,12 +32,8 @@ const InlineCell = ({ project, field, onSaved, type = "text", placeholder, class
     const original = initial === null || initial === undefined ? "" : String(initial);
     if (value === original) return;
     setSaving(true);
-    const payload: Record<string, unknown> = {};
-    if (type === "number") {
-      payload[field] = value === "" ? null : Number(value);
-    } else {
-      payload[field] = value === "" ? null : value;
-    }
+    const newValue = type === "number" ? (value === "" ? null : Number(value)) : (value === "" ? null : value);
+    const payload = { [field]: newValue } as never;
     const { error } = await supabase.from("projects").update(payload).eq("id", project.id);
     setSaving(false);
     if (error) {
