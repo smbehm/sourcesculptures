@@ -145,12 +145,11 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
-  // On the first touch/click anywhere, re-issue play to the active video.
+  // Kick play on ANY user gesture (including the preloader's "tap to enter")
+  // so the YouTube center play-button overlay never appears.
   useEffect(() => {
     if (!shouldLoad) return;
     const kick = () => {
-      // Always kick this video into play on any gesture so iOS never shows
-      // the YouTube center play-button overlay when user scrolls to it.
       post("playVideo");
       if (isActive && !globalMuted) post("unMute");
       else post("mute");
@@ -158,10 +157,12 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     window.addEventListener("touchstart", kick, { passive: true });
     window.addEventListener("touchend", kick, { passive: true });
     window.addEventListener("click", kick);
+    window.addEventListener("preloader-gesture", kick);
     return () => {
       window.removeEventListener("touchstart", kick);
       window.removeEventListener("touchend", kick);
       window.removeEventListener("click", kick);
+      window.removeEventListener("preloader-gesture", kick);
     };
   }, [shouldLoad, isActive, globalMuted]);
 
