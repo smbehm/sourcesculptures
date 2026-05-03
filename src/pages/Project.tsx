@@ -21,26 +21,36 @@ const Project = () => {
   if (!project) return <Navigate to="/" replace />;
 
   const mainYt = project.main_video_youtube_id || project.preview_video_youtube_id;
-  const gallery =
-    project.gallery && project.gallery.length > 0
-      ? project.gallery
-      : mainYt
-      ? [
-          `https://i.ytimg.com/vi/${mainYt}/maxresdefault.jpg`,
-          `https://i.ytimg.com/vi/${mainYt}/hqdefault.jpg`,
-          `https://i.ytimg.com/vi/${mainYt}/sddefault.jpg`,
-        ]
-      : [];
+
+  const extractYtId = (s: string) => {
+    const m = s?.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/))([\w-]{11})/);
+    return m ? m[1] : s;
+  };
+
+  type GalleryItem = { type: "image" | "video"; url: string; caption?: string };
+  const galleryItems: GalleryItem[] = Array.isArray((project as any).gallery_items) && (project as any).gallery_items.length > 0
+    ? ((project as any).gallery_items as GalleryItem[])
+    : (project.gallery && project.gallery.length > 0
+        ? project.gallery.map((url) => ({ type: "image" as const, url }))
+        : mainYt
+        ? [
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/maxresdefault.jpg` },
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/hqdefault.jpg` },
+            { type: "image" as const, url: `https://i.ytimg.com/vi/${mainYt}/sddefault.jpg` },
+          ]
+        : []);
 
   const idx = projects.findIndex((p) => p.slug === project.slug);
   const next = projects[(idx + 1) % Math.max(projects.length, 1)] ?? project;
 
-  const credits = [1, 2, 3, 4, 5, 6]
+  const creditsArr = Array.isArray((project as any).credits) ? (project as any).credits as { title: string; name: string }[] : [];
+  const legacyCredits = [1, 2, 3, 4, 5, 6]
     .map((n) => ({
       title: (project as any)[`credit_title_${n}`] as string | null,
       name: (project as any)[`credit_name_${n}`] as string | null,
     }))
-    .filter((c) => c.title && c.name);
+    .filter((c) => c.title && c.name) as { title: string; name: string }[];
+  const credits = creditsArr.length > 0 ? creditsArr : legacyCredits;
 
   return (
     <SoundProvider>
@@ -85,19 +95,35 @@ const Project = () => {
             )}
           </section>
 
-          {gallery.length > 0 && (
+          {galleryItems.length > 0 && (
             <section className="px-6 sm:px-10 pb-28 sm:pb-40">
               <div className="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {gallery.map((src, i) => (
-                  <div key={i} className="relative aspect-[4/5] overflow-hidden bg-muted">
-                    <img
-                      src={src}
-                      alt={`${project.title} still ${i + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                  </div>
+                {galleryItems.map((item, i) => (
+                  <figure key={i} className="relative aspect-[4/5] overflow-hidden bg-muted">
+                    {item.type === "video" ? (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${extractYtId(item.url)}?rel=0&modestbranding=1`}
+                        title={item.caption || `${project.title} clip ${i + 1}`}
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full border-0"
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={item.caption || `${project.title} still ${i + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                      />
+                    )}
+                    {item.caption && (
+                      <figcaption className="absolute bottom-2 left-2 right-2 text-xs text-foreground/80 bg-background/60 backdrop-blur px-2 py-1 rounded">
+                        {item.caption}
+                      </figcaption>
+                    )}
+                  </figure>
                 ))}
               </div>
             </section>
