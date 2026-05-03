@@ -296,7 +296,7 @@ const Preloader = () => {
               textShadow: "0 0 10px rgba(255,180,80,0.5)",
             }}
           >
-            {needsTap ? "TAP TO ENTER" : `${String(Math.round(fillPct)).padStart(3, "0")}%`}
+            {`${String(Math.round(fillPct)).padStart(3, "0")}%`}
           </div>
         </div>
       </div>
