@@ -237,14 +237,6 @@ const Preloader = () => {
         </div>
       </div>
 
-      {/* Mouse-reactive ember/spark canvas */}
-      <canvas
-        ref={canvasRef}
-        className="pointer-events-none absolute inset-0"
-        style={{ mixBlendMode: "screen" }}
-        aria-hidden="true"
-      />
-
       {/* Sundial percentage */}
       <div
         className="pointer-events-none absolute left-1/2 -translate-x-1/2"
