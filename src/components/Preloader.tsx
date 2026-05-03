@@ -6,12 +6,19 @@ const ICON_PATH = "M561.59,0l3.66.26v1.05c-10.54,11.11-22.9,19.08-29.54,34.25-7.
  * Cinematic preloader: black foggy scene, golden light fills the icon
  * bottom-to-top as the site/videos buffer, then zooms into the light.
  */
+const isIOS = () =>
+  typeof navigator !== "undefined" &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1));
+
 const Preloader = () => {
   const [progress, setProgress] = useState(0); // 0..100
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [needsTap, setNeedsTap] = useState(false); // iOS gesture gate
   const startedAt = useRef<number>(performance.now());
   const videoReadyRef = useRef(false);
+  const ios = useRef(isIOS());
 
   // Listen for the first preview video signaling ready
   useEffect(() => {
@@ -22,15 +29,12 @@ const Preloader = () => {
     return () => window.removeEventListener("preview-video-ready", onReady);
   }, []);
 
-  // Drive progress: gradual ramp from 0 → ~92% over ~7s with an ease curve
-  // that lingers in the middle so the fill feels deliberate, not snappy.
-  // Snaps to 100% only after the first video is ready (or 11s hard cap).
+  // Drive progress
   useEffect(() => {
     let raf = 0;
     const tick = () => {
       const elapsed = performance.now() - startedAt.current;
       const t = Math.min(1, elapsed / 7000);
-      // ease-in-out cubic — slower start, slow middle plateau, gentle finish
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       let target = eased * 92;
 
@@ -46,14 +50,29 @@ const Preloader = () => {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // When we hit 100, trigger zoom and unmount after the animation
+  // When we hit 100: on iOS wait for a tap to satisfy autoplay gesture; otherwise auto-dismiss.
   useEffect(() => {
-    if (progress >= 100 && !done) {
+    if (progress >= 100 && !done && !needsTap) {
+      if (ios.current) {
+        setNeedsTap(true);
+        return;
+      }
       setDone(true);
       const t = setTimeout(() => setHidden(true), 1400);
       return () => clearTimeout(t);
     }
-  }, [progress, done]);
+  }, [progress, done, needsTap]);
+
+  const handleEnter = () => {
+    if (!needsTap || done) return;
+    // Synchronously dispatch a gesture event so video iframes can autoplay
+    try {
+      window.dispatchEvent(new Event("preloader-gesture"));
+    } catch { /* noop */ }
+    setDone(true);
+    setTimeout(() => setHidden(true), 1400);
+  };
+
 
   // Lock body scroll while showing
   useEffect(() => {
