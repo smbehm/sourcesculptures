@@ -1,15 +1,6 @@
 import { useState, useEffect } from "react";
-
-const links = [
-  { label: "Home", href: "#intro" },
-  { label: "Source Spirits — No Art", href: "#source-spirits" },
-  { label: "The Veil", href: "#the-veil" },
-  { label: "Infirna", href: "#infirna" },
-  { label: "Together", href: "#together" },
-  { label: "Isabelle", href: "#isabelle" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#cta" },
-];
+import { Link } from "react-router-dom";
+import { projects } from "@/data/projects";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
@@ -21,15 +12,22 @@ const Header = () => {
     };
   }, [open]);
 
+  const links = [
+    { label: "Home", to: "/" },
+    ...projects.map((p) => ({ label: p.title, to: `/projects/${p.slug}` })),
+    { label: "About", to: "/about" },
+    { label: "Contact", to: "/about#cta" },
+  ];
+
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 sm:px-10 py-5 mix-blend-difference">
-        <a
-          href="#intro"
+        <Link
+          to="/"
           className="font-display tracking-cinema text-[11px] sm:text-[12px] uppercase text-white font-bold"
         >
           SOURCE
-        </a>
+        </Link>
         <button
           onClick={() => setOpen((v) => !v)}
           className="font-display tracking-cinema text-[11px] sm:text-[12px] uppercase text-white font-bold"
@@ -39,7 +37,6 @@ const Header = () => {
         </button>
       </header>
 
-      {/* Overlay menu */}
       <div
         className={`fixed inset-0 z-40 bg-background transition-opacity duration-500 ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -47,9 +44,9 @@ const Header = () => {
       >
         <nav className="flex h-full w-full flex-col items-center justify-center gap-5 sm:gap-7 px-6 overflow-y-auto py-24">
           {links.map((l, i) => (
-            <a
+            <Link
               key={l.label}
-              href={l.href}
+              to={l.to}
               onClick={() => setOpen(false)}
               className="font-display uppercase text-foreground hover:text-accent transition-colors text-[clamp(1.5rem,5vw,3.5rem)] font-bold leading-none text-center"
               style={{
@@ -59,7 +56,7 @@ const Header = () => {
               }}
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
       </div>
