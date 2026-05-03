@@ -115,50 +115,51 @@ const Preloader = () => {
     const spawnEmber = () => {
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
-      // Embers bias toward emerging from icon area
-      const x = cx + (Math.random() - 0.5) * 220;
-      const y = cy + 40 + Math.random() * 180;
+      const x = cx + (Math.random() - 0.5) * 320;
+      const y = cy + 20 + Math.random() * 240;
       particles.push({
         x: x * dpr,
         y: y * dpr,
-        vx: (Math.random() - 0.5) * 0.25 * dpr,
-        vy: -(0.25 + Math.random() * 0.55) * dpr,
+        vx: (Math.random() - 0.5) * 0.18 * dpr,
+        vy: -(0.15 + Math.random() * 0.45) * dpr,
         life: 0,
-        max: 180 + Math.random() * 220,
-        size: (0.6 + Math.random() * 1.6) * dpr,
+        max: 240 + Math.random() * 320,
+        size: (0.18 + Math.random() * 0.45) * dpr,
         kind: 0,
         hue: 30 + Math.random() * 25,
       });
     };
     const spawnSpark = () => {
-      // Soft sparks around the screen
       const x = Math.random() * window.innerWidth;
-      const y = window.innerHeight * (0.2 + Math.random() * 0.7);
+      const y = window.innerHeight * (0.05 + Math.random() * 0.9);
       particles.push({
         x: x * dpr,
         y: y * dpr,
-        vx: (Math.random() - 0.5) * 0.15 * dpr,
-        vy: -(0.05 + Math.random() * 0.2) * dpr,
+        vx: (Math.random() - 0.5) * 0.12 * dpr,
+        vy: -(0.03 + Math.random() * 0.18) * dpr,
         life: 0,
-        max: 220 + Math.random() * 260,
-        size: (0.5 + Math.random() * 1.1) * dpr,
+        max: 320 + Math.random() * 360,
+        size: (0.14 + Math.random() * 0.36) * dpr,
         kind: 1,
         hue: 38 + Math.random() * 18,
       });
     };
 
+    // Pre-seed thousands of tiny particles so the field looks dense immediately
+    for (let i = 0; i < 1800; i++) spawnSpark();
+    for (let i = 0; i < 600; i++) spawnEmber();
+
     let raf = 0;
     const loop = () => {
-      // Spawn rate scales with fill progress
-      const intensity = 0.3 + progressRef.current / 100;
-      const emberCount = Math.round(2 * intensity);
-      const sparkCount = Math.round(1 * intensity);
+      const intensity = 0.4 + progressRef.current / 100;
+      const emberCount = Math.round(14 * intensity);
+      const sparkCount = Math.round(28 * intensity);
       for (let i = 0; i < emberCount; i++) spawnEmber();
       for (let i = 0; i < sparkCount; i++) spawnSpark();
 
       // Soft trail fade
       ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = "lighter";
 
@@ -172,25 +173,21 @@ const Preloader = () => {
         p.life++;
         if (p.life > p.max) { particles.splice(i, 1); continue; }
 
-        // Mouse influence — gentle push away + swirl
         if (mActive) {
           const dx = p.x - mx;
           const dy = p.y - my;
           const d2 = dx * dx + dy * dy;
           if (d2 < influenceR * influenceR && d2 > 1) {
             const d = Math.sqrt(d2);
-            const f = (1 - d / influenceR) * 0.6;
+            const f = (1 - d / influenceR) * 0.5;
             p.vx += (dx / d) * f;
             p.vy += (dy / d) * f * 0.8;
-            // Swirl
-            p.vx += (-dy / d) * f * 0.15;
-            p.vy += (dx / d) * f * 0.15;
+            p.vx += (-dy / d) * f * 0.12;
+            p.vy += (dx / d) * f * 0.12;
           }
         }
 
-        // Gentle wobble
-        p.vx += Math.sin((p.life + p.x) * 0.02) * 0.01 * dpr;
-        // Damping
+        p.vx += Math.sin((p.life + p.x) * 0.02) * 0.008 * dpr;
         p.vx *= 0.985;
         p.vy *= 0.992;
 
@@ -198,27 +195,29 @@ const Preloader = () => {
         p.y += p.vy;
 
         const lifeT = p.life / p.max;
-        const fade = Math.sin(lifeT * Math.PI); // ease in & out
-        const alpha = (p.kind === 0 ? 0.9 : 0.7) * fade;
-        const r = p.size * (1 + (1 - lifeT) * 0.6);
+        const fade = Math.sin(lifeT * Math.PI);
+        const alpha = (p.kind === 0 ? 0.85 : 0.6) * fade;
+        const r = p.size;
 
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 6);
-        grad.addColorStop(0, `hsla(${p.hue}, 100%, 75%, ${alpha})`);
-        grad.addColorStop(0.4, `hsla(${p.hue}, 100%, 55%, ${alpha * 0.5})`);
+        // Tiny soft halo (much smaller than before)
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2);
+        grad.addColorStop(0, `hsla(${p.hue}, 100%, 70%, ${alpha * 0.6})`);
         grad.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 6, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, r * 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Bright core
-        ctx.fillStyle = `hsla(50, 100%, 92%, ${alpha})`;
+        // Bright pin-point core
+        ctx.fillStyle = `hsla(48, 100%, 88%, ${alpha})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 0.9, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
       }
 
       raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
