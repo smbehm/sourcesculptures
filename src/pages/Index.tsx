@@ -5,12 +5,13 @@ import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/context/SoundContext";
 import { ActiveVideoProvider } from "@/context/ActiveVideoContext";
-import { projects } from "@/data/projects";
+import { useProjects } from "@/hooks/useProjects";
 import About from "@/components/About";
 import Clients from "@/components/Clients";
 import CTA from "@/components/CTA";
 
 const Index = () => {
+  const { data: projects = [] } = useProjects();
   useEffect(() => {
     document.title = "SOURCEsculptures — Cinematic Storytelling Studio";
   }, []);
