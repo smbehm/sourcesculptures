@@ -58,8 +58,8 @@ function pickAudibleParallaxSlug(projects: Project[]): string | null {
       hit = p.slug;
       break;
     }
-    const mid = (r.top + r.bottom) / 2;
-    const d = Math.abs(mid - scanY);
+
+    const d = scanY < r.top ? r.top - scanY : scanY - r.bottom;
     if (d < nearestDist) {
       nearestDist = d;
       nearestSlug = p.slug;
