@@ -99,12 +99,9 @@ const Preloader = () => {
         opacity: done ? 0 : 1,
         transition: "opacity 900ms ease 500ms",
         pointerEvents: done ? "none" : "auto",
-        cursor: needsTap ? "pointer" : "default",
       }}
       aria-label="Loading"
       role="status"
-      onClick={handleEnter}
-      onTouchEnd={handleEnter}
     >
       {/* Ground fog layers */}
       <div className="pointer-events-none absolute inset-0">
