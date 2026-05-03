@@ -36,6 +36,7 @@ export type Database = {
           featured: boolean
           gallery: string[]
           gallery_items: Json
+          homepage_subtitle: string | null
           id: string
           main_image_url: string | null
           main_media_type: string
@@ -91,6 +92,7 @@ export type Database = {
           featured?: boolean
           gallery?: string[]
           gallery_items?: Json
+          homepage_subtitle?: string | null
           id?: string
           main_image_url?: string | null
           main_media_type?: string
@@ -146,6 +148,7 @@ export type Database = {
           featured?: boolean
           gallery?: string[]
           gallery_items?: Json
+          homepage_subtitle?: string | null
           id?: string
           main_image_url?: string | null
           main_media_type?: string
