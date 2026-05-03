@@ -22,21 +22,33 @@ export type { VideoQualityTier };
 
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
-    mute?: () => void;
-    unMute?: () => void;
-    playVideo?: () => void;
-    setVolume?: (n: number) => void;
+    mute?: () => unknown;
+    unMute?: () => unknown;
+    playVideo?: () => unknown;
+    setVolume?: (n: number) => unknown;
   };
-  try {
-    if (muted) {
+  if (muted) {
+    try {
       p.mute?.();
-      return;
+    } catch {
+      /* noop */
     }
+    return;
+  }
+  try {
     p.unMute?.();
+  } catch {
+    /* noop */
+  }
+  try {
     p.setVolume?.(100);
+  } catch {
+    /* noop */
+  }
+  try {
     p.playVideo?.();
   } catch {
-    /* iframe may be unavailable */
+    /* noop */
   }
 }
 
@@ -62,18 +74,42 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const [siteMuted, setSiteMuted] = useState(false);
   const [videoQuality, setVideoQualityState] = useState<VideoQualityTier>("hd1080");
   const [prefsHydrated, setPrefsHydrated] = useState(false);
-  const [activeParallaxSlug, setActiveParallaxSlug] = useState<string | null>(null);
+
+  const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
   const videoQualityRef = useRef(videoQuality);
   const siteMutedRef = useRef(siteMuted);
-  /** Tracks prior `siteMuted` so we can nudge playback only when leaving muted → unmuted. */
-  const prevSiteMutedRef = useRef(siteMuted);
 
   useLayoutEffect(() => {
     videoQualityRef.current = videoQuality;
     siteMutedRef.current = siteMuted;
   }, [videoQuality, siteMuted]);
+
+  const applyPolicySync = useCallback((muted: boolean) => {
+    const q = videoQualityRef.current;
+    const activeSlug = activeParallaxSlugRef.current;
+
+    parallaxPlayersRef.current.forEach((player, slug) => {
+      applyPreferredQuality(player, q);
+      if (muted) {
+        setPlayerMuted(player, true);
+      } else {
+        setPlayerMuted(player, slug !== activeSlug);
+      }
+    });
+
+    const hero = heroPlayerRef.current;
+    if (hero) {
+      applyPreferredQuality(hero, q);
+      setPlayerMuted(hero, muted);
+    }
+  }, []);
+
+  const setActiveParallaxSlug = useCallback((slug: string | null) => {
+    activeParallaxSlugRef.current = slug;
+    applyPolicySync(siteMutedRef.current);
+  }, [applyPolicySync]);
 
   useEffect(() => {
     try {
@@ -115,31 +151,14 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     }
   }, [siteMuted, prefsHydrated]);
 
-  const applyPolicy = useCallback(
-    (muted: boolean) => {
-      const q = videoQualityRef.current;
-
-      parallaxPlayersRef.current.forEach((player, slug) => {
-        applyPreferredQuality(player, q);
-        if (muted) {
-          setPlayerMuted(player, true);
-        } else {
-          setPlayerMuted(player, slug !== activeParallaxSlug);
-        }
-      });
-
-      const hero = heroPlayerRef.current;
-      if (hero) {
-        applyPreferredQuality(hero, q);
-        setPlayerMuted(hero, muted);
-      }
-    },
-    [activeParallaxSlug],
-  );
-
   const toggleMute = useCallback(() => {
-    setSiteMuted((prev) => !prev);
-  }, []);
+    setSiteMuted((prev) => {
+      const next = !prev;
+      siteMutedRef.current = next;
+      applyPolicySync(next);
+      return next;
+    });
+  }, [applyPolicySync]);
 
   const registerParallaxPlayer = useCallback(
     (slug: string, player: YouTubePlayer | null) => {
@@ -147,50 +166,30 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       if (player) m.set(slug, player);
       else m.delete(slug);
       if (player) {
-        applyPolicy(siteMutedRef.current);
+        applyPolicySync(siteMutedRef.current);
       }
     },
-    [applyPolicy],
+    [applyPolicySync],
   );
 
   const registerHeroPlayer = useCallback(
     (player: YouTubePlayer | null) => {
       heroPlayerRef.current = player;
       if (player) {
-        applyPolicy(siteMutedRef.current);
+        applyPolicySync(siteMutedRef.current);
       }
     },
-    [applyPolicy],
+    [applyPolicySync],
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
     reinforcePreferredQuality(player, videoQualityRef.current);
   }, []);
 
+  /** Hydration, tab sync, and quality tier changes (outside the mute button gesture chain). */
   useEffect(() => {
-    applyPolicy(siteMuted);
-  }, [siteMuted, activeParallaxSlug, videoQuality, applyPolicy]);
-
-  /** Mobile Safari often needs an explicit playVideo after unmute via user gesture chain (handled upstream). */
-  useEffect(() => {
-    const prev = prevSiteMutedRef.current;
-    prevSiteMutedRef.current = siteMuted;
-    if (prev !== true || siteMuted !== false) return;
-
-    try {
-      const hero = heroPlayerRef.current;
-      if (hero) {
-        hero.playVideo?.();
-        return;
-      }
-      const slug = activeParallaxSlug;
-      if (slug) {
-        parallaxPlayersRef.current.get(slug)?.playVideo?.();
-      }
-    } catch {
-      /* noop */
-    }
-  }, [siteMuted, activeParallaxSlug]);
+    applyPolicySync(siteMuted);
+  }, [siteMuted, videoQuality, applyPolicySync]);
 
   const value = useMemo(
     () => ({
@@ -206,6 +205,7 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
       toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
+      setActiveParallaxSlug,
       reinforcePlaybackQuality,
     ],
   );

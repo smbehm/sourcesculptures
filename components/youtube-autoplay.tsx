@@ -6,6 +6,7 @@ import Image from "next/image";
 import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
+import { patchYtIframeAllow } from "@/lib/patch-yt-iframe-allow";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -95,11 +96,13 @@ export function YouTubeAutoplay({
   const poster = youtubePosterSrc(videoId);
 
   const handleHeroReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+    patchYtIframeAllow(e.target);
     registerHeroPlayer(e.target);
     reinforcePlaybackQuality(e.target);
   };
 
   const handleInlineReady = (e: { target: import("react-youtube").YouTubePlayer }) => {
+    patchYtIframeAllow(e.target);
     reinforcePlaybackQuality(e.target);
   };
 

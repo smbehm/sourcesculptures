@@ -13,6 +13,7 @@ import {
 import YouTube from "react-youtube";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
+import { patchYtIframeAllow } from "@/lib/patch-yt-iframe-allow";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 import type { Project } from "@/lib/projects";
@@ -414,6 +415,7 @@ function ParallaxProjectSection({ project, priority }: { project: Project; prior
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading={priority ? "eager" : "lazy"}
                     onReady={(e) => {
+                      patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
                     }}

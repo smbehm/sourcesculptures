@@ -15,7 +15,7 @@ export function GlobalPlaybackBar() {
         <button
           type="button"
           onPointerUp={(e) => {
-            if (e.pointerType === "mouse" && e.button !== 0) return;
+            e.preventDefault();
             toggleMute();
           }}
           onKeyDown={(e) => {
@@ -24,9 +24,10 @@ export function GlobalPlaybackBar() {
               toggleMute();
             }
           }}
+          style={{ touchAction: "manipulation" }}
           aria-pressed={!siteMuted}
           title={siteMuted ? "Unmute video audio" : "Mute video audio"}
-          className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-white/10"
         >
           <span className="sr-only">
             {siteMuted ? "Unmute video audio" : "Mute video audio"}
