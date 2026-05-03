@@ -146,17 +146,26 @@ const Preloader = () => {
       });
     };
 
-    // Pre-seed thousands of tiny particles so the field looks dense immediately
-    for (let i = 0; i < 1800; i++) spawnSpark();
-    for (let i = 0; i < 600; i++) spawnEmber();
+    // Lower seed counts on mobile/low-power devices
+    const isSmall = window.innerWidth < 768;
+    const seedSpark = isSmall ? 350 : 800;
+    const seedEmber = isSmall ? 120 : 280;
+    for (let i = 0; i < seedSpark; i++) spawnSpark();
+    for (let i = 0; i < seedEmber; i++) spawnEmber();
+
+    const MAX_PARTICLES = isSmall ? 700 : 1600;
 
     let raf = 0;
     const loop = () => {
       const intensity = 0.4 + progressRef.current / 100;
-      const emberCount = Math.round(14 * intensity);
-      const sparkCount = Math.round(28 * intensity);
-      for (let i = 0; i < emberCount; i++) spawnEmber();
-      for (let i = 0; i < sparkCount; i++) spawnSpark();
+      const room = MAX_PARTICLES - particles.length;
+      // Stop spawning once we're effectively done — let field drain naturally
+      if (room > 0 && progressRef.current < 99.5) {
+        const emberCount = Math.min(room, Math.round((isSmall ? 4 : 8) * intensity));
+        const sparkCount = Math.min(room - emberCount, Math.round((isSmall ? 8 : 16) * intensity));
+        for (let i = 0; i < emberCount; i++) spawnEmber();
+        for (let i = 0; i < sparkCount; i++) spawnSpark();
+      }
 
       // Soft trail fade
       ctx.globalCompositeOperation = "destination-out";
@@ -200,17 +209,8 @@ const Preloader = () => {
         const alpha = (p.kind === 0 ? 0.85 : 0.6) * fade;
         const r = p.size;
 
-        // Tiny soft halo (much smaller than before)
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.2);
-        grad.addColorStop(0, `hsla(${p.hue}, 100%, 70%, ${alpha * 0.6})`);
-        grad.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bright pin-point core
-        ctx.fillStyle = `hsla(48, 100%, 88%, ${alpha})`;
+        // Single solid pin-point — no per-particle gradient allocation
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${alpha})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
@@ -308,20 +308,20 @@ const Preloader = () => {
           <div
             className="pointer-events-none absolute left-1/2 top-1/2"
             style={{
-              width: "260vmax",
-              height: "260vmax",
+              width: "140vmax",
+              height: "140vmax",
               transform: "translate(-50%, -50%)",
               opacity: glow,
               transition: "opacity 500ms ease",
               mixBlendMode: "screen",
+              willChange: "transform",
               background:
                 "conic-gradient(from 0deg, rgba(255,200,90,0) 0deg, rgba(255,210,120,0.6) 3deg, rgba(255,200,90,0) 9deg, rgba(255,200,90,0) 26deg, rgba(255,210,120,0.5) 31deg, rgba(255,200,90,0) 38deg, rgba(255,200,90,0) 58deg, rgba(255,210,120,0.55) 64deg, rgba(255,200,90,0) 71deg, rgba(255,200,90,0) 92deg, rgba(255,210,120,0.45) 99deg, rgba(255,200,90,0) 106deg, rgba(255,200,90,0) 132deg, rgba(255,210,120,0.55) 139deg, rgba(255,200,90,0) 147deg, rgba(255,200,90,0) 172deg, rgba(255,210,120,0.5) 179deg, rgba(255,200,90,0) 187deg, rgba(255,200,90,0) 212deg, rgba(255,210,120,0.55) 219deg, rgba(255,200,90,0) 227deg, rgba(255,200,90,0) 252deg, rgba(255,210,120,0.5) 259deg, rgba(255,200,90,0) 267deg, rgba(255,200,90,0) 292deg, rgba(255,210,120,0.55) 299deg, rgba(255,200,90,0) 307deg, rgba(255,200,90,0) 332deg, rgba(255,210,120,0.6) 339deg, rgba(255,200,90,0) 347deg)",
               WebkitMaskImage:
                 "radial-gradient(closest-side, black 0%, black 4%, rgba(0,0,0,0.6) 18%, transparent 70%)",
               maskImage:
                 "radial-gradient(closest-side, black 0%, black 4%, rgba(0,0,0,0.6) 18%, transparent 70%)",
-              animation: "raysSpin 60s linear infinite",
-              filter: "blur(2px)",
+              animation: "raysSpin 90s linear infinite",
             }}
           />
 
