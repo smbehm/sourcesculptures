@@ -235,13 +235,22 @@ export function ParallaxProjectStack({ projects }: Props) {
         </div>
       )}
 
-      {/*
-        Outer wrapper: no overflow-hidden — desktop parallax motion layer bleeds
-        outside each panel intentionally; each panel's own overflow-hidden clips it.
-      */}
       <div className="relative bg-black">
         {projects.map((p, i) => (
-          <ParallaxProjectSection key={p.slug} project={p} priority={i === 0} />
+          <ParallaxProjectSection
+            key={p.slug}
+            project={p}
+            priority={i === 0}
+            /*
+              Pre-warm: mount the YouTube iframe for the first 2 panels
+              immediately (before IntersectionObserver fires) so the player
+              is initialised and buffering by the time the user scrolls to it.
+              Panel 0 is above the fold — always pre-warmed.
+              Panel 1 is just off-screen — pre-warm so scrolling into it is instant.
+              Panels 2+ load on scroll as normal.
+            */
+            preWarm={i <= 1}
+          />
         ))}
       </div>
     </>
@@ -251,15 +260,17 @@ export function ParallaxProjectStack({ projects }: Props) {
 function ParallaxProjectSection({
   project,
   priority,
+  preWarm,
 }: {
   project: Project;
   priority: boolean;
+  /** Mount the YT iframe immediately — don't wait for IntersectionObserver. */
+  preWarm: boolean;
 }) {
   const { registerParallaxPlayer, reinforcePlaybackQuality } = useSitePlayback();
   const { ready: embedReady, origin: embedOrigin } = useYoutubeEmbedReady();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
-  const [play, setPlay] = useState(false);
   const [showYtPoster, setShowYtPoster] = useState(true);
 
   const [narrowViewport, setNarrowViewport] = useState(false);
@@ -271,6 +282,13 @@ function ParallaxProjectSection({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  /*
+    play: true  → render the YouTube iframe
+    Pre-warmed panels start as true immediately.
+    Other panels flip to true when IntersectionObserver fires.
+  */
+  const [play, setPlay] = useState(preWarm);
 
   const ytPoster = `https://i.ytimg.com/vi/${project.youtubeId}/maxresdefault.jpg`;
 
@@ -305,16 +323,14 @@ function ParallaxProjectSection({
     reduce || narrowViewport ? [0, 0] : [-90, 90]
   );
 
-  /*
-    Mobile motion layer gets bg-black so the panel background colour never
-    shows through at seams between panels. Desktop keeps it transparent so
-    the parallax bleed area (–11% / +11%) is visible at panel edges.
-  */
   const motionLayerClass = narrowViewport
     ? "absolute inset-0 h-full w-full bg-black will-change-transform"
     : "absolute -top-[11%] left-0 h-[122%] w-full will-change-transform";
 
   useEffect(() => {
+    // Pre-warmed panels don't need IntersectionObserver — they're always playing.
+    if (preWarm) return;
+
     const root = ref.current;
     if (!root) return;
 
@@ -343,7 +359,11 @@ function ParallaxProjectSection({
         },
         {
           threshold: thresholds,
-          rootMargin: mobile ? "15% 0px 15% 0px" : "0px",
+          /*
+            Large rootMargin: start loading the iframe well before the panel
+            scrolls into view, so it's ready when the user arrives.
+          */
+          rootMargin: mobile ? "40% 0px 40% 0px" : "25% 0px 25% 0px",
         }
       );
       io.observe(root);
@@ -356,23 +376,9 @@ function ParallaxProjectSection({
       mq.removeEventListener("change", attach);
       io?.disconnect();
     };
-  }, []);
+  }, [preWarm]);
 
   return (
-    /*
-      BLACK-LINE FIX (mobile):
-      ─────────────────────────
-      • height: 135svh — "small viewport height" is stable on mobile; vh changes
-        when the browser address bar hides/shows, creating fractional-px gaps.
-        On desktop svh = vh so behaviour is identical.
-      • marginBottom: -1px — each panel overlaps the next by 1px so no gap
-        can appear between panels regardless of sub-pixel rounding.
-
-      NOT added: transform / translateZ(0) — that would break Framer Motion's
-      useScroll on desktop by interfering with Lenis's scroll transform stack.
-      The isolate class (already present) creates the stacking context we need
-      without the side effects of a 3D transform.
-    */
     <div
       id={`panel-${project.slug}`}
       ref={ref}
@@ -418,6 +424,10 @@ function ParallaxProjectSection({
                       patchYtIframeAllow(e.target);
                       registerParallaxPlayer(project.slug, e.target);
                       reinforcePlaybackQuality(e.target);
+                      // Signal the preloader that the first YT player is ready
+                      if (priority) {
+                        window.dispatchEvent(new Event("yt-player-ready"));
+                      }
                     }}
                     onStateChange={(e) => {
                       if (e.data === YouTube.PlayerState.PLAYING) {

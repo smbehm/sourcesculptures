@@ -2,6 +2,20 @@
 
 import { useEffect, useState } from "react";
 
+/*
+  Preloader hides when BOTH conditions are true:
+  1. Minimum display time has elapsed (so it doesn't flash on fast connections).
+  2. The first YouTube player has fired onReady — meaning the YT IFrame API is
+     loaded and the player is initialised. We signal this via a custom event
+     dispatched from parallax-project-stack's first panel onReady handler.
+
+  If the YT-ready event never fires (ad blocker, network error, etc.) we fall
+  back to the window `load` event so the preloader doesn't hang forever.
+*/
+
+const MIN_MS = 1800;
+const FALLBACK_MS = 6000; // give up waiting for YT after this long
+
 export function SitePreloader() {
   const [phase, setPhase] = useState<"visible" | "fading" | "gone">("visible");
 
@@ -10,19 +24,40 @@ export function SitePreloader() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    const minDelay = new Promise<void>((res) => setTimeout(res, 1400));
-    const pageLoad = new Promise<void>((res) => {
-      if (document.readyState === "complete") res();
-      else window.addEventListener("load", () => res(), { once: true });
-    });
-
-    Promise.all([minDelay, pageLoad]).then(() => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
       if (prefersReduced) {
         setPhase("gone");
       } else {
         setPhase("fading");
       }
+    };
+
+    const minDelay = new Promise<void>((res) => setTimeout(res, MIN_MS));
+
+    // Signal 1: first YT player ready (dispatched by parallax panel's onReady)
+    const ytReady = new Promise<void>((res) => {
+      window.addEventListener("yt-player-ready", () => res(), { once: true });
     });
+
+    // Signal 2: window load (fallback)
+    const pageLoad = new Promise<void>((res) => {
+      if (document.readyState === "complete") res();
+      else window.addEventListener("load", () => res(), { once: true });
+    });
+
+    // Hard fallback — don't block the user if YT never fires
+    const hardFallback = new Promise<void>((res) =>
+      setTimeout(res, FALLBACK_MS)
+    );
+
+    // Resolve on whichever content signal fires first, but always wait for minDelay
+    Promise.all([
+      minDelay,
+      Promise.race([ytReady, pageLoad, hardFallback]),
+    ]).then(finish);
   }, []);
 
   if (phase === "gone") return null;
@@ -45,7 +80,6 @@ export function SitePreloader() {
         pointerEvents: phase === "fading" ? "none" : "auto",
       }}
     >
-      {/* Wordmark */}
       <span
         style={{
           fontFamily: "var(--font-antonio), sans-serif",
@@ -58,7 +92,6 @@ export function SitePreloader() {
         SOURCE
       </span>
 
-      {/* Pulsing dots */}
       <div style={{ display: "flex", gap: "8px" }}>
         {[0, 1, 2].map((i) => (
           <span
