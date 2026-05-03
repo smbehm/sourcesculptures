@@ -129,12 +129,17 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad || !ready) return;
     post("playVideo");
-    // Request 4K on desktop, 720p HD on mobile/tablet.
-    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches;
-    post("setPlaybackQuality", [isMobile ? "hd1080" : "hd2160"]);
+    post("setPlaybackQuality", [desiredQuality]);
+    // Re-assert after YT has buffered, since it often downgrades on first call.
+    const t1 = setTimeout(() => post("setPlaybackQuality", [desiredQuality]), 1500);
+    const t2 = setTimeout(() => post("setPlaybackQuality", [desiredQuality]), 4000);
     if (isActive && !globalMuted) post("unMute");
     else post("mute");
-  }, [isActive, globalMuted, shouldLoad, ready]);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
   // On the first touch/click anywhere, re-issue play to the active video.
