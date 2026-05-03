@@ -112,6 +112,26 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     }
   }, [isActive, globalMuted, shouldLoad, ready]);
 
+  // iOS Safari blocks programmatic autoplay until a user gesture.
+  // On the first touch/click anywhere, re-issue play to the active video.
+  useEffect(() => {
+    if (!shouldLoad) return;
+    const kick = () => {
+      if (isActive) {
+        post("playVideo");
+        if (globalMuted) post("mute");
+      }
+    };
+    window.addEventListener("touchstart", kick, { passive: true });
+    window.addEventListener("touchend", kick, { passive: true });
+    window.addEventListener("click", kick);
+    return () => {
+      window.removeEventListener("touchstart", kick);
+      window.removeEventListener("touchend", kick);
+      window.removeEventListener("click", kick);
+    };
+  }, [shouldLoad, isActive, globalMuted]);
+
   return (
     <section
       ref={sectionRef}
