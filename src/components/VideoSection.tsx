@@ -105,6 +105,9 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         // Manual loop: when video ends (state 0), seek to 0 and play again
         const info = data?.info;
         const playerState = data?.event === "onStateChange" ? data?.info : info?.playerState;
+        if (typeof playerState === "number") {
+          setPlaying(playerState === 1);
+        }
         if (playerState === 0) {
           post("seekTo", [0, true]);
           post("playVideo");
