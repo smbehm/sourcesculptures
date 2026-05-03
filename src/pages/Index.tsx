@@ -28,7 +28,7 @@ const Index = () => {
         <main className="relative w-full overflow-x-hidden bg-background text-foreground">
           <Hero />
           <div id="work">
-            {featuredProjects.map((p) => {
+            {featuredProjects.map((p, i) => {
               const media = resolvePreviewMedia(p);
               if (!media.url && !media.youtubeId) return null;
 
@@ -39,6 +39,7 @@ const Index = () => {
                   title={p.title}
                   href={`/projects/${p.slug}`}
                   poster={getMediaPoster(media, p.title)}
+                  deferUntilScroll={i === 0}
                 />
               );
             })}

@@ -11,12 +11,23 @@ interface VideoSectionProps {
   poster?: string;
   videoUrl?: string;
   showControls?: boolean;
+  deferUntilScroll?: boolean;
 }
 
-const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls = false }: VideoSectionProps) => {
+const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls = false, deferUntilScroll = false }: VideoSectionProps) => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [scrolled, setScrolled] = useState(!deferUntilScroll);
   const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    if (!deferUntilScroll || scrolled) return;
+    const onScroll = () => {
+      if (window.scrollY > 0) setScrolled(true);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [deferUntilScroll, scrolled]);
   const [ready, setReady] = useState(false);
   const { muted: globalMuted } = useSound();
   const { activeId, reportRatio, unregister } = useActiveVideo();
@@ -26,7 +37,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
 
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el) return;
+    if (!el || !scrolled) return;
 
     const ioLoad = new IntersectionObserver(
       (entries) => {
@@ -58,7 +69,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       ioRatio.disconnect();
       unregister(id);
     };
-  }, [id, reportRatio, unregister]);
+  }, [id, reportRatio, unregister, scrolled]);
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
