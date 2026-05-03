@@ -60,9 +60,11 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
-  // Always autoplay muted with no controls; we control play/pause + mute via postMessage
+  // Always autoplay muted with no controls; we control play/pause + mute via postMessage.
+  // NOTE: We intentionally DO NOT pass loop=1&playlist=ID — that makes YouTube render
+  // the center prev/pause/next overlay buttons on mobile. We loop manually via postMessage.
   const src = shouldLoad
-    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
+    ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&cc_load_policy=0&enablejsapi=1`
     : undefined;
 
   const post = (func: string, args: unknown[] = []) => {
