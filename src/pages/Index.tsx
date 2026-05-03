@@ -121,24 +121,57 @@ const Index = () => {
     return () => clearTitleTimers();
   }, [active?.slug, showCaption, reduceMotion, clearTitleTimers]);
 
-  const onTitlePointerActivity = useCallback(() => {
-    if (reduceMotion) return;
+  const touchActiveRef = useRef(false);
+  const showTitleNow = useCallback(() => {
     setTitleFadeInstant(true);
     setTitleOpacity(1);
     requestAnimationFrame(() => requestAnimationFrame(() => setTitleFadeInstant(false)));
+    clearTitleTimers();
+  }, [clearTitleTimers]);
+
+  const scheduleIdleHide = useCallback(() => {
     clearTitleTimers();
     idleHideTimerRef.current = setTimeout(() => {
       setTitleFadeInstant(false);
       setTitleOpacity(0);
     }, IDLE_TITLE_FADE_MS);
-  }, [clearTitleTimers, reduceMotion]);
+  }, [clearTitleTimers]);
+
+  const onTitlePointerActivity = useCallback(() => {
+    if (reduceMotion) return;
+    showTitleNow();
+    if (!touchActiveRef.current) scheduleIdleHide();
+  }, [reduceMotion, showTitleNow, scheduleIdleHide]);
 
   useEffect(() => {
     if (!showCaption || reduceMotion) return;
     const onMove = () => onTitlePointerActivity();
+    const onScrollActivity = () => onTitlePointerActivity();
+    const onTouchStart = () => {
+      touchActiveRef.current = true;
+      showTitleNow();
+    };
+    const onTouchEnd = () => {
+      touchActiveRef.current = false;
+      scheduleIdleHide();
+    };
     window.addEventListener("pointermove", onMove, { passive: true, capture: true });
-    return () => window.removeEventListener("pointermove", onMove, true);
-  }, [showCaption, reduceMotion, onTitlePointerActivity]);
+    window.addEventListener("scroll", onScrollActivity, { passive: true });
+    window.addEventListener("wheel", onScrollActivity, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove, true);
+      window.removeEventListener("scroll", onScrollActivity);
+      window.removeEventListener("wheel", onScrollActivity);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [showCaption, reduceMotion, onTitlePointerActivity, showTitleNow, scheduleIdleHide]);
 
   useEffect(() => {
     if (featuredProjects.length === 0) return;
