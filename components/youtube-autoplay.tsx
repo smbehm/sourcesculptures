@@ -5,8 +5,6 @@ import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 import { patchYtIframeAllow } from "@/components/site-playback-provider";
-import { scheduleMutedYoutubeRetries } from "@/lib/schedule-muted-youtube-retries";
-import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
 import { buildYoutubePlayerVars } from "@/lib/youtube-player-vars";
 import { useYoutubeEmbedReady } from "@/lib/use-youtube-embed-ready";
 
@@ -36,8 +34,8 @@ export function YouTubeAutoplay({
 
   const ytOpts = useMemo(
     () => ({
-      width: 1280,
-      height: 720,
+      width: "100%",
+      height: "100%",
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
@@ -100,7 +98,6 @@ export function YouTubeAutoplay({
     patchYtIframeAllow(e.target);
     registerHeroPlayer(e.target);
     reinforcePlaybackQuality(e.target);
-    scheduleMutedYoutubeRetries(e.target);
   };
 
   const handleInlineReady = (e: {
@@ -108,7 +105,6 @@ export function YouTubeAutoplay({
   }) => {
     patchYtIframeAllow(e.target);
     reinforcePlaybackQuality(e.target);
-    scheduleMutedYoutubeRetries(e.target);
   };
 
   const handleEnd = (e: {
@@ -116,7 +112,7 @@ export function YouTubeAutoplay({
   }) => {
     try {
       e.target.seekTo(0, true);
-      safeYoutubePlayVideo(e.target);
+      e.target.playVideo();
     } catch {
       /* noop */
     }
@@ -168,7 +164,6 @@ export function YouTubeAutoplay({
                       videoId={videoId}
                       opts={ytOpts}
                       title={title}
-                      loading="eager"
                       className={`${sharedTubeClasses} z-0`}
                       iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                       onReady={handleHeroReady}
@@ -211,7 +206,6 @@ export function YouTubeAutoplay({
               videoId={videoId}
               opts={ytOpts}
               title={title}
-              loading="eager"
               className={`${sharedTubeClasses} z-0`}
               iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
               onReady={handleInlineReady}

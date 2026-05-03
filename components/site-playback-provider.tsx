@@ -12,11 +12,6 @@ import {
 import type { YouTubePlayer } from "react-youtube";
 
 import type { VideoQualityTier } from "@/lib/playback-types";
-import { syncAllSiteVideosMuted, tryPlayAllSiteVideos } from "@/lib/native-video-registry";
-import { usePlaybackMuteStore } from "@/lib/playback-mute-store";
-import { safeYoutubePlayVideo } from "@/lib/safe-media-play";
-import { scheduleMutedYoutubeRetries } from "@/lib/schedule-muted-youtube-retries";
-import { SITE_MEDIA_RESUME_EVENT } from "@/lib/site-media-events";
 import {
   applyPreferredQuality,
   reinforcePreferredQuality,
@@ -38,7 +33,6 @@ const IFRAME_ALLOW_FEATURES = [
 
 /**
  * Patch iframe `allow` so autoplay / encrypted-media work across mobile browsers.
- * Chrome Android historically needed `autoplay`; iOS WebKit benefits from the full set.
  */
 export function patchYtIframeAllow(player: YouTubePlayer) {
   try {
@@ -67,15 +61,9 @@ export function patchYtIframeAllow(player: YouTubePlayer) {
 }
 
 /**
- * Mute or request audible playback.
- * For muted autoplay (unlockAudio false), WebKit requires mute() before playVideo().
- * Never call unMute unless unlockAudio — real gesture / scroll-driven unlock only.
+ * Mute or unmute a player (synchronous — preserves mobile gesture chains).
  */
-function setPlayerMuted(
-  player: YouTubePlayer,
-  muted: boolean,
-  unlockAudio = false,
-) {
+function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
     mute?: () => unknown;
     unMute?: () => unknown;
@@ -85,22 +73,15 @@ function setPlayerMuted(
   try {
     if (muted) {
       p.mute?.();
-      return;
+    } else {
+      p.unMute?.();
+      p.setVolume?.(100);
+      p.playVideo?.();
     }
-    if (!unlockAudio) {
-      p.mute?.();
-      safeYoutubePlayVideo(p);
-      return;
-    }
-    p.unMute?.();
-    p.setVolume?.(100);
-    safeYoutubePlayVideo(p);
   } catch {
     /* noop — iframe may be mid-teardown */
   }
 }
-
-const STORAGE_MUTE = "sourcesculptures:playback:mute";
 
 function preferredTierForViewport(): VideoQualityTier {
   if (typeof window === "undefined") return "hd1080";
@@ -108,7 +89,6 @@ function preferredTierForViewport(): VideoQualityTier {
 }
 
 type PlaybackContextValue = {
-  toggleMute: () => void;
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
   setActiveParallaxSlug: (slug: string | null) => void;
@@ -124,37 +104,15 @@ export function SitePlaybackProvider({
 }) {
   const [videoQuality, setVideoQuality] = useState<VideoQualityTier>("hd1080");
 
-  // Refs for synchronous access inside callbacks (no stale closures)
-  const siteMutedRef = useRef(false);
   const videoQualityRef = useRef<VideoQualityTier>("hd1080");
   const activeParallaxSlugRef = useRef<string | null>(null);
   const parallaxPlayersRef = useRef<Map<string, YouTubePlayer>>(new Map());
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
-  const initialGestureUnlockDoneRef = useRef(false);
-  /** After a real unlock gesture, panel switches may call unMute (desktop + post-unlock iOS). */
-  const sessionAudioUnlockedRef = useRef(false);
-
-  const siteMuted = usePlaybackMuteStore((s) => s.siteMuted);
-
-  // Keep refs in sync with state
-  useEffect(() => {
-    siteMutedRef.current = siteMuted;
-  }, [siteMuted]);
 
   useEffect(() => {
     videoQualityRef.current = videoQuality;
   }, [videoQuality]);
 
-  // Persist to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_MUTE, siteMuted ? "1" : "0");
-    } catch {
-      /* noop */
-    }
-  }, [siteMuted]);
-
-  // Track viewport quality tier
   useEffect(() => {
     const sync = () => {
       const tier = preferredTierForViewport();
@@ -168,155 +126,31 @@ export function SitePlaybackProvider({
   }, []);
 
   /**
-   * Apply the mute policy synchronously — reads only refs.
-   * Use `unlockAudio: true` only from real user gestures (toggle, first tap).
+   * Route audio to the active parallax panel only, or to the hero on project pages.
+   * No global mute UI — whichever strip is “audible” plays sound.
    */
-  const applyPolicySync = useCallback(
-    (muted: boolean, opts?: { unlockAudio?: boolean }) => {
-      const gestureUnlock = opts?.unlockAudio ?? false;
-      if (muted) {
-        sessionAudioUnlockedRef.current = false;
-      } else if (gestureUnlock) {
-        sessionAudioUnlockedRef.current = true;
-      }
-      const unlock =
-        gestureUnlock || (!muted && sessionAudioUnlockedRef.current);
+  const applyPolicySync = useCallback(() => {
+    const q = videoQualityRef.current;
+    const hero = heroPlayerRef.current;
+    const audibleSlug = hero ? null : activeParallaxSlugRef.current;
 
-      const physicalSiteMuted = muted || !sessionAudioUnlockedRef.current;
-      syncAllSiteVideosMuted(physicalSiteMuted);
-      usePlaybackMuteStore.setState({ physicalSiteMuted: physicalSiteMuted });
+    parallaxPlayersRef.current.forEach((player, slug) => {
+      applyPreferredQuality(player, q);
+      const silence =
+        audibleSlug === null ? true : slug !== audibleSlug;
+      setPlayerMuted(player, silence);
+    });
 
-      const q = videoQualityRef.current;
-      const hero = heroPlayerRef.current;
-      const audibleSlug = hero ? null : activeParallaxSlugRef.current;
-
-      parallaxPlayersRef.current.forEach((player, slug) => {
-        applyPreferredQuality(player, q);
-        /* When `audibleSlug` is still null (before scroll settles), do not treat every panel as
-         * “silent” — `slug !== null` was always true and forced mute()-only, killing autoplay. */
-        const silence =
-          muted ||
-          (audibleSlug !== null && slug !== audibleSlug);
-        if (silence) {
-          setPlayerMuted(player, true);
-        } else {
-          setPlayerMuted(player, false, unlock);
-        }
-      });
-
-      if (hero) {
-        applyPreferredQuality(hero, q);
-        setPlayerMuted(hero, muted, !muted && unlock);
-      }
-    },
-    [],
-  );
-
-  // Hydrate mute preference from localStorage and sync physical mute / native videos
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_MUTE);
-      if (stored === "1") {
-        siteMutedRef.current = true;
-        usePlaybackMuteStore.setState({ siteMuted: true });
-      } else if (stored === "0") {
-        siteMutedRef.current = false;
-        usePlaybackMuteStore.setState({ siteMuted: false });
-      }
-    } catch {
-      /* noop */
+    if (hero) {
+      applyPreferredQuality(hero, q);
+      setPlayerMuted(hero, false);
     }
-    applyPolicySync(siteMutedRef.current);
-  }, [applyPolicySync]);
-
-  /**
-   * Toggle site mute preference.
-   * Audio unlock only when turning sound ON — not when muting, and not tied to starting playback.
-   */
-  const toggleMute = useCallback(() => {
-    const next = !siteMutedRef.current;
-    siteMutedRef.current = next;
-    usePlaybackMuteStore.setState({ siteMuted: next });
-    if (next) {
-      applyPolicySync(true);
-    } else {
-      applyPolicySync(false, { unlockAudio: true });
-    }
-  }, [applyPolicySync]);
-
-  // Sync mute across tabs (no gesture — never unlock audio remotely)
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key !== STORAGE_MUTE) return;
-      if (e.newValue === "1") {
-        siteMutedRef.current = true;
-        usePlaybackMuteStore.setState({ siteMuted: true });
-        applyPolicySync(true);
-      } else if (e.newValue === "0") {
-        siteMutedRef.current = false;
-        usePlaybackMuteStore.setState({ siteMuted: false });
-        applyPolicySync(false);
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, [applyPolicySync]);
-
-  /**
-   * First touchstart, click, or scroll (excluding mute control) unlocks audio if the user
-   * has not chosen muted via the control / persisted mute (`siteMuted`).
-   */
-  useEffect(() => {
-    const onFirstGesture = (e: Event) => {
-      if (initialGestureUnlockDoneRef.current) return;
-      const t = e.target as HTMLElement | null;
-      if (t?.closest?.("[data-site-mute-control]")) return;
-      if (usePlaybackMuteStore.getState().siteMuted) return;
-      initialGestureUnlockDoneRef.current = true;
-      applyPolicySync(false, { unlockAudio: true });
-      tryPlayAllSiteVideos();
-    };
-    const optsTouch = { capture: true, passive: true } as const;
-    const optsScroll = { capture: true, passive: true } as const;
-    const optsWheel = { capture: true, passive: true } as const;
-    window.addEventListener("touchstart", onFirstGesture, optsTouch);
-    window.addEventListener("click", onFirstGesture, true);
-    window.addEventListener("scroll", onFirstGesture, optsScroll);
-    window.addEventListener("wheel", onFirstGesture, optsWheel);
-    return () => {
-      window.removeEventListener("touchstart", onFirstGesture, optsTouch);
-      window.removeEventListener("click", onFirstGesture, true);
-      window.removeEventListener("scroll", onFirstGesture, optsScroll);
-      window.removeEventListener("wheel", onFirstGesture, optsWheel);
-    };
-  }, [applyPolicySync]);
-
-  /** Intro overlay blocks the viewport — browsers often skip muted autoplay until it clears. */
-  useEffect(() => {
-    const resume = () => {
-      applyPolicySync(siteMutedRef.current);
-      parallaxPlayersRef.current.forEach((player) =>
-        scheduleMutedYoutubeRetries(player),
-      );
-      const hero = heroPlayerRef.current;
-      if (hero) scheduleMutedYoutubeRetries(hero);
-    };
-    window.addEventListener(SITE_MEDIA_RESUME_EVENT, resume);
-    return () => window.removeEventListener(SITE_MEDIA_RESUME_EVENT, resume);
-  }, [applyPolicySync]);
+  }, []);
 
   const setActiveParallaxSlug = useCallback(
     (slug: string | null) => {
-      const prev = activeParallaxSlugRef.current;
       activeParallaxSlugRef.current = slug;
-      const slugChanged = prev !== slug;
-      /** Scroll-driven panel changes count as user interaction for iframe audio handoff (desktop wheel + mobile scroll). */
-      const unlockFromParallax =
-        slugChanged && slug !== null && !siteMutedRef.current;
-      applyPolicySync(
-        siteMutedRef.current,
-        unlockFromParallax ? { unlockAudio: true } : undefined,
-      );
+      applyPolicySync();
     },
     [applyPolicySync],
   );
@@ -326,49 +160,45 @@ export function SitePlaybackProvider({
       const m = parallaxPlayersRef.current;
       if (player) {
         m.set(slug, player);
-        // Apply current policy to newly registered player
-        applyPolicySync(siteMutedRef.current);
+        applyPolicySync();
       } else {
         m.delete(slug);
       }
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const registerHeroPlayer = useCallback(
     (player: YouTubePlayer | null) => {
       heroPlayerRef.current = player;
       if (player) {
-        applyPolicySync(siteMutedRef.current);
+        applyPolicySync();
       }
     },
-    [applyPolicySync]
+    [applyPolicySync],
   );
 
   const reinforcePlaybackQuality = useCallback((player: YouTubePlayer) => {
     reinforcePreferredQuality(player, videoQualityRef.current);
   }, []);
 
-  // Re-apply policy whenever quality tier changes
   useEffect(() => {
-    applyPolicySync(siteMutedRef.current);
+    applyPolicySync();
   }, [videoQuality, applyPolicySync]);
 
   const value = useMemo(
     () => ({
-      toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
       reinforcePlaybackQuality,
     }),
     [
-      toggleMute,
       registerParallaxPlayer,
       registerHeroPlayer,
       setActiveParallaxSlug,
       reinforcePlaybackQuality,
-    ]
+    ],
   );
 
   return (
@@ -378,11 +208,10 @@ export function SitePlaybackProvider({
 
 export function useSitePlayback() {
   const ctx = useContext(PlaybackContext);
-  const siteMuted = usePlaybackMuteStore((s) => s.siteMuted);
   if (!ctx) {
     throw new Error("useSitePlayback must be used within SitePlaybackProvider");
   }
-  return { ...ctx, siteMuted };
+  return ctx;
 }
 
 /** @deprecated Use useSitePlayback */

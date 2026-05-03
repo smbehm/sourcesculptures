@@ -9,8 +9,13 @@ export function buildYoutubePlayerVars(options: {
    * If this does not match the real page, mute/quality API calls fail silently.
    */
   origin?: string;
+  /**
+   * Viewport-based hint for initial quality (`vq`). Omit or pass false on SSR.
+   */
+  isMobile?: boolean;
 }): Record<string, string | number> {
   const origin = options.origin?.trim() || getYoutubeEmbedOrigin();
+  const isMobile = options.isMobile ?? false;
   const v: Record<string, string | number> = {
     enablejsapi: 1,
     autoplay: 1,
@@ -25,7 +30,7 @@ export function buildYoutubePlayerVars(options: {
     cc_load_policy: 0,
     /** Deprecated but still suppresses some metadata chrome in several embed builds */
     showinfo: 0,
-    /* Quality is applied via IFrame API (`youtube-quality.ts`). Omit legacy `vq` — it can break embeds. */
+    vq: isMobile ? "hd1080" : "hd2160",
   };
   if (origin) {
     v.origin = origin;

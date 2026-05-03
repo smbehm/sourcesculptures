@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalPlaybackBar } from "@/components/global-playback-bar";
 import { PlaybackRouteSync } from "@/components/playback-route-sync";
 import { SitePlaybackProvider } from "@/components/site-playback-provider";
 
@@ -9,7 +8,6 @@ export function SiteAudioShell({ children }: { children: React.ReactNode }) {
     <SitePlaybackProvider>
       {children}
       <PlaybackRouteSync />
-      <GlobalPlaybackBar />
     </SitePlaybackProvider>
   );
 }

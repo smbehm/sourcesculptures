@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RulerRule } from "@/components/ruler-rule";
 import { siteConfig } from "@/lib/site";
 
 export function SiteFooter() {
@@ -6,6 +7,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-white/10 bg-black text-white/55">
+      <RulerRule className="border-t-0" />
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-14 px-6 py-20 text-center md:px-10">
         <div className="space-y-4">
           <p className="text-[10px] tracking-[0.45em] text-white/35 uppercase">
@@ -56,6 +58,7 @@ export function SiteFooter() {
           © {year} {siteConfig.legalName}. All rights reserved.
         </p>
       </div>
+      <RulerRule className="border-b-0 opacity-60" />
     </footer>
   );
 }
