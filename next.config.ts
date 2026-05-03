@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
+  env: {
+    NEXT_PUBLIC_BUILD_STAMP: new Date().toISOString(),
+  },
   /** Prefer `/projects/slug/` → `.../index.html` on static hosts (clean URLs). */
   trailingSlash: true,
   images: {

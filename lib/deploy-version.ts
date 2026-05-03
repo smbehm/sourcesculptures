@@ -10,6 +10,8 @@
 export function getDeployVersionLabel(): string {
   const explicit = process.env.NEXT_PUBLIC_DEPLOY_VERSION?.trim();
   if (explicit) return explicit;
+  const buildStamp = process.env.NEXT_PUBLIC_BUILD_STAMP?.trim();
+  const stampShort = buildStamp ? buildStamp.slice(0, 16).replace("T", " ") : null;
 
   const rawSha =
     process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.trim() ??
@@ -22,9 +24,13 @@ export function getDeployVersionLabel(): string {
       ? rawDpl.replace(/^dpl_/, "").slice(-6)
       : null;
 
+  if (sha && dplShort && stampShort) return `${sha} · ${dplShort} · ${stampShort}`;
   if (sha && dplShort) return `${sha} · ${dplShort}`;
+  if (sha && stampShort) return `${sha} · ${stampShort}`;
+  if (dplShort && stampShort) return `${dplShort} · ${stampShort}`;
   if (sha) return sha;
   if (dplShort) return dplShort;
+  if (stampShort) return stampShort;
 
   return "local";
 }

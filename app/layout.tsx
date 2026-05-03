@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Antonio, Inter } from "next/font/google";
 import "./globals.css";
 import { LenisProvider } from "@/components/lenis-provider";
 import { AmberHeader } from "@/components/amber-header";
@@ -9,17 +8,6 @@ import { SitePreloader } from "@/components/site-preloader";
 import { DeployVersionBadge } from "@/components/deploy-version-badge";
 import { siteConfig } from "@/lib/site";
 import { JsonLd } from "@/components/json-ld";
-
-const antonio = Antonio({
-  variable: "--font-antonio",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -67,10 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${antonio.variable} ${inter.variable} min-h-full antialiased`}
-    >
+    <html lang="en" className="min-h-full antialiased">
       <body className="min-h-full bg-black text-zinc-100">
         {/* Preloader must be first — renders above everything at z-9999 */}
         <SitePreloader />
