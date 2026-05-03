@@ -11,9 +11,20 @@ export function SitePreloader() {
     ).matches;
 
     const minDelay = new Promise<void>((res) => setTimeout(res, 1400));
+    /** If `load` never fires (blocked subresource, extension, etc.), don't block the whole site. */
     const pageLoad = new Promise<void>((res) => {
-      if (document.readyState === "complete") res();
-      else window.addEventListener("load", () => res(), { once: true });
+      if (document.readyState === "complete") {
+        res();
+        return;
+      }
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        res();
+      };
+      window.addEventListener("load", finish, { once: true });
+      window.setTimeout(finish, 12_000);
     });
 
     Promise.all([minDelay, pageLoad]).then(() => {
@@ -45,7 +56,6 @@ export function SitePreloader() {
         pointerEvents: phase === "fading" ? "none" : "auto",
       }}
     >
-      {/* Wordmark */}
       <span
         style={{
           fontFamily: "var(--font-antonio), sans-serif",
@@ -58,7 +68,6 @@ export function SitePreloader() {
         SOURCE
       </span>
 
-      {/* Pulsing dots */}
       <div style={{ display: "flex", gap: "8px" }}>
         {[0, 1, 2].map((i) => (
           <span
