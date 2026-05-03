@@ -1,5 +1,7 @@
 "use client";
 
+/** Parallax panels register with `SitePlaybackProvider`; active slug + mute routing are centralized there. */
+
 import Image from "next/image";
 import Link from "next/link";
 import {

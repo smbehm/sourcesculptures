@@ -14,7 +14,16 @@ export function GlobalPlaybackBar() {
       <div className="flex flex-row items-stretch rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md">
         <button
           type="button"
-          onClick={toggleMute}
+          onPointerUp={(e) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            toggleMute();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggleMute();
+            }
+          }}
           aria-pressed={!siteMuted}
           title={siteMuted ? "Unmute video audio" : "Mute video audio"}
           className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10"

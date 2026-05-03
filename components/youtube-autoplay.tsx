@@ -1,5 +1,7 @@
 "use client";
 
+/** Site-wide mute and “who gets audio” rules live in `components/site-playback-provider.tsx`. */
+
 import Image from "next/image";
 import YouTube from "react-youtube";
 import { useEffect, useMemo, useRef, useState } from "react";

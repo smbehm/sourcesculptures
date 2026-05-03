@@ -20,11 +20,6 @@ import {
 
 export type { VideoQualityTier };
 
-/**
- * Drive YouTube iframe mute state synchronously.
- * iOS Safari only honors unmute/play when it runs in the same turn as a real user gesture —
- * do not defer via Promise.then, queueMicrotask, or requestAnimationFrame from the mute button.
- */
 function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   const p = player as unknown as {
     mute?: () => void;
@@ -45,10 +40,8 @@ function setPlayerMuted(player: YouTubePlayer, muted: boolean) {
   }
 }
 
-/** Persisted site-wide in localStorage (survives reload and matches cross-route SPA state after hydrate). */
 const STORAGE_MUTE = "sourcesculptures:playback:mute";
 
-/** Mobile/tablet: ask YouTube for HD; desktop: ask for 4K (best-effort per video + API). */
 function preferredTierForViewport(): VideoQualityTier {
   if (typeof window === "undefined") return "hd1080";
   return window.matchMedia("(max-width: 1023px)").matches ? "hd1080" : "hd2160";
@@ -60,14 +53,12 @@ type PlaybackContextValue = {
   registerParallaxPlayer: (slug: string, player: YouTubePlayer | null) => void;
   registerHeroPlayer: (player: YouTubePlayer | null) => void;
   setActiveParallaxSlug: (slug: string | null) => void;
-  /** Call when the player enters PLAYING — quality requests stick better after playback starts. */
   reinforcePlaybackQuality: (player: YouTubePlayer) => void;
 };
 
 const PlaybackContext = createContext<PlaybackContextValue | null>(null);
 
 export function SitePlaybackProvider({ children }: { children: React.ReactNode }) {
-  /** Default unmuted: global bar mutes/unmutes the whole site; only one embed gets sound when unmuted. */
   const [siteMuted, setSiteMuted] = useState(false);
   const [videoQuality, setVideoQualityState] = useState<VideoQualityTier>("hd1080");
   const [prefsHydrated, setPrefsHydrated] = useState(false);
@@ -76,6 +67,8 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const heroPlayerRef = useRef<YouTubePlayer | null>(null);
   const videoQualityRef = useRef(videoQuality);
   const siteMutedRef = useRef(siteMuted);
+  /** Tracks prior `siteMuted` so we can nudge playback only when leaving muted → unmuted. */
+  const prevSiteMutedRef = useRef(siteMuted);
 
   useLayoutEffect(() => {
     videoQualityRef.current = videoQuality;
@@ -95,7 +88,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  /** Preferred stream tier follows viewport (HD on mobile, 4K on desktop). */
   useEffect(() => {
     const sync = () => setVideoQualityState(preferredTierForViewport());
     sync();
@@ -104,7 +96,6 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  /** Keep mute in sync across browser tabs. */
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_MUTE && (e.newValue === "0" || e.newValue === "1")) {
@@ -127,14 +118,17 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   const applyPolicy = useCallback(
     (muted: boolean) => {
       const q = videoQualityRef.current;
-      const hero = heroPlayerRef.current;
-      const parallaxAudibleSlug = hero ? null : activeParallaxSlug;
 
       parallaxPlayersRef.current.forEach((player, slug) => {
-        const audible = !muted && slug === parallaxAudibleSlug;
         applyPreferredQuality(player, q);
-        setPlayerMuted(player, !audible);
+        if (muted) {
+          setPlayerMuted(player, true);
+        } else {
+          setPlayerMuted(player, slug !== activeParallaxSlug);
+        }
       });
+
+      const hero = heroPlayerRef.current;
       if (hero) {
         applyPreferredQuality(hero, q);
         setPlayerMuted(hero, muted);
@@ -144,12 +138,8 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   );
 
   const toggleMute = useCallback(() => {
-    const next = !siteMuted;
-    siteMutedRef.current = next;
-    /** Same synchronous turn as the button gesture — required for mobile browser audio policy. */
-    applyPolicy(next);
-    setSiteMuted(next);
-  }, [siteMuted, applyPolicy]);
+    setSiteMuted((prev) => !prev);
+  }, []);
 
   const registerParallaxPlayer = useCallback(
     (slug: string, player: YouTubePlayer | null) => {
@@ -180,6 +170,27 @@ export function SitePlaybackProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     applyPolicy(siteMuted);
   }, [siteMuted, activeParallaxSlug, videoQuality, applyPolicy]);
+
+  /** Mobile Safari often needs an explicit playVideo after unmute via user gesture chain (handled upstream). */
+  useEffect(() => {
+    const prev = prevSiteMutedRef.current;
+    prevSiteMutedRef.current = siteMuted;
+    if (prev !== true || siteMuted !== false) return;
+
+    try {
+      const hero = heroPlayerRef.current;
+      if (hero) {
+        hero.playVideo?.();
+        return;
+      }
+      const slug = activeParallaxSlug;
+      if (slug) {
+        parallaxPlayersRef.current.get(slug)?.playVideo?.();
+      }
+    } catch {
+      /* noop */
+    }
+  }, [siteMuted, activeParallaxSlug]);
 
   const value = useMemo(
     () => ({
