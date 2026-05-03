@@ -74,6 +74,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
             }}
           >
             <iframe
+              key={muted ? "m" : "u"}
               src={src}
               title={title}
               allow="autoplay; encrypted-media; picture-in-picture"
