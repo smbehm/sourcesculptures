@@ -186,11 +186,12 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
           aria-hidden={!isActive}
         >
           <div
-            className="absolute left-1/2 top-1/2 [--yt-oversize:1] md:[--yt-oversize:1.2]"
+            className="absolute left-1/2 top-1/2 [--yt-oversize:1.35] md:[--yt-oversize:1.2]"
             style={{
               transform: "translate(-50%, -50%)",
-              // Desktop: oversize ~20% to clip YouTube's title bar (top) and any UI (bottom).
-              // Mobile: no oversize so the top of the video isn't cropped off.
+              // Oversize on mobile too so YouTube's center play/pause overlay
+              // (which flashes briefly during state changes) is pushed outside
+              // the visible crop.
               width: "calc(max(100vw, calc(100svh * 16 / 9)) * var(--yt-oversize))",
               height: "calc(max(100svh, calc(100vw * 9 / 16)) * var(--yt-oversize))",
             }}
