@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import iconUrl from "@/assets/preloader-icon.svg";
 
 /**
@@ -21,24 +21,22 @@ const Preloader = () => {
     return () => window.removeEventListener("preview-video-ready", onReady);
   }, []);
 
-  // Drive progress: ramps to ~85% over 3s, snaps to 100% when video is ready
-  // (or hard timeout at 7s so we never strand the user).
+  // Drive progress: gradual ramp from 0 → ~92% over ~7s with an ease curve
+  // that lingers in the middle so the fill feels deliberate, not snappy.
+  // Snaps to 100% only after the first video is ready (or 11s hard cap).
   useEffect(() => {
     let raf = 0;
     const tick = () => {
       const elapsed = performance.now() - startedAt.current;
-      // Smooth ease-out toward 85% over ~3000ms
-      const ramp = Math.min(1, elapsed / 3000);
-      const eased = 1 - Math.pow(1 - ramp, 2);
-      let target = eased * 85;
+      const t = Math.min(1, elapsed / 7000);
+      // ease-in-out cubic — slower start, slow middle plateau, gentle finish
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      let target = eased * 92;
 
-      if (videoReadyRef.current && elapsed > 800) target = 100;
-      if (elapsed > 7000) target = 100;
+      if (videoReadyRef.current && elapsed > 1500) target = 100;
+      if (elapsed > 11000) target = 100;
 
-      setProgress((p) => {
-        const next = Math.max(p, target);
-        return next;
-      });
+      setProgress((p) => Math.max(p, target));
 
       if (target >= 100) return;
       raf = requestAnimationFrame(tick);
@@ -72,6 +70,184 @@ const Preloader = () => {
   const fillPct = Math.min(100, Math.max(0, progress));
   // Glow intensity ramps with progress
   const glow = fillPct / 100;
+
+  // ─── Mouse-reactive embers / sparks ─────────────────────────────────────
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mouseRef = useRef({ x: -9999, y: -9999, active: false });
+  const progressRef = useRef(0);
+  progressRef.current = fillPct;
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
+      mouseRef.current.active = true;
+    };
+    const onLeave = () => { mouseRef.current.active = false; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerleave", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; kind: 0 | 1; hue: number };
+    const particles: P[] = [];
+
+    const spawnEmber = () => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      // Embers bias toward emerging from icon area
+      const x = cx + (Math.random() - 0.5) * 220;
+      const y = cy + 40 + Math.random() * 180;
+      particles.push({
+        x: x * dpr,
+        y: y * dpr,
+        vx: (Math.random() - 0.5) * 0.25 * dpr,
+        vy: -(0.25 + Math.random() * 0.55) * dpr,
+        life: 0,
+        max: 180 + Math.random() * 220,
+        size: (0.6 + Math.random() * 1.6) * dpr,
+        kind: 0,
+        hue: 30 + Math.random() * 25,
+      });
+    };
+    const spawnSpark = () => {
+      // Soft sparks around the screen
+      const x = Math.random() * window.innerWidth;
+      const y = window.innerHeight * (0.2 + Math.random() * 0.7);
+      particles.push({
+        x: x * dpr,
+        y: y * dpr,
+        vx: (Math.random() - 0.5) * 0.15 * dpr,
+        vy: -(0.05 + Math.random() * 0.2) * dpr,
+        life: 0,
+        max: 220 + Math.random() * 260,
+        size: (0.5 + Math.random() * 1.1) * dpr,
+        kind: 1,
+        hue: 38 + Math.random() * 18,
+      });
+    };
+
+    let raf = 0;
+    const loop = () => {
+      // Spawn rate scales with fill progress
+      const intensity = 0.3 + progressRef.current / 100;
+      const emberCount = Math.round(2 * intensity);
+      const sparkCount = Math.round(1 * intensity);
+      for (let i = 0; i < emberCount; i++) spawnEmber();
+      for (let i = 0; i < sparkCount; i++) spawnSpark();
+
+      // Soft trail fade
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "lighter";
+
+      const mx = mouseRef.current.x * dpr;
+      const my = mouseRef.current.y * dpr;
+      const mActive = mouseRef.current.active;
+      const influenceR = 180 * dpr;
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life++;
+        if (p.life > p.max) { particles.splice(i, 1); continue; }
+
+        // Mouse influence — gentle push away + swirl
+        if (mActive) {
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < influenceR * influenceR && d2 > 1) {
+            const d = Math.sqrt(d2);
+            const f = (1 - d / influenceR) * 0.6;
+            p.vx += (dx / d) * f;
+            p.vy += (dy / d) * f * 0.8;
+            // Swirl
+            p.vx += (-dy / d) * f * 0.15;
+            p.vy += (dx / d) * f * 0.15;
+          }
+        }
+
+        // Gentle wobble
+        p.vx += Math.sin((p.life + p.x) * 0.02) * 0.01 * dpr;
+        // Damping
+        p.vx *= 0.985;
+        p.vy *= 0.992;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        const lifeT = p.life / p.max;
+        const fade = Math.sin(lifeT * Math.PI); // ease in & out
+        const alpha = (p.kind === 0 ? 0.9 : 0.7) * fade;
+        const r = p.size * (1 + (1 - lifeT) * 0.6);
+
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 6);
+        grad.addColorStop(0, `hsla(${p.hue}, 100%, 75%, ${alpha})`);
+        grad.addColorStop(0.4, `hsla(${p.hue}, 100%, 55%, ${alpha * 0.5})`);
+        grad.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright core
+        ctx.fillStyle = `hsla(50, 100%, 92%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  // ─── Sundial geometry ────────────────────────────────────────────────────
+  const sundial = useMemo(() => {
+    const r = 44;
+    // Build SVG paths for tick marks
+    const ticks = Array.from({ length: 24 }, (_, i) => {
+      const a = (i / 24) * Math.PI * 2 - Math.PI / 2;
+      const inner = i % 6 === 0 ? r - 9 : r - 5;
+      const outer = r - 1;
+      return {
+        x1: 50 + Math.cos(a) * inner,
+        y1: 50 + Math.sin(a) * inner,
+        x2: 50 + Math.cos(a) * outer,
+        y2: 50 + Math.sin(a) * outer,
+        major: i % 6 === 0,
+      };
+    });
+    return { r, ticks };
+  }, []);
+
+  const dialAngle = (fillPct / 100) * 360 - 90; // start at top
 
   return (
     <div
@@ -219,6 +395,80 @@ const Preloader = () => {
               opacity: fillPct > 2 ? 1 : 0,
             }}
           />
+        </div>
+      </div>
+
+      {/* Mouse-reactive ember/spark canvas */}
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0"
+        style={{ mixBlendMode: "screen" }}
+        aria-hidden="true"
+      />
+
+      {/* Sundial percentage */}
+      <div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+        style={{
+          bottom: "8vh",
+          opacity: done ? 0 : 0.95,
+          transition: "opacity 500ms ease",
+        }}
+      >
+        <div className="relative" style={{ width: 120, height: 150 }}>
+          <svg viewBox="0 0 100 100" width={120} height={120}>
+            <defs>
+              <radialGradient id="dialGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(255,200,100,0.35)" />
+                <stop offset="70%" stopColor="rgba(255,200,100,0)" />
+              </radialGradient>
+              <linearGradient id="gnomon" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fff2c2" />
+                <stop offset="100%" stopColor="#ff8a1a" />
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="48" fill="url(#dialGlow)" opacity={0.4 + glow * 0.6} />
+            <circle cx="50" cy="50" r={sundial.r} fill="none" stroke="rgba(255,210,140,0.35)" strokeWidth="0.6" />
+            <circle cx="50" cy="50" r={sundial.r - 0.5} fill="rgba(0,0,0,0.35)" />
+            {sundial.ticks.map((t, i) => (
+              <line
+                key={i}
+                x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+                stroke={t.major ? "rgba(255,220,160,0.95)" : "rgba(255,220,160,0.5)"}
+                strokeWidth={t.major ? 0.8 : 0.4}
+                strokeLinecap="round"
+              />
+            ))}
+            <circle
+              cx="50" cy="50" r={sundial.r - 3}
+              fill="none"
+              stroke="rgba(255,180,80,0.9)"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * (sundial.r - 3)}
+              strokeDashoffset={2 * Math.PI * (sundial.r - 3) * (1 - fillPct / 100)}
+              transform="rotate(-90 50 50)"
+              style={{ filter: "drop-shadow(0 0 2px rgba(255,180,80,0.9))" }}
+            />
+            <g transform={`rotate(${dialAngle + 90} 50 50)`}>
+              <line x1="50" y1="50" x2="50" y2={50 - sundial.r + 4}
+                stroke="url(#gnomon)" strokeWidth="1.2" strokeLinecap="round"
+                style={{ filter: "drop-shadow(0 0 3px rgba(255,180,80,0.9))" }} />
+              <circle cx="50" cy={50 - sundial.r + 4} r="2.2" fill="#ffe9a8"
+                style={{ filter: "drop-shadow(0 0 5px rgba(255,210,120,1))" }} />
+            </g>
+            <circle cx="50" cy="50" r="1.6" fill="#ffd58a" />
+          </svg>
+          <div
+            className="absolute left-0 right-0 text-center font-display tracking-[0.32em] text-[11px]"
+            style={{
+              top: 124,
+              color: "rgba(255,220,170,0.92)",
+              textShadow: "0 0 10px rgba(255,180,80,0.5)",
+            }}
+          >
+            {String(Math.round(fillPct)).padStart(3, "0")}%
+          </div>
         </div>
       </div>
 
