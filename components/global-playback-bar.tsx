@@ -1,9 +1,16 @@
 "use client";
 
+import { useCallback, useRef } from "react";
 import { useSitePlayback } from "@/components/site-playback-provider";
 
 export function GlobalPlaybackBar() {
   const { siteMuted, toggleMute } = useSitePlayback();
+  /** Touch devices emit touchend then a synthetic click — only toggle once */
+  const touchHandledRef = useRef(false);
+
+  const runToggle = useCallback(() => {
+    toggleMute();
+  }, [toggleMute]);
 
   return (
     <div
@@ -14,18 +21,29 @@ export function GlobalPlaybackBar() {
       <div className="flex flex-row items-stretch rounded-full border border-white/25 bg-black/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md">
         <button
           type="button"
-          /**
-           * onPointerUp fires before onClick and keeps the user-gesture
-           * activation alive on iOS/Android. preventDefault stops the
-           * synthetic click from firing a second time.
-           */
-          onPointerUp={(e) => {
-            e.preventDefault();
-            toggleMute();
+          onTouchStart={() => {
+            touchHandledRef.current = true;
+          }}
+          onTouchCancel={() => {
+            touchHandledRef.current = false;
+          }}
+          onTouchEnd={() => {
+            runToggle();
+          }}
+          onClick={() => {
+            if (touchHandledRef.current) {
+              touchHandledRef.current = false;
+              return;
+            }
+            runToggle();
           }}
           aria-pressed={!siteMuted}
           title={siteMuted ? "Unmute video audio" : "Mute video audio"}
-          style={{ touchAction: "manipulation" }}
+          style={{
+            touchAction: "manipulation",
+            WebkitTapHighlightColor: "transparent",
+            cursor: "pointer",
+          }}
           className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full transition hover:bg-white/10"
         >
           <span className="sr-only">

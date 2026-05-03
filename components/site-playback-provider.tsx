@@ -19,10 +19,21 @@ import {
 
 export type { VideoQualityTier };
 
+/** Matches typical YouTube embed policy — iOS Chrome/WKWebKit is strict about missing features. */
+const IFRAME_ALLOW_FEATURES = [
+  "accelerometer",
+  "autoplay",
+  "clipboard-write",
+  "encrypted-media",
+  "gyroscope",
+  "picture-in-picture",
+  "web-share",
+  "fullscreen",
+] as const;
+
 /**
- * Patch `allow="autoplay"` onto the YouTube iframe element.
- * Must be called in onReady. Without this, Chrome Android blocks
- * audio unlock from outside the iframe.
+ * Patch iframe `allow` so autoplay / encrypted-media work across mobile browsers.
+ * Chrome Android historically needed `autoplay`; iOS WebKit benefits from the full set.
  */
 export function patchYtIframeAllow(player: YouTubePlayer) {
   try {
@@ -30,12 +41,21 @@ export function patchYtIframeAllow(player: YouTubePlayer) {
     const iframe = p.getIframe?.();
     if (!iframe) return;
     const cur = iframe.getAttribute("allow") ?? "";
-    if (!cur.includes("autoplay")) {
-      iframe.setAttribute(
-        "allow",
-        [cur, "autoplay"].filter(Boolean).join("; ")
-      );
+    const existing = cur
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const names = new Set(
+      existing.map((chunk) => chunk.split(/\s+/)[0]?.toLowerCase()).filter(Boolean),
+    );
+    const merged = [...existing];
+    for (const feat of IFRAME_ALLOW_FEATURES) {
+      if (!names.has(feat.toLowerCase())) {
+        merged.push(feat);
+        names.add(feat.toLowerCase());
+      }
     }
+    iframe.setAttribute("allow", merged.join("; "));
   } catch {
     /* noop */
   }
