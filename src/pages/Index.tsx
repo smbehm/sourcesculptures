@@ -10,7 +10,7 @@ import { SoundProvider } from "@/context/SoundContext";
 
 const projects = [
   {
-    youtubeId: "lDyARVNEOAc",
+    youtubeId: "aoD2vFN5wFw",
     eyebrow: "Short Film",
     title: "Obsidian",
     subtitle: "An editorial study in light, fabric and silence.",
