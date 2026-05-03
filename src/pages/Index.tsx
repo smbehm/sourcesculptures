@@ -41,20 +41,23 @@ const Index = () => {
                     poster={getMediaPoster(media, p.title)}
                     deferUntilScroll={i === 0}
                   />
-                  <div className="px-6 sm:px-10 py-24 sm:py-32 mx-auto max-w-4xl">
-                    {p.categories?.[0] ? (
-                      <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
-                        {p.categories[0]}
-                      </span>
-                    ) : null}
-                    <h3 className="mt-6 font-display uppercase text-foreground font-bold leading-[0.95] text-[clamp(2rem,6vw,4rem)]">
-                      {p.title}
-                    </h3>
-                    {p.brief_description ? (
-                      <p className="mt-8 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
-                        {p.brief_description}
-                      </p>
-                    ) : null}
+                  <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-end p-6 sm:p-10 md:p-16">
+                    <div className="absolute inset-0 veil" aria-hidden="true" />
+                    <div className="relative">
+                      {p.categories?.[0] ? (
+                        <span className="font-display tracking-cinema text-[10px] sm:text-[11px] uppercase text-white/70 mb-3 block">
+                          {p.categories[0]}
+                        </span>
+                      ) : null}
+                      <h2 className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,9vw,7rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
+                        {p.title}
+                      </h2>
+                      {p.brief_description ? (
+                        <p className="mt-4 max-w-xl text-white/80 text-sm sm:text-base leading-relaxed">
+                          {p.brief_description}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                 </section>
               );
