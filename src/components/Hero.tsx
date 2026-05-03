@@ -17,16 +17,8 @@ const Hero = () => {
       {/* Subtle veil for legibility */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 pointer-events-none" />
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-5 text-center pointer-events-none">
-        <h1 className="font-display flex flex-col items-center uppercase text-white drop-shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
-          <span className="block font-bold leading-[0.86] tracking-[-0.02em] text-[clamp(3rem,15vw,9rem)]">
-            SOURCE
-          </span>
-          <span className="mt-[0.1em] block font-bold leading-[1.05] tracking-[0.14em] text-[clamp(1.25rem,6vw,3.25rem)]">
-            SCULPTURES
-          </span>
-        </h1>
-      </div>
+      {/* Hidden H1 for SEO/a11y */}
+      <h1 className="sr-only">SOURCEsculptures</h1>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-center">
         <p className="font-display tracking-[0.1em] text-[10px] sm:text-[11px] uppercase text-white/80">
