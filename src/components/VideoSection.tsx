@@ -96,6 +96,9 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       try {
         const data = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
         if (data?.event === "onReady" || data?.event === "infoDelivery") {
+          if (!ready) {
+            try { window.dispatchEvent(new Event("preview-video-ready")); } catch { /* noop */ }
+          }
           setReady(true);
         }
         // Manual loop: when video ends (state 0), seek to 0 and play again

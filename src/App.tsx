@@ -13,6 +13,7 @@ import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminProjectsList from "./pages/admin/AdminProjectsList.tsx";
 import AdminProjectEdit from "./pages/admin/AdminProjectEdit.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
+import Preloader from "./components/Preloader.tsx";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <Preloader />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
