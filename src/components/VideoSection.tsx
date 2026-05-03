@@ -37,7 +37,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
 
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el) return;
+    if (!el || !scrolled) return;
 
     const ioLoad = new IntersectionObserver(
       (entries) => {
