@@ -11,19 +11,17 @@ interface VideoSectionProps {
   poster?: string;
 }
 
-const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: VideoSectionProps) => {
+const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [ready, setReady] = useState(false);
-  const [titleVisible, setTitleVisible] = useState(false);
   const { muted: globalMuted } = useSound();
   const { activeId, reportRatio, unregister } = useActiveVideo();
 
   const id = `video-${youtubeId}`;
   const isActive = activeId === id;
 
-  // Build thresholds from 0..1 in fine steps for smooth ratio reporting
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -38,7 +36,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
           }
         }
       },
-      { rootMargin: "150% 0px 150% 0px" }
+      { rootMargin: "200% 0px 200% 0px" }
     );
     ioLoad.observe(el);
 
@@ -47,7 +45,6 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
       (entries) => {
         for (const e of entries) {
           reportRatio(id, e.intersectionRatio);
-          setTitleVisible(e.intersectionRatio > 0.55);
         }
       },
       { threshold: thresholds }
@@ -63,7 +60,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
 
-  // Always load muted (autoplay policy); we control play/pause + mute via postMessage
+  // Always autoplay muted with no controls; we control play/pause + mute via postMessage
   const src = shouldLoad
     ? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&enablejsapi=1`
     : undefined;
@@ -74,6 +71,34 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
     win.postMessage(JSON.stringify({ event: "command", func, args }), "*");
   };
 
+  // Listen for YT iframe "onReady" via postMessage
+  useEffect(() => {
+    if (!shouldLoad) return;
+    const onMessage = (ev: MessageEvent) => {
+      if (ev.source !== iframeRef.current?.contentWindow) return;
+      try {
+        const data = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
+        if (data?.event === "onReady" || data?.event === "infoDelivery") {
+          setReady(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [shouldLoad]);
+
+  // Subscribe to YT events once iframe loads
+  const handleIframeLoad = () => {
+    // Tell YT iframe to start sending us events
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(JSON.stringify({ event: "listening" }), "*");
+    // Fallback: assume ready shortly after
+    setTimeout(() => setReady(true), 600);
+  };
+
   // React to active/mute changes
   useEffect(() => {
     if (!shouldLoad || !ready) return;
@@ -82,13 +107,10 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
       if (globalMuted) post("mute");
       else post("unMute");
     } else {
-      post("pauseVideo");
       post("mute");
+      post("pauseVideo");
     }
   }, [isActive, globalMuted, shouldLoad, ready]);
-
-  const Wrapper: any = href ? "a" : "div";
-  const wrapperProps = href ? { href } : {};
 
   return (
     <section
@@ -101,11 +123,15 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
         loading="lazy"
         decoding="async"
         className="video-cover"
-        style={{ opacity: ready ? 0 : 1, transition: "opacity 700ms ease" }}
+        style={{ opacity: ready && isActive ? 0 : 1, transition: "opacity 500ms ease" }}
       />
 
       {src && (
-        <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ opacity: ready && isActive ? 1 : 0, transition: "opacity 500ms ease" }}
+          aria-hidden={!isActive}
+        >
           <div
             className="absolute left-1/2 top-1/2"
             style={{
@@ -121,19 +147,18 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
               allow="autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
               loading="lazy"
-              onLoad={() => setTimeout(() => setReady(true), 400)}
+              onLoad={handleIframeLoad}
               className="block w-full h-full border-0 pointer-events-none"
             />
           </div>
         </div>
       )}
 
-      {href && (
-        <a
-          href={href}
-          aria-label={title}
-          className="absolute inset-0 z-10 block"
-        />
+      {/* Click-catcher overlay covers any YT UI and provides navigation */}
+      {href ? (
+        <a href={href} aria-label={title} className="absolute inset-0 z-10 block" />
+      ) : (
+        <div className="absolute inset-0 z-10" aria-hidden="true" />
       )}
     </section>
   );
