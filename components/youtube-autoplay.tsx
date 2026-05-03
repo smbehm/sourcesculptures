@@ -34,8 +34,8 @@ export function YouTubeAutoplay({
 
   const ytOpts = useMemo(
     () => ({
-      width: "100%",
-      height: "100%",
+      width: 1280,
+      height: 720,
       playerVars: buildYoutubePlayerVars({
         startMuted: true,
         origin: embedOrigin,
@@ -95,16 +95,28 @@ export function YouTubeAutoplay({
   const handleHeroReady = (e: {
     target: import("react-youtube").YouTubePlayer;
   }) => {
-    patchYtIframeAllow(e.target);
-    registerHeroPlayer(e.target);
-    reinforcePlaybackQuality(e.target);
+    const p = e.target;
+    patchYtIframeAllow(p);
+    registerHeroPlayer(p);
+    reinforcePlaybackQuality(p);
+    try {
+      p.playVideo();
+    } catch {
+      /* noop */
+    }
   };
 
   const handleInlineReady = (e: {
     target: import("react-youtube").YouTubePlayer;
   }) => {
-    patchYtIframeAllow(e.target);
-    reinforcePlaybackQuality(e.target);
+    const p = e.target;
+    patchYtIframeAllow(p);
+    reinforcePlaybackQuality(p);
+    try {
+      p.playVideo();
+    } catch {
+      /* noop */
+    }
   };
 
   const handleEnd = (e: {
@@ -164,6 +176,7 @@ export function YouTubeAutoplay({
                       videoId={videoId}
                       opts={ytOpts}
                       title={title}
+                      loading="eager"
                       className={`${sharedTubeClasses} z-0`}
                       iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                       onReady={handleHeroReady}
@@ -206,6 +219,7 @@ export function YouTubeAutoplay({
               videoId={videoId}
               opts={ytOpts}
               title={title}
+              loading="eager"
               className={`${sharedTubeClasses} z-0`}
               iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
               onReady={handleInlineReady}

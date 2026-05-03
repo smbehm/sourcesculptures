@@ -420,11 +420,24 @@ function ParallaxProjectSection({
                     iframeClassName="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading={priority ? "eager" : "lazy"}
                     onReady={(e) => {
-                      patchYtIframeAllow(e.target);
-                      registerParallaxPlayer(project.slug, e.target);
-                      reinforcePlaybackQuality(e.target);
+                      const p = e.target;
+                      patchYtIframeAllow(p);
+                      registerParallaxPlayer(project.slug, p);
+                      reinforcePlaybackQuality(p);
+                      try {
+                        p.playVideo();
+                      } catch {
+                        /* noop */
+                      }
                     }}
                     onStateChange={(e) => {
+                      if (e.data === YouTube.PlayerState.UNSTARTED) {
+                        try {
+                          e.target.playVideo();
+                        } catch {
+                          /* noop */
+                        }
+                      }
                       if (e.data === YouTube.PlayerState.PLAYING) {
                         reinforcePlaybackQuality(e.target);
                         setShowYtPoster(false);

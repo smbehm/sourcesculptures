@@ -36,6 +36,12 @@ export function SitePreloader() {
     });
   }, []);
 
+  useEffect(() => {
+    if (phase !== "fading") return;
+    const t = window.setTimeout(() => setPhase("gone"), 900);
+    return () => window.clearTimeout(t);
+  }, [phase]);
+
   if (phase === "gone") return null;
 
   return (
