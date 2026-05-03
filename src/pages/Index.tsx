@@ -69,29 +69,27 @@ const Index = () => {
         <main className="relative w-full overflow-x-hidden bg-background text-foreground">
           <Hero />
           <div id="work" className="relative">
-            {/* Fixed-position title overlay — stays centered while #work is in view */}
+            {/* Sticky overlay — pinned to viewport center while #work is in view, content swaps on scroll */}
             {featuredProjects.length > 0 && (
-              <div className="pointer-events-none absolute inset-0 z-30">
-                <div className="sticky top-0 h-screen-stable w-full flex flex-col items-center justify-center text-center px-6">
-                  {active && (
-                    <>
-                      <h2
-                        key={`t-${active.id}`}
-                        className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,7vw,5.5rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)] animate-fade-in"
+              <div className="sticky top-0 h-screen-stable w-full pointer-events-none z-30 -mb-[100svh] flex flex-col items-center justify-center text-center px-6">
+                {active && (
+                  <>
+                    <h2
+                      key={`t-${active.id}`}
+                      className="font-display text-white uppercase font-bold leading-[0.95] text-[clamp(2.5rem,7vw,5.5rem)] drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)] animate-fade-in"
+                    >
+                      {active.title}
+                    </h2>
+                    {active.homepage_subtitle ? (
+                      <div
+                        key={`s-${active.id}`}
+                        className="mt-4 font-display tracking-[0.2em] text-[11px] sm:text-xs uppercase text-white/85 animate-fade-in"
                       >
-                        {active.title}
-                      </h2>
-                      {active.homepage_subtitle ? (
-                        <div
-                          key={`s-${active.id}`}
-                          className="mt-4 font-display tracking-[0.2em] text-[11px] sm:text-xs uppercase text-white/85 animate-fade-in"
-                        >
-                          {active.homepage_subtitle}
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </div>
+                        {active.homepage_subtitle}
+                      </div>
+                    ) : null}
+                  </>
+                )}
               </div>
             )}
 
