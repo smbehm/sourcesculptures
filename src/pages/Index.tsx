@@ -4,6 +4,7 @@ import VideoSection from "@/components/VideoSection";
 import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/context/SoundContext";
+import { ActiveVideoProvider } from "@/context/ActiveVideoContext";
 import { projects } from "@/data/projects";
 import About from "@/components/About";
 import Clients from "@/components/Clients";
@@ -16,25 +17,27 @@ const Index = () => {
 
   return (
     <SoundProvider>
-      <Header />
-      <SoundToggle />
-      <main className="relative w-full overflow-x-hidden bg-background text-foreground">
-        <Hero />
-        <div id="work">
-          {projects.map((p) => (
-            <VideoSection
-              key={p.id}
-              youtubeId={p.youtubeId}
-              eyebrow={p.eyebrow}
-              title={p.title}
-              href={`/projects/${p.slug}`}
-            />
-          ))}
-        </div>
-        <About />
-        <Clients />
-        <CTA />
-      </main>
+      <ActiveVideoProvider>
+        <Header />
+        <SoundToggle />
+        <main className="relative w-full overflow-x-hidden bg-background text-foreground">
+          <Hero />
+          <div id="work">
+            {projects.map((p) => (
+              <VideoSection
+                key={p.id}
+                youtubeId={p.youtubeId}
+                eyebrow={p.eyebrow}
+                title={p.title}
+                href={`/projects/${p.slug}`}
+              />
+            ))}
+          </div>
+          <About />
+          <Clients />
+          <CTA />
+        </main>
+      </ActiveVideoProvider>
     </SoundProvider>
   );
 };
