@@ -8,6 +8,7 @@ interface ProjectMediaSectionProps {
   href?: string;
   poster?: string;
   showControls?: boolean;
+  deferUntilScroll?: boolean;
 }
 
 const ProjectMediaSection = ({
@@ -16,6 +17,7 @@ const ProjectMediaSection = ({
   href,
   poster,
   showControls = false,
+  deferUntilScroll = false,
 }: ProjectMediaSectionProps) => {
   const { muted } = useSound();
 
@@ -27,6 +29,7 @@ const ProjectMediaSection = ({
         href={href}
         poster={poster}
         showControls={showControls}
+        deferUntilScroll={deferUntilScroll}
       />
     );
   }
