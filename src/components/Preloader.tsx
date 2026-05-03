@@ -218,8 +218,6 @@ const Preloader = () => {
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
