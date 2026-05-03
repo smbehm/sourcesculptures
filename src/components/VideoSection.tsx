@@ -116,24 +116,23 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     return () => window.removeEventListener("message", onMessage);
   }, [shouldLoad]);
 
-  // Subscribe to YT events once iframe loads
+  // Subscribe to YT events once iframe loads — and start playing IMMEDIATELY
+  // (muted) so the video is already running by the time it scrolls into view.
   const handleIframeLoad = () => {
-    // Tell YT iframe to start sending us events
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
     win.postMessage(JSON.stringify({ event: "listening" }), "*");
-    // Fallback: assume ready shortly after
-    setTimeout(() => setReady(true), 600);
+    // Force play right away, muted — no wait for active state
+    post("playVideo");
+    post("mute");
+    setTimeout(() => { post("playVideo"); setReady(true); }, 400);
   };
 
-  // React to active/mute changes. Never pause — pausing makes YouTube show
-  // a large center pause/play overlay that we cannot style across origins.
-  // Instead, keep all videos playing and only toggle mute on the active one.
+  // React to active/mute changes — never pause, just toggle mute.
   useEffect(() => {
     if (!shouldLoad || !ready) return;
     post("playVideo");
     post("setPlaybackQuality", [desiredQuality]);
-    // Re-assert after YT has buffered, since it often downgrades on first call.
     const t1 = setTimeout(() => post("setPlaybackQuality", [desiredQuality]), 1500);
     const t2 = setTimeout(() => post("setPlaybackQuality", [desiredQuality]), 4000);
     if (isActive && !globalMuted) post("unMute");
