@@ -33,7 +33,7 @@ const Index = () => {
               if (!media.url && !media.youtubeId) return null;
 
               return (
-                <div key={p.id} className="relative">
+                <section key={p.id} id={p.slug} className="relative w-full bg-background">
                   <ProjectMediaSection
                     media={media}
                     title={p.title}
@@ -41,17 +41,22 @@ const Index = () => {
                     poster={getMediaPoster(media, p.title)}
                     deferUntilScroll={i === 0}
                   />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-6 sm:px-10 pb-10 sm:pb-14 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                    <h2 className="font-display uppercase text-white font-bold leading-[0.95] text-[clamp(1.75rem,5vw,3.5rem)] drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                  <div className="px-6 sm:px-10 py-24 sm:py-32 mx-auto max-w-4xl">
+                    {p.categories?.[0] ? (
+                      <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
+                        {p.categories[0]}
+                      </span>
+                    ) : null}
+                    <h3 className="mt-6 font-display uppercase text-foreground font-bold leading-[0.95] text-[clamp(2rem,6vw,4rem)]">
                       {p.title}
-                    </h2>
+                    </h3>
                     {p.brief_description ? (
-                      <p className="mt-3 max-w-2xl text-white/85 text-sm sm:text-base leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                      <p className="mt-8 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
                         {p.brief_description}
                       </p>
                     ) : null}
                   </div>
-                </div>
+                </section>
               );
             })}
           </div>
