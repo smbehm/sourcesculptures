@@ -71,6 +71,184 @@ const Preloader = () => {
   // Glow intensity ramps with progress
   const glow = fillPct / 100;
 
+  // ─── Mouse-reactive embers / sparks ─────────────────────────────────────
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mouseRef = useRef({ x: -9999, y: -9999, active: false });
+  const progressRef = useRef(0);
+  progressRef.current = fillPct;
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
+      mouseRef.current.active = true;
+    };
+    const onLeave = () => { mouseRef.current.active = false; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerleave", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; kind: 0 | 1; hue: number };
+    const particles: P[] = [];
+
+    const spawnEmber = () => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      // Embers bias toward emerging from icon area
+      const x = cx + (Math.random() - 0.5) * 220;
+      const y = cy + 40 + Math.random() * 180;
+      particles.push({
+        x: x * dpr,
+        y: y * dpr,
+        vx: (Math.random() - 0.5) * 0.25 * dpr,
+        vy: -(0.25 + Math.random() * 0.55) * dpr,
+        life: 0,
+        max: 180 + Math.random() * 220,
+        size: (0.6 + Math.random() * 1.6) * dpr,
+        kind: 0,
+        hue: 30 + Math.random() * 25,
+      });
+    };
+    const spawnSpark = () => {
+      // Soft sparks around the screen
+      const x = Math.random() * window.innerWidth;
+      const y = window.innerHeight * (0.2 + Math.random() * 0.7);
+      particles.push({
+        x: x * dpr,
+        y: y * dpr,
+        vx: (Math.random() - 0.5) * 0.15 * dpr,
+        vy: -(0.05 + Math.random() * 0.2) * dpr,
+        life: 0,
+        max: 220 + Math.random() * 260,
+        size: (0.5 + Math.random() * 1.1) * dpr,
+        kind: 1,
+        hue: 38 + Math.random() * 18,
+      });
+    };
+
+    let raf = 0;
+    const loop = () => {
+      // Spawn rate scales with fill progress
+      const intensity = 0.3 + progressRef.current / 100;
+      const emberCount = Math.round(2 * intensity);
+      const sparkCount = Math.round(1 * intensity);
+      for (let i = 0; i < emberCount; i++) spawnEmber();
+      for (let i = 0; i < sparkCount; i++) spawnSpark();
+
+      // Soft trail fade
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "lighter";
+
+      const mx = mouseRef.current.x * dpr;
+      const my = mouseRef.current.y * dpr;
+      const mActive = mouseRef.current.active;
+      const influenceR = 180 * dpr;
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life++;
+        if (p.life > p.max) { particles.splice(i, 1); continue; }
+
+        // Mouse influence — gentle push away + swirl
+        if (mActive) {
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < influenceR * influenceR && d2 > 1) {
+            const d = Math.sqrt(d2);
+            const f = (1 - d / influenceR) * 0.6;
+            p.vx += (dx / d) * f;
+            p.vy += (dy / d) * f * 0.8;
+            // Swirl
+            p.vx += (-dy / d) * f * 0.15;
+            p.vy += (dx / d) * f * 0.15;
+          }
+        }
+
+        // Gentle wobble
+        p.vx += Math.sin((p.life + p.x) * 0.02) * 0.01 * dpr;
+        // Damping
+        p.vx *= 0.985;
+        p.vy *= 0.992;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        const lifeT = p.life / p.max;
+        const fade = Math.sin(lifeT * Math.PI); // ease in & out
+        const alpha = (p.kind === 0 ? 0.9 : 0.7) * fade;
+        const r = p.size * (1 + (1 - lifeT) * 0.6);
+
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 6);
+        grad.addColorStop(0, `hsla(${p.hue}, 100%, 75%, ${alpha})`);
+        grad.addColorStop(0.4, `hsla(${p.hue}, 100%, 55%, ${alpha * 0.5})`);
+        grad.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright core
+        ctx.fillStyle = `hsla(50, 100%, 92%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  // ─── Sundial geometry ────────────────────────────────────────────────────
+  const sundial = useMemo(() => {
+    const r = 44;
+    // Build SVG paths for tick marks
+    const ticks = Array.from({ length: 24 }, (_, i) => {
+      const a = (i / 24) * Math.PI * 2 - Math.PI / 2;
+      const inner = i % 6 === 0 ? r - 9 : r - 5;
+      const outer = r - 1;
+      return {
+        x1: 50 + Math.cos(a) * inner,
+        y1: 50 + Math.sin(a) * inner,
+        x2: 50 + Math.cos(a) * outer,
+        y2: 50 + Math.sin(a) * outer,
+        major: i % 6 === 0,
+      };
+    });
+    return { r, ticks };
+  }, []);
+
+  const dialAngle = (fillPct / 100) * 360 - 90; // start at top
+
   return (
     <div
       className="fixed inset-0 z-[200] overflow-hidden bg-black"
