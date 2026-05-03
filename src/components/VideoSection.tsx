@@ -76,7 +76,7 @@ const VideoSection = ({ youtubeId, eyebrow, title, subtitle, href, poster }: Vid
 
   // React to active/mute changes
   useEffect(() => {
-    if (!shouldLoad) return;
+    if (!shouldLoad || !ready) return;
     if (isActive) {
       post("playVideo");
       if (globalMuted) post("mute");
