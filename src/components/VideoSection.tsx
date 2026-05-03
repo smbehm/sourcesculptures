@@ -73,7 +73,7 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
     win.postMessage(JSON.stringify({ event: "command", func, args }), "*");
   };
 
-  // Listen for YT iframe "onReady" via postMessage
+  // Listen for YT iframe events via postMessage
   useEffect(() => {
     if (!shouldLoad) return;
     const onMessage = (ev: MessageEvent) => {
@@ -82,6 +82,13 @@ const VideoSection = ({ youtubeId, title, href, poster }: VideoSectionProps) => 
         const data = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
         if (data?.event === "onReady" || data?.event === "infoDelivery") {
           setReady(true);
+        }
+        // Manual loop: when video ends (state 0), seek to 0 and play again
+        const info = data?.info;
+        const playerState = data?.event === "onStateChange" ? data?.info : info?.playerState;
+        if (playerState === 0) {
+          post("seekTo", [0, true]);
+          post("playVideo");
         }
       } catch {
         /* ignore */
