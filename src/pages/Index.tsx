@@ -42,7 +42,7 @@ function CaptionBody({ project }: { project: ProjectRow }) {
         {project.title}
       </h2>
       {subtitle && (
-        <p className="mt-5 text-[15px] tracking-[0.34em] text-white/90 uppercase sm:text-[17px]">
+        <p className="mt-1 text-[15px] tracking-[0.34em] text-white/90 uppercase sm:text-[17px]">
           {subtitle}
         </p>
       )}
