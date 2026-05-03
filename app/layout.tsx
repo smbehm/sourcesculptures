@@ -6,6 +6,7 @@ import { AmberHeader } from "@/components/amber-header";
 import { SiteAudioShell } from "@/components/site-audio-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { siteConfig } from "@/lib/site";
+import { DeployVersionBadge } from "@/components/deploy-version-badge";
 import { JsonLd } from "@/components/json-ld";
 
 const antonio = Antonio({
@@ -79,6 +80,7 @@ export default function RootLayout({
               <SiteFooter />
             </div>
           </SiteAudioShell>
+          <DeployVersionBadge />
         </LenisProvider>
       </body>
     </html>
