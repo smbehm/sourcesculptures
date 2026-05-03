@@ -158,14 +158,14 @@ const ContactPage = () => {
 
               <div>
                 <span className="font-display tracking-cinema text-[10px] uppercase text-muted-foreground">
-                  Follow us
+                  Connect
                 </span>
                 <p className="mt-5 text-muted-foreground leading-relaxed max-w-md">
                   Whether you're dreaming up a new project, seeking a creative
-                  collaborator, or simply curious about our work. We would love
+                  collaborator, or simply curious about our work — we would love
                   to hear from you.
                 </p>
-                <div className="mt-6 flex gap-8">
+                <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
                   {[
                     { label: "Instagram", href: "#" },
                     { label: "Vimeo", href: "#" },
