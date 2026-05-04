@@ -1,5 +1,5 @@
 const services = [
-  "Brand Films",
+  "CAD / CAM Design",
   "Commercials & Ad Spots",
   "Event Cinematography",
   "Editorial & Fashion Films",
@@ -29,7 +29,7 @@ const About = () => {
 
         <div className="mt-20">
           <h3 className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground mb-8">
-            Services
+            PASSION'S 
           </h3>
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
             {services.map((s) => (
