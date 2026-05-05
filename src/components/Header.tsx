@@ -4,6 +4,8 @@ import { projects } from "@/data/projects";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -11,6 +13,16 @@ const Header = () => {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.dispatchEvent(new Event("reset-videos"));
+    } else {
+      navigate("/");
+    }
+  };
 
   const links = [
     { label: "Home", to: "/" },
@@ -22,12 +34,13 @@ const Header = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 sm:px-10 py-5 mix-blend-difference">
-        <Link
-          to="/"
-          className="font-display tracking-cinema text-[11px] sm:text-[12px] uppercase text-white font-bold"
+        <a
+          href="/"
+          onClick={handleLogoClick}
+          className="font-display tracking-cinema text-[11px] sm:text-[12px] uppercase text-white font-bold cursor-pointer"
         >
           SOURCE
-        </Link>
+        </a>
         <button
           onClick={() => setOpen((v) => !v)}
           className="font-display tracking-cinema text-[11px] sm:text-[12px] uppercase text-white font-bold"
