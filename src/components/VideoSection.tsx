@@ -199,9 +199,11 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad) return;
     const kick = () => {
-      if (!inView) return;
+      // Always pump playVideo on ANY user gesture so YouTube's iOS
+      // gesture-required overlay never appears. The video stays muted
+      // when off-screen via the inView effect above.
       post("playVideo");
-      if (isActive && !globalMuted) post("unMute");
+      if (inView && isActive && !globalMuted) post("unMute");
       else post("mute");
     };
     window.addEventListener("touchstart", kick, { passive: true });
