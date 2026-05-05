@@ -9,7 +9,7 @@ const About = () => {
             ABOUT US
         </span>
         <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
-          Together, Rey Jaffet & Sean Behm create immersive works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
+          Together, Rey Jaffet & Sean Behm create immersive and monumental works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
           <br /><br />
           Rooted in trust, passion, and a shared vision, their collaboration transforms ambitious ideas into tangible realities. Each piece is a testament to what becomes possible when creativity is guided by love, curiosity, and fearless execution. Their journey continues to unfold, driven by gratitude, exploration, and a deep commitment to inspiring others through art that resonates far beyond the physical form.
         </h2>
@@ -19,7 +19,7 @@ const About = () => {
             ABOUT REY JAFFET
           </span>
           <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
-            Rey Jaffet is an artist whose life and work are devoted to creating portals into the infinite—a bridge between individual experience and collective consciousness. From a young age, his path has been guided by immersion in art, leading to the creation of powerful connections, vivid experiences, and large-scale works that resonate across cultures and communities.
+            Rey Jaffet is an artist whose life and work are devoted to creating portals into the infinite, a bridge between individual experience and collective consciousness. From a young age, his path has been guided by immersion in art, leading to the creation of powerful connections, vivid experiences, and large-scale works that resonate across cultures and communities.
             <br /><br />
             Working across stainless steel, fire, lighting systems, painting, and mixed media, Rey’s creations explore the balance between movement and stillness, energy and form. His intention is clear: to inspire love over fear, to reveal the beauty of interconnectedness, and to spark the realization that we are all part of something greater.
             <br /><br />
