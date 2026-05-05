@@ -92,26 +92,67 @@ const Field = ({
   </label>
 );
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().email("Invalid email").max(255),
+  phone: z.string().trim().max(50).optional().or(z.literal("")),
+  message: z.string().trim().min(1, "Message is required").max(2000),
+});
+
 const ContactPage = () => {
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     document.title = "Contact — SOURCEsculptures";
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") || "");
-    const email = String(data.get("email") || "");
-    const phone = String(data.get("phone") || "");
-    const message = String(data.get("message") || "");
-    const body = encodeURIComponent(
-      `${message}\n\n— ${name}\n${email}${phone ? "\n" + phone : ""}`
-    );
-    window.location.href = `mailto:reach@sourcesculptures.com?subject=${encodeURIComponent(
-      "New inquiry from " + name
-    )}&body=${body}`;
+    if (submitting) return;
+
+    const formEl = e.currentTarget;
+    const data = new FormData(formEl);
+    const parsed = contactSchema.safeParse({
+      name: data.get("name"),
+      email: data.get("email"),
+      phone: data.get("phone") || "",
+      message: data.get("message"),
+    });
+
+    if (!parsed.success) {
+      const first = parsed.error.errors[0]?.message ?? "Please check your inputs.";
+      toast({ title: "Please fix the form", description: first, variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "contact-form-notification",
+          recipientEmail: "reach@sourcesculptures.com",
+          idempotencyKey: `contact-${crypto.randomUUID()}`,
+          templateData: parsed.data,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Message sent",
+        description: "Thanks — we'll be in touch shortly.",
+      });
+      formEl.reset();
+    } catch (err: any) {
+      toast({
+        title: "Could not send",
+        description: err?.message ?? "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
 
   return (
     <SoundProvider>
