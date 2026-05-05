@@ -113,10 +113,8 @@ const ContactPage = () => {
             <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
               Contact
             </span>
-            <h1 className="font-display uppercase text-foreground font-bold leading-[0.92] text-[clamp(2.75rem,10vw,7.5rem)] max-w-5xl mt-8">
+            <h1 className="font-display uppercase text-foreground font-bold leading-[0.92] text-[clamp(1.375rem,5vw,3.75rem)] max-w-5xl mt-8">
               Let's create
-              <br />
-              something timeless.
             </h1>
           </div>
         </section>
@@ -136,24 +134,7 @@ const ContactPage = () => {
                   >
                     reach@sourcesculptures.com
                   </a>
-                  <a
-                    href="tel:+13105550199"
-                    className="block text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    +1 (310) 555 0199
-                  </a>
                 </div>
-              </div>
-
-              <div>
-                <span className="font-display tracking-cinema text-[10px] uppercase text-muted-foreground">
-                  Studio
-                </span>
-                <p className="mt-5 text-foreground leading-relaxed">
-                  8427 Melrose Avenue, Suite 205
-                  <br />
-                  Los Angeles, CA 90069 USA
-                </p>
               </div>
 
               <div>
@@ -161,9 +142,7 @@ const ContactPage = () => {
                   Connect
                 </span>
                 <p className="mt-5 text-muted-foreground leading-relaxed max-w-md">
-                  Whether you're dreaming up a new project, seeking a creative
-                  collaborator, or simply curious about our work — we would love
-                  to hear from you.
+                  Open the portal to creativity through collaboration.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
                   {[
