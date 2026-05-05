@@ -21,10 +21,10 @@ const About = () => {
         <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
           Studio
         </span>
-        <h2 className="mt-6 font-display text-foreground text-[clamp(1.6rem,4vw,2.75rem)] leading-[1.2] font-medium w-full">
-          We're a videography studio driven by a love for cinematic storytelling and intentional
-          filmmaking. From brand films and commercials to weddings and editorial pieces, we bring a
-          crafted, artful approach to every frame.
+        <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify">
+          Together, Rey Jaffet & Sean Behm create immersive works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
+          <br /><br />
+          Rooted in trust, passion, and a shared vision, their collaboration transforms ambitious ideas into tangible realities. Each piece is a testament to what becomes possible when creativity is guided by love, curiosity, and fearless execution. Their journey continues to unfold, driven by gratitude, exploration, and a deep commitment to inspiring others through art that resonates far beyond the physical form.
         </h2>
 
         <div className="mt-20">
