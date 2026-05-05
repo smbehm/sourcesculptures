@@ -61,6 +61,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       (entries) => {
         for (const e of entries) {
           reportRatio(id, e.intersectionRatio);
+          setInView(e.intersectionRatio > 0.1);
         }
       },
       { threshold: thresholds }
