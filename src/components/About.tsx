@@ -35,9 +35,9 @@ const sections = [
     label: "About Sean Behm",
     body: (
       <>
-        Sean Behm is a visionary designer, fabricator, and entrepreneur known for bringing ambitious ideas into physical reality at scale. As a partner at Miami Design Shop and co-founder of The Kazbah, Sean operates at the intersection of architecture, art, experiential design and fabrication, crafting environments that are as technically refined as they are emotionally impactful.
+        Sean Behm is a visionary designer, fabricator, and entrepreneur known for bringing ambitious ideas into physical reality at scale. As a partner and senior designer at Miami Design Shop and co-founder of The Kazbah, Sean operates at the intersection of architecture, art, experiential design and fabrication, crafting environments that are as technically refined as they are emotionally impactful.
         <br /><br />
-        His work spans collaborations with global leaders such as Tiffany & Co., Cartier, and the Formula 1 Miami Grand Prix, where he has delivered immersive, high-precision installations that push the boundaries of fabrication and storytelling.
+        His work spans collaborations with global leaders such as Tiffany & Co., Cartier, and Formula 1, where he has delivered with his team, immersive, high-precision installations that push the boundaries of fabrication and storytelling.
         <br /><br />
         Beyond the studio, Sean is deeply committed to giving back, supporting creative education and empowering the next generation through hands-on mentorship in design, music, and architecture. With a relentless drive for innovation and a passion for meaningful impact, he continues to shape not just spaces, but communities.
       </>
