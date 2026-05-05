@@ -228,9 +228,10 @@ const ContactPage = () => {
 
               <button
                 type="submit"
-                className="group inline-flex items-center gap-3 font-display tracking-cinema text-[12px] uppercase text-foreground border-b border-foreground pb-2 hover:text-accent hover:border-accent transition-colors"
+                disabled={submitting}
+                className="group inline-flex items-center gap-3 font-display tracking-cinema text-[12px] uppercase text-foreground border-b border-foreground pb-2 hover:text-accent hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send message
+                {submitting ? "Sending…" : "Send message"}
                 <span className="transition-transform group-hover:translate-x-1">
                   →
                 </span>
