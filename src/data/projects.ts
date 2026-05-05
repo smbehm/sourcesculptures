@@ -28,11 +28,11 @@ export const projects: Project[] = [
       "An editorial study in light, fabric and silence. Slow, deliberate frames that let texture and breath carry the narrative.",
   },
   {
-    slug: "infirna",
-    id: "infirna",
+    slug: "inferna",
+    id: "inferna",
     youtubeId: "XQzXnpOq_uY",
     eyebrow: "Brand Film",
-    title: "Infirna",
+    title: "Inferna",
     description:
       "A meditation on form — sculpted in motion. Crafted to feel both intimate and monumental, with a focus on material and atmosphere.",
   },
