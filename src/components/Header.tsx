@@ -18,7 +18,6 @@ const Header = () => {
     e.preventDefault();
     if (location.pathname === "/") {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      window.dispatchEvent(new Event("reset-videos"));
     } else {
       navigate("/");
     }
