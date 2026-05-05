@@ -1,4 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/context/SoundContext";
