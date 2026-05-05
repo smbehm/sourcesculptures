@@ -6,7 +6,7 @@ const About = () => {
     >
       <div className="mx-auto max-w-5xl">
         <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground text-left font-bold">
-            ABOUT REY JAFFET
+            ABOUT US
         </span>
         <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
           Together, Rey Jaffet & Sean Behm create immersive works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
@@ -19,9 +19,11 @@ const About = () => {
             ABOUT REY JAFFET
           </span>
           <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
-            Together, Rey Jaffet & Sean Behm create immersive works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
+            Rey Jaffet is an artist whose life and work are devoted to creating portals into the infinite—a bridge between individual experience and collective consciousness. From a young age, his path has been guided by immersion in art, leading to the creation of powerful connections, vivid experiences, and large-scale works that resonate across cultures and communities.
             <br /><br />
-            Rooted in trust, passion, and a shared vision, their collaboration transforms ambitious ideas into tangible realities. Each piece is a testament to what becomes possible when creativity is guided by love, curiosity, and fearless execution. Their journey continues to unfold, driven by gratitude, exploration, and a deep commitment to inspiring others through art that resonates far beyond the physical form.
+            Working across stainless steel, fire, lighting systems, painting, and mixed media, Rey’s creations explore the balance between movement and stillness, energy and form. His intention is clear: to inspire love over fear, to reveal the beauty of interconnectedness, and to spark the realization that we are all part of something greater.
+            <br /><br />
+            A staple of Art Basel Miami Beach since 2011, Rey has collaborated with globally recognized brands and institutions including Samsung, Netflix, Coca-Cola, the Miami Heat, Aston Martin, and Burning Man. His public works, murals, and installations have reached international audiences, including the iconic 14-story mural Declaration of Hope. Through both art and life, Rey continues to create experiences that evoke wonder and expand perception.
           </h2>
         </div>
 
@@ -30,9 +32,11 @@ const About = () => {
             ABOUT SEAN BEHM
           </span>
           <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
-            Sean Behm is an artist and creative force whose work blends vision, craft, and innovation. With a background spanning sculpture, design, and immersive installation, Sean brings a meticulous eye and a fearless approach to every collaboration.
+            Sean Behm is a visionary designer, fabricator, and entrepreneur known for bringing ambitious ideas into physical reality at scale. As a partner at Miami Design Shop and co-founder of The Kazbah, Sean operates at the intersection of architecture, art, and experiential design—crafting environments that are as technically refined as they are emotionally impactful.
             <br /><br />
-            His practice is rooted in the belief that art can transform space, perception, and connection. Together with Rey Jaffet, Sean co-creates large-scale works that invite audiences into moments of presence and wonder—pushing the boundaries of what sculpture can be and how it can move people.
+            His work spans collaborations with global leaders such as Tiffany & Co., Cartier, and the Formula 1 Miami Grand Prix, where he has delivered immersive, high-precision installations that push the boundaries of fabrication and storytelling.
+            <br /><br />
+            Beyond the studio, Sean is deeply committed to giving back—supporting creative education and empowering the next generation through hands-on mentorship in design, music, and architecture. With a relentless drive for innovation and a passion for meaningful impact, he continues to shape not just spaces, but communities.
           </h2>
         </div>
       </div>
