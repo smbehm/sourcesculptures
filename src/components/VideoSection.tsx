@@ -73,6 +73,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   }, [id, reportRatio, unregister, scrolled]);
 
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   // Always autoplay muted with no controls; we control play/pause + mute via postMessage.
   // NOTE: We intentionally DO NOT pass loop=1&playlist=ID — that makes YouTube render
@@ -80,7 +81,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 1025px)").matches;
   const desiredQuality = isDesktop ? "hd2160" : "hd1080";
   const src = shouldLoad
-    ? (videoUrl ?? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=${showControls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=${showControls ? 0 : 1}&fs=${showControls ? 1 : 0}&showinfo=0&cc_load_policy=0&enablejsapi=1&vq=${desiredQuality}&hd=1`)
+    ? (videoUrl ?? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=${showControls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=${showControls ? 0 : 1}&fs=${showControls ? 1 : 0}&showinfo=0&cc_load_policy=0&enablejsapi=1&origin=${encodeURIComponent(origin)}&vq=${desiredQuality}&hd=1`)
     : undefined;
 
   const post = (func: string, args: unknown[] = []) => {
