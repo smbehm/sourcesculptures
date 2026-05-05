@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import Project from "./pages/Project.tsx";
 import AboutPage from "./pages/About.tsx";
 import ContactPage from "./pages/Contact.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/projects/:slug" element={<Project />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminProjectsList />} />

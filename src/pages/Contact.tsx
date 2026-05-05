@@ -1,4 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/context/SoundContext";
@@ -89,26 +92,67 @@ const Field = ({
   </label>
 );
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().email("Invalid email").max(255),
+  phone: z.string().trim().max(50).optional().or(z.literal("")),
+  message: z.string().trim().min(1, "Message is required").max(2000),
+});
+
 const ContactPage = () => {
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     document.title = "Contact — SOURCEsculptures";
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") || "");
-    const email = String(data.get("email") || "");
-    const phone = String(data.get("phone") || "");
-    const message = String(data.get("message") || "");
-    const body = encodeURIComponent(
-      `${message}\n\n— ${name}\n${email}${phone ? "\n" + phone : ""}`
-    );
-    window.location.href = `mailto:reach@sourcesculptures.com?subject=${encodeURIComponent(
-      "New inquiry from " + name
-    )}&body=${body}`;
+    if (submitting) return;
+
+    const formEl = e.currentTarget;
+    const data = new FormData(formEl);
+    const parsed = contactSchema.safeParse({
+      name: data.get("name"),
+      email: data.get("email"),
+      phone: data.get("phone") || "",
+      message: data.get("message"),
+    });
+
+    if (!parsed.success) {
+      const first = parsed.error.errors[0]?.message ?? "Please check your inputs.";
+      toast({ title: "Please fix the form", description: first, variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "contact-form-notification",
+          recipientEmail: "reach@sourcesculptures.com",
+          idempotencyKey: `contact-${crypto.randomUUID()}`,
+          templateData: parsed.data,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Message sent",
+        description: "Thanks — we'll be in touch shortly.",
+      });
+      formEl.reset();
+    } catch (err: any) {
+      toast({
+        title: "Could not send",
+        description: err?.message ?? "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
 
   return (
     <SoundProvider>
@@ -184,9 +228,10 @@ const ContactPage = () => {
 
               <button
                 type="submit"
-                className="group inline-flex items-center gap-3 font-display tracking-cinema text-[12px] uppercase text-foreground border-b border-foreground pb-2 hover:text-accent hover:border-accent transition-colors"
+                disabled={submitting}
+                className="group inline-flex items-center gap-3 font-display tracking-cinema text-[12px] uppercase text-foreground border-b border-foreground pb-2 hover:text-accent hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send message
+                {submitting ? "Sending…" : "Send message"}
                 <span className="transition-transform group-hover:translate-x-1">
                   →
                 </span>
