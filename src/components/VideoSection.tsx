@@ -153,10 +153,18 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
     win.postMessage(JSON.stringify({ event: "listening" }), "*");
-    post("playVideo");
+    // Briefly play to force buffering/preload of the first frames, then pause
+    // immediately if not yet in view. We unpause when the user scrolls to it.
     post("mute");
+    post("playVideo");
     forceQuality();
-    setTimeout(() => setReady(true), 400);
+    setTimeout(() => {
+      if (!inView) {
+        post("pauseVideo");
+        post("seekTo", [0, true]);
+      }
+      setReady(true);
+    }, 400);
   };
 
   // React to active/mute changes without pausing, so native pause controls
