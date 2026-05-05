@@ -193,6 +193,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         decoding="async"
         className="video-cover"
         style={{
+          zIndex: 1,
           opacity: isActive && playing ? 0 : 1,
           transition: isActive && playing ? "opacity 500ms ease" : "none",
         }}
@@ -201,12 +202,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       {src && (
         <div
           className="absolute inset-0 overflow-hidden"
-          style={{
-            // Fade in when playing, vanish instantly when not — so YouTube's
-            // pause/play overlay never has a chance to be visible.
-            opacity: isActive && playing ? 1 : 0,
-            transition: isActive && playing ? "opacity 500ms ease" : "none",
-          }}
+          style={{ zIndex: 0 }}
           aria-hidden={!isActive}
         >
           <div
