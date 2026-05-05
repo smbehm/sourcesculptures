@@ -35,6 +35,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
 
   const id = `video-${youtubeId}`;
   const isActive = activeId === id;
+  const revealVideo = isActive && ready;
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -195,8 +196,8 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         className="video-cover"
         style={{
           zIndex: 1,
-          opacity: isActive && playing ? 0 : 1,
-          transition: isActive && playing ? "opacity 500ms ease" : "none",
+          opacity: revealVideo ? 0 : 1,
+          transition: revealVideo ? "opacity 500ms ease" : "none",
         }}
       />
 
