@@ -11,36 +11,44 @@ import {
 
 const faqs = [
   {
-    q: "What types of projects do you specialize in?",
-    a: "Cinematic brand films, fashion campaigns, music videos, and long-form storytelling for studios, labels, and houses.",
+    q: "What scale of projects do you take on?",
+    a: "We primarily take on medium to large-scale projects, ranging from statement pieces for private spaces to monumental public installations. Most of our work is designed to live as a focal point within an environment, both visually and experientially.",
   },
   {
-    q: "Where are you based, and do you travel for projects?",
-    a: "We are based in Los Angeles and work globally. Travel is part of nearly every production we take on.",
+    q: "Do you handle everything from concept to installation?",
+    a: "Yes. We manage the entire process from initial concept through design, renderings & AR models, engineering, fabrication, logistics, and final installation.",
   },
   {
-    q: "How do we start a project?",
-    a: "Send us a note with your timeline, references, and goals. We'll reply within 48 hours to set up an intro call.",
+    q: "Can you fabricate and engineer complex custom sculptures?",
+    a: "Absolutely. Our work often involves advanced engineering, custom fabrication, and integrated systems such as lighting, lasers, haze, motion, and structural and mechanical components. We specialize in turning ambitious ideas into fully realized physical forms.",
   },
   {
-    q: "What is your typical turnaround time?",
-    a: "Pre-production usually takes 2–4 weeks, with delivery 4–8 weeks after the shoot, depending on scope.",
+    q: "What materials do you typically work with?",
+    a: "We work across a wide range of materials including stainless steel, aluminum, glass, acrylic, advanced lighting systems, and mixed media. Material selection is always driven by the concept, environment, and use cases for the sculptures.",
   },
   {
-    q: "Do you offer creative direction?",
-    a: "Yes — creative direction, treatment writing, and art direction are core to how we work.",
+    q: "Do you create permanent installations or temporary experiences?",
+    a: "Both. We design permanent installations for long-term environments as well as touring works for festivals, events, and brand activations. Each project is built with its intended lifespan and setting in mind.",
   },
   {
-    q: "Can we request a specific style?",
-    a: "Absolutely. We tailor every project to the world we're building together, from grain and grade to pace and sound.",
+    q: "Can you design something completely original for our space or brand?",
+    a: "Yes. Every project we take on is custom. We design from a blank slate, shaping the concept around the space, audience, and intention to create something truly one of one.",
   },
   {
-    q: "What is your pricing structure?",
-    a: "Each project is quoted individually based on scope, crew, locations, and post. We provide a detailed breakdown after the intro call.",
+    q: "What is the investment range for a project like this?",
+    a: "Projects typically range from high five figures into seven figures depending on scale, materials, complexity, and installation requirements. We provide a clear proposal after an initial discussion to align scope and budget.",
   },
   {
-    q: "Do you work with brands and individuals?",
-    a: "Both. We collaborate with global brands, independent labels, and private clients who care about craft.",
+    q: "Do you collaborate with architects, developers, or creative teams?",
+    a: "Yes. We frequently collaborate with architects, developers, designers, and brand teams. We integrate seamlessly into larger projects and can work as both lead creative or a specialized partner.",
+  },
+  {
+    q: "How are your sculptures transported and installed?",
+    a: "We handle all logistics including crating, sea or air freight, and on-site installation. Projects are engineered with transport in mind, whether local or international, and installed by our team or trusted partners to ensure precision and safety.",
+  },
+  {
+    q: "What makes your work different from other sculpture studios?",
+    a: "Our work sits at the intersection of art, engineering, and decades of experience. We combine cutting edge fabrication technologies, with the most advanced modeling and CAD software and a strong artistic vision, allowing us to create pieces that are not only visually striking but will raise the bar on what is possible in the sculptural and experiential design world.",
   },
 ];
 
