@@ -199,6 +199,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad) return;
     const kick = () => {
+      if (!inView) return;
       post("playVideo");
       if (isActive && !globalMuted) post("unMute");
       else post("mute");
