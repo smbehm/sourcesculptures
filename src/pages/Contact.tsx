@@ -199,8 +199,8 @@ const ContactPage = () => {
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
                   {[
                     { label: "Instagram", href: "#" },
-                    { label: "Vimeo", href: "#" },
-                    { label: "YouTube", href: "#" },
+                    { label: "TIKTOK", href: "#" },
+                    { label: "YouTube", href: "https://www.youtube.com/@SOURCEsculptures" },
                   ].map((s) => (
                     <a
                       key={s.label}
