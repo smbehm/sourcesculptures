@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import Header from "@/components/Header";
 import About from "@/components/About";
-import Clients from "@/components/Clients";
 import CTA from "@/components/CTA";
 import { SoundProvider } from "@/context/SoundContext";
 
@@ -15,7 +14,7 @@ const AboutPage = () => {
     <SoundProvider>
       <Header />
       <main className="relative w-full overflow-x-hidden bg-background text-foreground pt-24">
-        <Clients />
+        <About />
         <CTA />
       </main>
     </SoundProvider>
