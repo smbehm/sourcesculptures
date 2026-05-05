@@ -15,7 +15,6 @@ const AboutPage = () => {
     <SoundProvider>
       <Header />
       <main className="relative w-full overflow-x-hidden bg-background text-foreground pt-24">
-        <About />
         <Clients />
         <CTA />
       </main>
