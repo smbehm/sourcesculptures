@@ -35,7 +35,8 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
 
   const id = `video-${youtubeId}`;
   const isActive = activeId === id;
-  const revealVideo = isActive && ready;
+  const [inView, setInView] = useState(false);
+  const revealVideo = isActive && ready && inView;
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -60,6 +61,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       (entries) => {
         for (const e of entries) {
           reportRatio(id, e.intersectionRatio);
+          setInView(e.intersectionRatio > 0.1);
         }
       },
       { threshold: thresholds }
@@ -151,10 +153,18 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
     win.postMessage(JSON.stringify({ event: "listening" }), "*");
-    post("playVideo");
+    // Briefly play to force buffering/preload of the first frames, then pause
+    // immediately if not yet in view. We unpause when the user scrolls to it.
     post("mute");
+    post("playVideo");
     forceQuality();
-    setTimeout(() => setReady(true), 400);
+    setTimeout(() => {
+      if (!inView) {
+        post("pauseVideo");
+        post("seekTo", [0, true]);
+      }
+      setReady(true);
+    }, 400);
   };
 
   // React to active/mute changes without pausing, so native pause controls
@@ -162,24 +172,25 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad || !ready) return;
     forceQuality();
-    post("playVideo");
-    if (isActive && !globalMuted) {
-      post("unMute");
+    if (inView) {
+      post("playVideo");
+      if (isActive && !globalMuted) post("unMute");
+      else post("mute");
     } else {
+      post("pauseVideo");
+      post("seekTo", [0, true]);
       post("mute");
     }
     const t1 = setTimeout(() => {
-      post("playVideo");
+      if (inView) post("playVideo");
       forceQuality();
     }, 1500);
-    // Re-assert quality periodically — YouTube occasionally drops to "auto"
-    // and downshifts based on bandwidth heuristics.
     const interval = setInterval(forceQuality, 5000);
     return () => {
       clearTimeout(t1);
       clearInterval(interval);
     };
-  }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
+  }, [isActive, globalMuted, shouldLoad, ready, desiredQuality, inView]);
 
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
@@ -188,6 +199,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad) return;
     const kick = () => {
+      if (!inView) return;
       post("playVideo");
       if (isActive && !globalMuted) post("unMute");
       else post("mute");
@@ -210,7 +222,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       window.removeEventListener("scroll", kick);
       window.removeEventListener("preloader-gesture", kick);
     };
-  }, [shouldLoad, isActive, globalMuted]);
+  }, [shouldLoad, isActive, globalMuted, inView]);
 
   return (
     <section
