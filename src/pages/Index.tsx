@@ -193,9 +193,15 @@ const Index = () => {
         first.getBoundingClientRect().top < window.innerHeight * 0.92 &&
         last.getBoundingClientRect().bottom > window.innerHeight * 0.12;
 
-      setShowCaption(introPast && inStack);
-
       const tr = textMeasureRef.current?.getBoundingClientRect();
+      const titleMidY = tr ? (tr.top + tr.bottom) / 2 : window.innerHeight / 2;
+
+      // Hide caption once the last video's bottom passes the title center
+      const lastBottomPastTitle =
+        !!last && last.getBoundingClientRect().bottom < titleMidY;
+
+      setShowCaption(introPast && inStack && !lastBottomPastTitle);
+
       if (tr && introPast && inStack) {
         const midY = (tr.top + tr.bottom) / 2;
         const next = pickProjectForTextMidline(featuredProjects, midY);
