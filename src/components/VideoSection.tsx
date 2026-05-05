@@ -35,7 +35,8 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
 
   const id = `video-${youtubeId}`;
   const isActive = activeId === id;
-  const revealVideo = isActive && ready;
+  const [inView, setInView] = useState(false);
+  const revealVideo = isActive && ready && inView;
 
   useEffect(() => {
     const el = sectionRef.current;
