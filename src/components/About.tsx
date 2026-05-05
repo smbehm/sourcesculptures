@@ -21,7 +21,7 @@ const About = () => {
         <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground">
           Studio
         </span>
-        <h2 className="mt-6 font-display text-foreground text-[clamp(1.6rem,4vw,2.75rem)] leading-[1.2] font-medium max-w-3xl">
+        <h2 className="mt-6 font-display text-foreground text-[clamp(1.6rem,4vw,2.75rem)] leading-[1.2] font-medium w-full">
           We're a videography studio driven by a love for cinematic storytelling and intentional
           filmmaking. From brand films and commercials to weddings and editorial pieces, we bring a
           crafted, artful approach to every frame.
