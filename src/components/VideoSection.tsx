@@ -222,7 +222,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
       window.removeEventListener("scroll", kick);
       window.removeEventListener("preloader-gesture", kick);
     };
-  }, [shouldLoad, isActive, globalMuted]);
+  }, [shouldLoad, isActive, globalMuted, inView]);
 
   return (
     <section
