@@ -5,10 +5,10 @@ interface SoundContextValue {
   toggle: () => void;
 }
 
-const SoundContext = createContext<SoundContextValue>({ muted: true, toggle: () => {} });
+const SoundContext = createContext<SoundContextValue>({ muted: false, toggle: () => {} });
 
 export const SoundProvider = ({ children }: { children: ReactNode }) => {
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const toggle = useCallback(() => setMuted((m) => !m), []);
   return <SoundContext.Provider value={{ muted, toggle }}>{children}</SoundContext.Provider>;
 };
