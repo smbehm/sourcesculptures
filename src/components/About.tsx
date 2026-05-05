@@ -22,7 +22,7 @@ const sections = [
     label: "About Rey Jaffet",
     body: (
       <>
-        Rey Jaffet is an artist whose life and work are devoted to creating portals into the infinite, a bridge between individual experience and collective consciousness. From a young age, his path has been guided by immersion in art, leading to the creation of powerful connections, vivid experiences, and large-scale works that resonate across cultures and communities.
+        <a href="https://rjaffet.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground transition-colors">Rey Jaffet</a> is an artist whose life and work are devoted to creating portals into the infinite, a bridge between individual experience and collective consciousness. From a young age, his path has been guided by immersion in art, leading to the creation of powerful connections, vivid experiences, and large-scale works that resonate across cultures and communities.
         <br /><br />
         Working across stainless steel, fire, lighting systems, painting, and mixed media, Rey's creations explore the balance between movement and stillness, energy and form. His intention is clear: to inspire love over fear, to reveal the beauty of interconnectedness, and to spark the realization that we are all part of something greater.
         <br /><br />
