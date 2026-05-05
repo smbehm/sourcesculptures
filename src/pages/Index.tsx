@@ -268,7 +268,6 @@ const Index = () => {
             })}
           </div>
           <About />
-          <Clients />
           <CTA />
         </main>
       </ActiveVideoProvider>
