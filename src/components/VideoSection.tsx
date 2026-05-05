@@ -164,24 +164,25 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   useEffect(() => {
     if (!shouldLoad || !ready) return;
     forceQuality();
-    post("playVideo");
-    if (isActive && !globalMuted) {
-      post("unMute");
+    if (inView) {
+      post("playVideo");
+      if (isActive && !globalMuted) post("unMute");
+      else post("mute");
     } else {
+      post("pauseVideo");
+      post("seekTo", [0, true]);
       post("mute");
     }
     const t1 = setTimeout(() => {
-      post("playVideo");
+      if (inView) post("playVideo");
       forceQuality();
     }, 1500);
-    // Re-assert quality periodically — YouTube occasionally drops to "auto"
-    // and downshifts based on bandwidth heuristics.
     const interval = setInterval(forceQuality, 5000);
     return () => {
       clearTimeout(t1);
       clearInterval(interval);
     };
-  }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
+  }, [isActive, globalMuted, shouldLoad, ready, desiredQuality, inView]);
 
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
