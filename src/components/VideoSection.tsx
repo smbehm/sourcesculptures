@@ -76,11 +76,24 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   const posterSrc = poster ?? `https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
+  // Track viewport so quality target updates if user resizes between desktop/mobile.
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== "undefined" && window.matchMedia("(min-width: 1025px)").matches
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 1025px)");
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  // Desktop: target 4K; Mobile/tablet: target 1080p minimum.
+  const desiredQuality = isDesktop ? "hd2160" : "hd1080";
+
   // Always autoplay muted with no controls; we control play/pause + mute via postMessage.
   // NOTE: We intentionally DO NOT pass loop=1&playlist=ID — that makes YouTube render
   // the center prev/pause/next overlay buttons on mobile. We loop manually via postMessage.
-  const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 1025px)").matches;
-  const desiredQuality = isDesktop ? "hd2160" : "hd1080";
   const src = shouldLoad
     ? (videoUrl ?? `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=${showControls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=${showControls ? 0 : 1}&fs=${showControls ? 1 : 0}&showinfo=0&cc_load_policy=0&enablejsapi=1&origin=${encodeURIComponent(origin)}&vq=${desiredQuality}&hd=1`)
     : undefined;
@@ -89,6 +102,15 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
     win.postMessage(JSON.stringify({ event: "command", func, args }), "*");
+  };
+
+  // Force the highest available quality. YouTube's API picks from
+  // getAvailableQualityLevels — we try our preferred ladder in order.
+  const forceQuality = () => {
+    const ladder = isDesktop
+      ? ["highres", "hd2160", "hd1440", "hd1080"]
+      : ["hd1080", "hd1440", "hd2160", "highres"];
+    ladder.forEach((q) => post("setPlaybackQuality", [q]));
   };
 
   // Listen for YT iframe events via postMessage
@@ -109,6 +131,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
         const playerState = data?.event === "onStateChange" ? data?.info : info?.playerState;
         if (typeof playerState === "number") {
           setPlaying(playerState === 1);
+          if (playerState === 1) forceQuality();
         }
         if (playerState === 0) {
           post("seekTo", [0, true]);
@@ -130,6 +153,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     win.postMessage(JSON.stringify({ event: "listening" }), "*");
     post("playVideo");
     post("mute");
+    forceQuality();
     setTimeout(() => setReady(true), 400);
   };
 
@@ -137,7 +161,7 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
   // never get a chance to appear during scroll transitions.
   useEffect(() => {
     if (!shouldLoad || !ready) return;
-    post("setPlaybackQuality", [desiredQuality]);
+    forceQuality();
     post("playVideo");
     if (isActive && !globalMuted) {
       post("unMute");
@@ -146,10 +170,17 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     }
     const t1 = setTimeout(() => {
       post("playVideo");
-      post("setPlaybackQuality", [desiredQuality]);
+      forceQuality();
     }, 1500);
-    return () => clearTimeout(t1);
+    // Re-assert quality periodically — YouTube occasionally drops to "auto"
+    // and downshifts based on bandwidth heuristics.
+    const interval = setInterval(forceQuality, 5000);
+    return () => {
+      clearTimeout(t1);
+      clearInterval(interval);
+    };
   }, [isActive, globalMuted, shouldLoad, ready, desiredQuality]);
+
 
   // iOS Safari blocks programmatic autoplay until a user gesture.
   // Kick play on ANY user gesture (including the preloader's "tap to enter")
