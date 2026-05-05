@@ -6,7 +6,7 @@ const About = () => {
     >
       <div className="mx-auto max-w-5xl">
         <span className="font-display tracking-cinema text-[11px] uppercase text-muted-foreground text-left font-bold">
-          ABOUT US
+            ABOUT REY JAFFET
         </span>
         <h2 className="mt-6 font-display text-foreground leading-[1.2] font-medium w-full text-xl text-justify py-0 my-[2px]">
           Together, Rey Jaffet & Sean Behm create immersive works that act as portals, inviting people into moments of presence, connection, and awe. Their sculptures are not just objects, but living experiences: reflections of light, energy, and the infinite.
