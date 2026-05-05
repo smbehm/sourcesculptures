@@ -162,11 +162,19 @@ const VideoSection = ({ youtubeId, title, href, poster, videoUrl, showControls =
     window.addEventListener("touchstart", kick, { passive: true });
     window.addEventListener("touchend", kick, { passive: true });
     window.addEventListener("click", kick);
+    window.addEventListener("pointerdown", kick);
+    window.addEventListener("keydown", kick);
+    window.addEventListener("wheel", kick, { passive: true });
+    window.addEventListener("scroll", kick, { passive: true });
     window.addEventListener("preloader-gesture", kick);
     return () => {
       window.removeEventListener("touchstart", kick);
       window.removeEventListener("touchend", kick);
       window.removeEventListener("click", kick);
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+      window.removeEventListener("wheel", kick);
+      window.removeEventListener("scroll", kick);
       window.removeEventListener("preloader-gesture", kick);
     };
   }, [shouldLoad, isActive, globalMuted]);
