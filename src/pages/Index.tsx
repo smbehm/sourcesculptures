@@ -148,7 +148,20 @@ const Index = () => {
 
   useEffect(() => {
     if (!showCaption || reduceMotion) return;
-    const onMove = () => onTitlePointerActivity();
+    const POINTER_MOVE_THRESHOLD = 16;
+    let lastPointer: { x: number; y: number } | null = null;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+      if (!lastPointer) {
+        lastPointer = { x: e.clientX, y: e.clientY };
+        return;
+      }
+      const dx = e.clientX - lastPointer.x;
+      const dy = e.clientY - lastPointer.y;
+      if (Math.hypot(dx, dy) < POINTER_MOVE_THRESHOLD) return;
+      lastPointer = { x: e.clientX, y: e.clientY };
+      onTitlePointerActivity();
+    };
     const onScrollActivity = () => onTitlePointerActivity();
     const onTouchStart = (e: TouchEvent) => {
       const t = e.touches[0];
