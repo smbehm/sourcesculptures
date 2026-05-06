@@ -150,19 +150,37 @@ const Index = () => {
     if (!showCaption || reduceMotion) return;
     const onMove = () => onTitlePointerActivity();
     const onScrollActivity = () => onTitlePointerActivity();
-    const onTouchStart = () => {
-      touchActiveRef.current = true;
-      showTitleNow();
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      touchStartRef.current = t ? { x: t.clientX, y: t.clientY } : null;
+      touchMovedRef.current = false;
+      // Do NOT reveal title on initial finger-down — wait for actual movement
+      // past a small threshold so a stray tap doesn't pop the title.
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchMovedRef.current && touchStartRef.current) {
+        const t = e.touches[0];
+        if (!t) return;
+        const dx = t.clientX - touchStartRef.current.x;
+        const dy = t.clientY - touchStartRef.current.y;
+        if (Math.hypot(dx, dy) < TOUCH_MOVE_THRESHOLD) return;
+        touchMovedRef.current = true;
+        touchActiveRef.current = true;
+        showTitleNow();
+      }
+      onTitlePointerActivity();
     };
     const onTouchEnd = () => {
       touchActiveRef.current = false;
+      touchStartRef.current = null;
+      touchMovedRef.current = false;
       scheduleIdleHide();
     };
     window.addEventListener("pointermove", onMove, { passive: true, capture: true });
     window.addEventListener("scroll", onScrollActivity, { passive: true });
     window.addEventListener("wheel", onScrollActivity, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {
