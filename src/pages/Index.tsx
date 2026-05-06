@@ -122,6 +122,9 @@ const Index = () => {
   }, [active?.slug, showCaption, reduceMotion, clearTitleTimers]);
 
   const touchActiveRef = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchMovedRef = useRef(false);
+  const TOUCH_MOVE_THRESHOLD = 12;
   const showTitleNow = useCallback(() => {
     setTitleFadeInstant(true);
     setTitleOpacity(1);
