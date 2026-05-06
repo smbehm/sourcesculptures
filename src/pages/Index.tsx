@@ -188,7 +188,7 @@ const Index = () => {
       window.removeEventListener("scroll", onScrollActivity);
       window.removeEventListener("wheel", onScrollActivity);
       window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchEnd);
     };
