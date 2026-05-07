@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Trash2, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import ImageUploadInput from "@/components/admin/ImageUploadInput";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type Credit = { title: string; name: string };
@@ -229,8 +230,8 @@ const AdminProjectEdit = () => {
             <Field label="Preview video source">
               <SourceSelect value={p.preview_video_source} onChange={(v) => update("preview_video_source", v)} />
             </Field>
-            <Field label="Preview image URL" className="col-span-2">
-              <Input value={p.preview_image_url ?? ""} onChange={(e) => update("preview_image_url", e.target.value)} />
+            <Field label="Preview image (URL or upload)" className="col-span-2">
+              <ImageUploadInput value={p.preview_image_url ?? ""} onChange={(v) => update("preview_image_url", v)} />
             </Field>
             <Field label="Preview YouTube URL or ID">
               <Input value={p.preview_video_youtube_id ?? ""} onChange={(e) => update("preview_video_youtube_id", e.target.value)} placeholder="dQw4w9WgXcQ" />
@@ -258,8 +259,8 @@ const AdminProjectEdit = () => {
             <Field label="Main video source">
               <SourceSelect value={p.main_video_source} onChange={(v) => update("main_video_source", v)} />
             </Field>
-            <Field label="Main image URL" className="col-span-2">
-              <Input value={p.main_image_url ?? ""} onChange={(e) => update("main_image_url", e.target.value)} />
+            <Field label="Main image (URL or upload)" className="col-span-2">
+              <ImageUploadInput value={p.main_image_url ?? ""} onChange={(v) => update("main_image_url", v)} />
             </Field>
             <Field label="Main YouTube URL or ID">
               <Input value={p.main_video_youtube_id ?? ""} onChange={(e) => update("main_video_youtube_id", e.target.value)} />
@@ -323,11 +324,19 @@ const AdminProjectEdit = () => {
                     <SelectItem value="video">YouTube video</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input
-                  placeholder={item.type === "image" ? "Image URL" : "YouTube URL or ID"}
-                  value={item.url}
-                  onChange={(e) => { const next = [...gallery]; next[i] = { ...item, url: e.target.value }; setGallery(next); }}
-                />
+                {item.type === "image" ? (
+                  <ImageUploadInput
+                    value={item.url}
+                    onChange={(url) => { const next = [...gallery]; next[i] = { ...item, url }; setGallery(next); }}
+                    placeholder="Image URL or upload"
+                  />
+                ) : (
+                  <Input
+                    placeholder="YouTube URL or ID"
+                    value={item.url}
+                    onChange={(e) => { const next = [...gallery]; next[i] = { ...item, url: e.target.value }; setGallery(next); }}
+                  />
+                )}
                 <Input
                   placeholder="Caption (optional)"
                   value={item.caption ?? ""}
