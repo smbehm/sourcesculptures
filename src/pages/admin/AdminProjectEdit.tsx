@@ -324,11 +324,19 @@ const AdminProjectEdit = () => {
                     <SelectItem value="video">YouTube video</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input
-                  placeholder={item.type === "image" ? "Image URL" : "YouTube URL or ID"}
-                  value={item.url}
-                  onChange={(e) => { const next = [...gallery]; next[i] = { ...item, url: e.target.value }; setGallery(next); }}
-                />
+                {item.type === "image" ? (
+                  <ImageUploadInput
+                    value={item.url}
+                    onChange={(url) => { const next = [...gallery]; next[i] = { ...item, url }; setGallery(next); }}
+                    placeholder="Image URL or upload"
+                  />
+                ) : (
+                  <Input
+                    placeholder="YouTube URL or ID"
+                    value={item.url}
+                    onChange={(e) => { const next = [...gallery]; next[i] = { ...item, url: e.target.value }; setGallery(next); }}
+                  />
+                )}
                 <Input
                   placeholder="Caption (optional)"
                   value={item.caption ?? ""}
