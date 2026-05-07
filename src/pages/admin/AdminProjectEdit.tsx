@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Trash2, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import ImageUploadInput from "@/components/admin/ImageUploadInput";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type Credit = { title: string; name: string };
