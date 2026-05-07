@@ -148,7 +148,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!showCaption || reduceMotion) return;
-    const POINTER_MOVE_THRESHOLD = 16;
+    const POINTER_MOVE_THRESHOLD = 80;
     let lastPointer: { x: number; y: number } | null = null;
     const onMove = (e: PointerEvent) => {
       if (e.pointerType && e.pointerType !== "mouse") return;
