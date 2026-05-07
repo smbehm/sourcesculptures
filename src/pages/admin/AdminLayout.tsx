@@ -21,8 +21,8 @@ const AdminLayout = () => {
   const linkIdle = "text-muted-foreground hover:text-foreground hover:bg-secondary/50";
 
   return (
-    <div className="min-h-screen flex w-full bg-background text-foreground">
-      <aside className="w-60 shrink-0 border-r border-border flex flex-col">
+    <div className="h-screen flex w-full bg-background text-foreground overflow-hidden">
+      <aside className="w-60 shrink-0 border-r border-border flex flex-col h-full overflow-y-auto">
         <div className="px-5 py-5 border-b border-border">
           <div className="font-display uppercase text-sm tracking-cinema leading-tight">
             <div>SOURCE</div>
