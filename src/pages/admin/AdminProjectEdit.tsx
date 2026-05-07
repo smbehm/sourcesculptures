@@ -259,8 +259,8 @@ const AdminProjectEdit = () => {
             <Field label="Main video source">
               <SourceSelect value={p.main_video_source} onChange={(v) => update("main_video_source", v)} />
             </Field>
-            <Field label="Main image URL" className="col-span-2">
-              <Input value={p.main_image_url ?? ""} onChange={(e) => update("main_image_url", e.target.value)} />
+            <Field label="Main image (URL or upload)" className="col-span-2">
+              <ImageUploadInput value={p.main_image_url ?? ""} onChange={(v) => update("main_image_url", v)} />
             </Field>
             <Field label="Main YouTube URL or ID">
               <Input value={p.main_video_youtube_id ?? ""} onChange={(e) => update("main_video_youtube_id", e.target.value)} />
