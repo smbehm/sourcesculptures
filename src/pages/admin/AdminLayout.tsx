@@ -53,7 +53,7 @@ const AdminLayout = () => {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 min-w-0 overflow-x-auto">
+      <main className="flex-1 min-w-0 h-full overflow-auto">
         <Outlet />
       </main>
     </div>
