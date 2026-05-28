@@ -15,7 +15,6 @@ import AdminProjectsList from "./pages/admin/AdminProjectsList.tsx";
 import AdminProjectEdit from "./pages/admin/AdminProjectEdit.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import Preloader from "./components/Preloader.tsx";
-import BuildBadge from "./components/BuildBadge.tsx";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +24,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Preloader />
-      <BuildBadge />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
