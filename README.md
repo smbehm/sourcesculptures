@@ -1,130 +1,75 @@
-# Source Sculptures
+# SOURCEsculptures
 
-Build a clean, high-performance rebuild of my website sourcesculptures.com using the same content and videos, but fixing all current issues.
+Works by Rey Jaffet & Sean Behm. Vite + React + TypeScript + Tailwind (shadcn/ui),
+Supabase backend, deployed on Vercel.
 
-🎯 Context:
+## Deployed routes
 
- I originally built this site using Cursor (inspired by Framer Amber template)
+| Route | Built from | Purpose |
+|---|---|---|
+| `/` | `src/` | Main portfolio site (homepage) |
+| `/landing-site/` | `scripts/build-vercel.mjs` | Archived "Coming Soon" splash, `noindex`. Kept for maintenance windows. |
+| `/SITE/*`, `/SITE2/*` | — | 301 → `/` (legacy paths, links preserved) |
 
- The current version has scrolling issues, especially on mobile
+## Commands
 
- I want a better, stable version, not a direct copy of broken behavior
-
-📦 Content:
-
- Use ALL content from my site:
-
- All videos
-
- All section titles (e.g. “Obsidian”)
-
- All text and structure
-
- Keep the same storytelling and order
-
-🎥 Core Concept (VERY IMPORTANT):
-
-This is a video-first cinematic website
-
- Each section = fullscreen video
-
- Videos must:
-
- autoplay
-
- muted
-
- loop
-
- Text overlays appear on top of videos
-
-⚙️ FIX CURRENT PROBLEMS:
-
-The current site has these issues — FIX them:
-
- Glitches between video sections when scrolling
-
- Black/white gaps on mobile
-
- Unstable scroll behavior
-
- Video flickering or jumping
-
- Poor mobile responsiveness
-
-🧱 Layout & Style:
-
- Inspired by Framer Amber template
-
- Minimal, luxury, artistic
-
- Clean typography and spacing
-
- Dark cinematic look
-
-📱 Mobile (TOP PRIORITY):
-
- Perfect smooth scrolling on phone
-
- No gaps between sections
-
- Stable height (fix 100vh issue)
-
- No horizontal scroll
-
- Videos must scale perfectly (object-fit: cover)
-
-🚀 Performance:
-
- Lazy load videos
-
- Optimize video size
-
- Only load videos when needed
-
- Fast initial load
-
-⚠️ Technical Requirements:
-
- Use smooth scrolling (no snap if it causes issues)
-
- Use hardware-accelerated transforms
-
- Avoid layout shifts
-
- Ensure each section fills viewport correctly
-
-❌ DO NOT:
-
- Reuse broken logic from the old version
-
- Replace videos with images
-
- Add heavy animations that break performance
-
-💡 Final Goal:
-
-Create a stable, smooth, premium version of my website that works perfectly on both desktop and mobile, especially fixing the scrolling experience between video sections.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://sourcesculptures.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/48432e5a-6cc9-42e8-8c26-eca72b3eafb6).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```bash
+npm run dev          # main app, http://localhost:8080/
+npm run build        # full Vercel output: / + /landing-site/
+npm run build:main   # main app only → dist/
+npm run lint
+npm test
 ```
+
+## Environment
+
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`
+must be set in Vercel Project Settings → Environment Variables (all environments).
+Locally, put them in an untracked `.env`.
+
+## Putting the splash back up
+
+To point the domain at the maintenance splash, change the last rewrite in
+`vercel.json` from `/index.html` to `/landing-site/index.html` and redeploy.
+
+## Video sources
+
+`src/lib/projectMedia.ts` resolves three per-video source types, selectable in
+the admin UI on preview, main, and videos 2–3:
+
+| Source | Field | Renders as |
+|---|---|---|
+| `youtube` | video ID or any YouTube URL | `youtube-nocookie` iframe |
+| `file` | uploaded file URL | native `<video>` |
+| `url` | external/CDN URL | native `<video>` |
+
+Moving a video to a CDN (Bunny.net or similar) is a content change, not a code
+change: set the source to External URL and paste the direct-play URL.
+
+**Format note:** the native `<video>` element has no HLS support. `.m3u8`
+playlists play in Safari only — Chrome and Firefox need `hls.js` (~40 kB) added.
+Direct-play `.mp4` works everywhere with no new dependency.
+
+## History
+
+`SITE2/` was a parallel copy of `src/` created to prototype native/CDN video.
+It was removed once the work turned out to be unnecessary — the three source
+types above already cover it, and the copy had never diverged from `src/`.
+Recoverable from git history if ever needed.
+
+## Database migrations
+
+`supabase/migrations/` is the source of truth for schema and RLS policy history.
+
+Migrations authored in Lovable are applied to the linked Supabase project by
+Lovable at author time, so a migration file landing in this repo usually
+documents a change that is *already live* on the database. Verify against the
+Supabase dashboard before assuming a migration still needs to run.
+
+Three security migrations were imported from the Lovable project on 2026-08-18:
+
+| Migration | Effect |
+|---|---|
+| `20260717013859` | Pins `search_path` on `SECURITY DEFINER` functions; revokes `EXECUTE` on email-queue functions from `anon`/`authenticated` |
+| `20260717015126` | Restricts `site_settings` public SELECT to a key whitelist; explicit read policy for the `project-media` bucket; locks down `has_role` |
+| `20260818202000` | Splits `projects` SELECT: `anon` sees `status = 'live'` only, `authenticated` sees live-or-admin |

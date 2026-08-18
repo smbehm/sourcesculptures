@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
 
 @layer base {
   :root {
@@ -79,10 +79,25 @@
   .video-cover {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
-    object-fit: cover; object-position: center;
+    object-fit: cover;
+    object-position: center center;
     transform: translateZ(0);
     will-change: transform;
     pointer-events: none;
+  }
+
+  /* Full-bleed posters and stills: keep focal point dead center on phones */
+  @media (max-width: 1024px) {
+    .video-cover,
+    .media-thumb-center {
+      object-fit: cover;
+      object-position: center center;
+    }
+  }
+
+  .media-thumb-center {
+    object-fit: cover;
+    object-position: center center;
   }
 
   .veil {

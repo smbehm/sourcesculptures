@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    { "source": "/SITE", "destination": "/", "permanent": true },
+    { "source": "/SITE/", "destination": "/", "permanent": true },
+    { "source": "/SITE/:path*", "destination": "/:path*", "permanent": true },
+    { "source": "/SITE2", "destination": "/", "permanent": true },
+    { "source": "/SITE2/:path*", "destination": "/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/landing-site", "destination": "/landing-site/index.html" },
+    { "source": "/landing-site/:path*", "destination": "/landing-site/index.html" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}

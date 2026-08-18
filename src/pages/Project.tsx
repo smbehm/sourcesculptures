@@ -6,7 +6,7 @@ import SoundToggle from "@/components/SoundToggle";
 import { ActiveVideoProvider } from "@/context/ActiveVideoContext";
 import { SoundProvider } from "@/context/SoundContext";
 import { useProject, useProjects } from "@/hooks/useProjects";
-import { extractYoutubeId, getMediaPoster, resolveExtraVideo, resolveMainMedia, resolvePreviewMedia } from "@/lib/projectMedia";
+import { extractYoutubeId, getMediaPoster, getSlugThumbnail, resolveExtraVideo, resolveMainMedia, resolvePreviewMedia } from "@/lib/projectMedia";
 
 const Project = () => {
   const { slug = "" } = useParams();
@@ -23,6 +23,7 @@ const Project = () => {
 
   const mainMedia = resolveMainMedia(project);
   const previewMedia = resolvePreviewMedia(project);
+  const slugThumb = getSlugThumbnail(project.slug);
 
   type GalleryItem = { type: "image" | "video"; url: string; caption?: string };
   const galleryItems: GalleryItem[] = Array.isArray(project.gallery_items) && project.gallery_items.length > 0
@@ -31,6 +32,7 @@ const Project = () => {
       ? project.gallery.map((url) => ({ type: "image" as const, url }))
       : mainMedia.youtubeId
         ? [
+            ...(slugThumb ? [{ type: "image" as const, url: slugThumb }] : []),
             { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/maxresdefault.jpg` },
             { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/hqdefault.jpg` },
             { type: "image" as const, url: `https://i.ytimg.com/vi/${mainMedia.youtubeId}/sddefault.jpg` },
@@ -65,7 +67,7 @@ const Project = () => {
             <ProjectMediaSection
               media={heroMedia}
               title={project.title}
-              poster={getMediaPoster(heroMedia, project.title)}
+              poster={getMediaPoster(heroMedia, project.title, project.slug)}
               showControls={project.show_main_video_controls}
             />
           )}
@@ -135,7 +137,7 @@ const Project = () => {
                         alt={item.caption || `${project.title} still ${i + 1}`}
                         loading="lazy"
                         decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                       />
                     )}
                     {item.caption && (

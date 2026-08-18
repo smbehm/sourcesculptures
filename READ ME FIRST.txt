@@ -1,0 +1,48 @@
+SOURCEsculptures - updated site files
+=====================================
+
+WHAT THIS IS
+These are the finished files for smbehm/sourcesculptures, matching the three
+patches (0001, 0002, 0003). Same result, no command line needed.
+
+BEFORE YOU COPY ANYTHING
+1. Open GitHub Desktop and make sure the repo is on "main" with no uncommitted
+   changes (Changes tab should be empty). Fetch/pull first.
+2. Create a branch: Branch menu > New Branch > name it "promote-site-to-root".
+   Do NOT do this on main directly.
+
+STEP 1 - DELETE THE SITE2 FOLDER
+In File Explorer, open your sourcesculptures folder and delete the "SITE2"
+folder entirely. This copy cannot delete it for you - that has to be done by
+hand. GitHub Desktop will show the 104 deletions afterwards, which is correct.
+
+STEP 2 - COPY THESE FILES IN
+Select everything in this folder EXCEPT this "READ ME FIRST.txt" file, copy it,
+and paste into your sourcesculptures folder. Choose "Replace the files in the
+destination" when Windows asks.
+
+Do NOT delete anything else first. Copying over the top is correct - files that
+did not change will simply show no diff.
+
+STEP 3 - CHECK, THEN COMMIT
+Back in GitHub Desktop, the Changes tab should show roughly:
+  - 104 deleted files, all under SITE2/
+  - modified: vercel.json, package.json, tailwind.config.ts, README.md,
+    index.html, public/robots.txt, scripts/build-vercel.mjs, .gitignore,
+    src/ensureBaseTrailingSlash.ts, src/integrations/supabase/types.ts
+  - 3 new files under supabase/migrations/
+
+If you see changes to files you edited yourself recently, STOP and ask before
+committing - something unexpected is going on.
+
+Write a commit summary, click "Commit to promote-site-to-root", then
+"Publish branch".
+
+STEP 4 - CHECK THE PREVIEW BEFORE MERGING
+Vercel builds a preview for the branch. Open that preview URL and confirm the
+site loads at its root address. Only then merge the branch into main on GitHub.
+
+NOTE ON .env
+Your .env file is deliberately NOT included, so your local one is left alone.
+Set the three VITE_SUPABASE_* variables in Vercel Project Settings >
+Environment Variables (all environments) before merging.

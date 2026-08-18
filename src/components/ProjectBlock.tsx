@@ -55,7 +55,7 @@ const ProjectBlock = ({ id, youtubeId, eyebrow, title, description, images, href
                 alt={`${title} still ${i + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover object-center media-thumb-center transition-transform duration-700 hover:scale-105"
               />
             </div>
           ))}

@@ -94,7 +94,33 @@ export const resolveExtraVideo = (project: ProjectRow, slot: 2 | 3): ResolvedPro
     : resolveVideoBySource(project.video_3_source, project.video_3_youtube_id, project.video_3_file, project.video_3_url);
 };
 
-export const getMediaPoster = (media: ResolvedProjectMedia, fallbackTitle: string): string | undefined => {
+/** Custom poster art shipped in public/thumbnails (overrides YouTube stills). */
+const THUMBNAIL_BY_SLUG: Record<string, string> = {
+  isabelle: "thumbnails/isabelle-tn.jpg",
+  "the-veil": "thumbnails/the-veil-tn.jpg",
+  inferna: "thumbnails/inferna-tn.jpg",
+};
+
+const assetUrl = (relativePath: string): string => {
+  const base = import.meta.env.BASE_URL ?? "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = relativePath.replace(/^\//, "");
+  return `${normalizedBase}${normalizedPath}`;
+};
+
+export const getSlugThumbnail = (slug?: string | null): string | undefined => {
+  if (!slug) return undefined;
+  const path = THUMBNAIL_BY_SLUG[slug];
+  return path ? assetUrl(path) : undefined;
+};
+
+export const getMediaPoster = (
+  media: ResolvedProjectMedia,
+  _fallbackTitle: string,
+  slug?: string | null
+): string | undefined => {
+  const custom = getSlugThumbnail(slug);
+  if (custom) return custom;
   if (media.type === "image") return media.url ?? undefined;
   if (media.youtubeId) return `https://i.ytimg.com/vi/${media.youtubeId}/maxresdefault.jpg`;
   return undefined;
