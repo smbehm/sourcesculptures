@@ -1,19 +1,93 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import heroImage from "@/assets/hero-home.webp";
 
 const ICON_PATH = "M561.59,0l3.66.26v1.05c-10.54,11.11-22.9,19.08-29.54,34.25-7.92,18.06-9.66,39.86-23.79,51.5-14.3,11.79-34.02,23.13-45.49,37.39-10.96,13.63-21.44,27.97-35.82,38.17-14.79,10.49-33.94,16.45-49.41,26.14-16.28,10.2-30.78,24.24-42.62,38.96-7.15,8.9-15.52,16.1-20.39,27.45-7.49,17.45-9.3,37.97-12.81,59.61-2.47,15.22.66,36.02,3.14,48.89,3.03,15.75,4.04,30.54,8.37,44.45,7.5,24.08,17.4,45.31,23.79,70.85,8.46,33.79,6.32,73.56,13.86,108.24,6.9,31.75,13.21,62.04,20.92,93.07,7.64,30.76,12.82,61.76,20.39,91.51,8.7,34.18,15.5,81.31,8.63,122.62-1.56,9.36-.9,32.96-6.27,37.39h-1.05c-8.4-11.69-10.98-28.26-15.16-44.45-2.82-10.9-5.61-22.37-8.1-33.99-1.31-9.93-2.61-19.87-3.92-29.8-1.66-21.09-3.31-42.18-4.97-63.27-9.89-58.49-24.26-111.27-40.52-163.4-7.54-24.16-14.22-47.73-23.01-70.07-1.46-3.7-7.16-21.37-10.72-19.35-6.27,3.19-7.51,14.58-9.41,22.22-5.86,23.59-7.36,49.88-12.55,73.73-9.32,42.83-12.93,88.6-20.13,133.34-3.22,20,.17,44.32-3.66,63.79-4.35,22.12-11.01,41.76-17.26,61.96-4.97,16.07-8.29,38.06-16.47,51.24h-1.83c-5.17-9.95-5.87-23.66-8.37-36.34-3.34-16.97-7.63-42.8-4.18-62.49,6.5-37.12,18.64-68.59,28.24-103.27,5.2-18.79,5.68-39.31,9.15-60.92.52-11.94,1.05-23.88,1.57-35.82,1.05-21.44,2.09-42.88,3.14-64.32.61-7.23,1.22-14.47,1.83-21.7,2.18-17.25,4.36-34.51,6.54-51.77,1.05-13.42,2.09-26.84,3.14-40.26,4.26-23.83,9.65-44.46,15.16-66.67,2.76-11.14,3.36-22.35,5.49-34.25,2.73-15.22,3.36-35.2.52-50.72l-3.4-21.96c-5.21-17.34-41.15-16.79-60.92-20.92-8.29-1.73-17.12-2.88-24.58-5.75-17.17-6.61-32.93-16.24-47.84-25.62-14.39-9.05-29.37-21.64-48.37-25.36-12.63-2.48-22.99,4.21-32.94,6.54-20.1,4.71-48.57-3.55-53.6-17.52,2.35-6.27,11.03-7.5,18.04-9.15,18.18-4.27,52.34-5.23,71.37-1.05,8.97,1.97,18.11,4.01,25.1,8.1,9.67,6.71,19.35,13.42,29.02,20.13,11.65,7.14,23.51,14.55,36.34,20.13,11.24,4.9,23.32,8.19,35.56,12.03,13.36,4.19,38.58,14.53,55.69,7.32,15.66-6.6,22.92-27.85,16.47-49.67-6.03-20.4-16.58-35.82-24.05-54.9-3.17-8.09-6.96-20.03-4.97-31.9,6.74-40.24,31.98-55.15,65.62-68.5,7.94-3.15,32.27-15.7,40.26-14.12,7.44,9.99,6.72,38.64,2.88,52.29-10.61,37.7-38.1,58.05-51.77,92.29-3.82,9.58-10.87,28.3-8.63,41.57,1.22,7.23,0,16.14,6.01,18.3,6.31,2.57,15.58-7.07,18.56-9.67,14.63-12.76,27.57-26.18,44.97-36.34,14.21-8.3,30.52-13.35,42.88-23.27,4.74-3.8,8.34-9.5,12.03-14.38,7.14-9.46,15.39-19.52,24.84-26.67,13.82-10.45,34.05-17.27,44.45-31.11,14-18.64-11.21-21.72-8.37-34.25,1.7-7.51,10.38-12.78,15.95-16.73,9.76-6.92,19.98-13.42,31.9-18.3,7.15-2.27,14.29-4.53,21.44-6.8Z";
 
 /**
- * Cinematic preloader: black foggy scene, golden light fills the icon
- * bottom-to-top as the site/videos buffer, then zooms into the light.
+ * Preloader — cinematic entry sequence
+ *
+ * Black foggy scene; golden light fills the icon bottom-to-top while the site
+ * loads, then the camera zooms into the light and the overlay dissolves.
+ *
+ * Progress is driven by REAL load signals rather than a fixed timer, so a fast
+ * connection gets a short sequence and a slow one still gets honest feedback:
+ *
+ *   hero image decoded   0.45   the LCP element sitting behind this overlay
+ *   window load          0.30   stylesheets, fonts, remaining app chunks
+ *   first video ready    0.25   YouTube iframe reported playable
+ *
+ * A time-based floor keeps the bar moving even if a signal is slow, and
+ * HARD_CAP_MS guarantees dismissal if a signal never arrives at all — a
+ * blocked YouTube embed must never strand the visitor on a loading screen.
+ *
+ * Returning within the same tab session gets a much shorter sequence, and
+ * prefers-reduced-motion skips the sequence almost entirely.
  */
+
+const MIN_SHOW_MS = 900;      // floor, so a cached load does not flash
+const HARD_CAP_MS = 6000;     // ceiling, even if signals never land
+const REPEAT_CAP_MS = 1400;   // ceiling for repeat views in this tab session
+const SESSION_KEY = "ss-preloader-shown";
+
 const Preloader = () => {
   const [progress, setProgress] = useState(0); // 0..100
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);
   const startedAt = useRef<number>(performance.now());
+
+  // Real load signals, tracked in refs so the rAF loop reads them without
+  // re-subscribing on every state change.
+  const heroReadyRef = useRef(false);
+  const windowLoadedRef = useRef(false);
   const videoReadyRef = useRef(false);
 
-  // Listen for the first preview video signaling ready
+  const reduceMotion = useRef(
+    typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  ).current;
+
+  const isRepeatView = useRef(
+    typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY) === "1"
+  ).current;
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      /* private mode — fall through to the normal sequence */
+    }
+  }, []);
+
+  // Signal 1: hero image. Decoding it here rather than waiting for <Hero /> to
+  // mount means the LCP image is already in cache when the overlay lifts.
+  useEffect(() => {
+    let cancelled = false;
+    const img = new Image();
+    img.fetchPriority = "high";
+    img.src = heroImage;
+    const mark = () => {
+      if (!cancelled) heroReadyRef.current = true;
+    };
+    img.decode().then(mark).catch(mark); // decode() rejects on some browsers; treat as ready
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Signal 2: window load (stylesheets, fonts, remaining chunks)
+  useEffect(() => {
+    if (document.readyState === "complete") {
+      windowLoadedRef.current = true;
+      return;
+    }
+    const onLoad = () => {
+      windowLoadedRef.current = true;
+    };
+    window.addEventListener("load", onLoad);
+    return () => window.removeEventListener("load", onLoad);
+  }, []);
+
+  // Signal 3: first preview video reports playable
   useEffect(() => {
     const onReady = () => {
       videoReadyRef.current = true;
@@ -22,36 +96,56 @@ const Preloader = () => {
     return () => window.removeEventListener("preview-video-ready", onReady);
   }, []);
 
-  // Drive progress
+  // Drive progress from whichever is further along: real signals or the floor
   useEffect(() => {
+    if (reduceMotion) {
+      setProgress(100);
+      return;
+    }
+
+    const cap = isRepeatView ? REPEAT_CAP_MS : HARD_CAP_MS;
     let raf = 0;
+
     const tick = () => {
       const elapsed = performance.now() - startedAt.current;
-      const t = Math.min(1, elapsed / 7000);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      let target = eased * 92;
 
-      if (videoReadyRef.current && elapsed > 1500) target = 100;
-      if (elapsed > 11000) target = 100;
+      // Weighted real progress
+      const real =
+        (heroReadyRef.current ? 45 : 0) +
+        (windowLoadedRef.current ? 30 : 0) +
+        (videoReadyRef.current ? 25 : 0);
+
+      // Time-based floor: eased toward 90 so the bar never stalls visibly
+      const t = Math.min(1, elapsed / (cap * 0.8));
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const floor = eased * 90;
+
+      let target = Math.max(real, floor);
+
+      // Everything that matters is in — the video is not required, since a
+      // blocked embed should not hold the door shut.
+      const essentialsReady = heroReadyRef.current && windowLoadedRef.current;
+      if (essentialsReady && elapsed > MIN_SHOW_MS) target = 100;
+      if (elapsed > cap) target = 100;
 
       setProgress((p) => Math.max(p, target));
 
       if (target >= 100) return;
       raf = requestAnimationFrame(tick);
     };
+
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [reduceMotion, isRepeatView]);
 
-  // Auto-dismiss when complete
+  // Auto-dismiss when complete. The zoom-into-the-light runs during this delay.
   useEffect(() => {
     if (progress >= 100 && !done) {
       setDone(true);
-      const t = setTimeout(() => setHidden(true), 1400);
+      const t = setTimeout(() => setHidden(true), reduceMotion ? 200 : 1400);
       return () => clearTimeout(t);
     }
-  }, [progress, done]);
-
+  }, [progress, done, reduceMotion]);
 
   // Lock body scroll while showing
   useEffect(() => {
@@ -137,7 +231,7 @@ const Preloader = () => {
       <div
         className="absolute inset-0 flex items-center justify-center"
         style={{
-          transform: done ? "scale(14)" : "scale(1)",
+          transform: done && !reduceMotion ? "scale(14)" : "scale(1)",
           transformOrigin: "50% 50%",
           transition: "transform 1400ms cubic-bezier(0.7, 0, 0.84, 0)",
         }}

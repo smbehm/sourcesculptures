@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import About from "@/components/About";
 import CTA from "@/components/CTA";
 import { SoundProvider } from "@/context/SoundContext";
-import reySeanImage from "@/assets/rey-sean.png";
+import reySeanImage from "@/assets/rey-sean.webp";
 
 const AboutPage = () => {
   useEffect(() => {

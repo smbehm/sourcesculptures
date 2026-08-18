@@ -1,0 +1,36 @@
+IMAGE + PRELOADER OPTIMIZATION
+==============================
+
+STEP 1 - DELETE these 6 old image files from your repo folder:
+    src\assets\hero-home.jpg
+    src\assets\rey-sean.png
+    public\thumbnails\isabelle-tn.jpg
+    public\thumbnails\the-veil-tn.jpg
+    public\thumbnails\inferna-tn.jpg
+    assets\SS-TOGETHER.jpg
+
+  They are replaced by .webp versions. If you skip this the site still works,
+  but you keep shipping 5.8 MB of unused files in the repo.
+
+STEP 2 - COPY the contents of this folder into your repo folder, keeping the
+  folder structure (assets, public, scripts, src all merge in). Choose
+  "Replace the files in the destination". Do not copy this READ ME.txt.
+
+STEP 3 - In GitHub Desktop the Changes tab should show:
+    6 deleted images, 6 new .webp images
+    modified: index.html, src/App.tsx, src/components/Hero.tsx,
+              src/components/Preloader.tsx, src/lib/projectMedia.ts,
+              src/pages/About.tsx, scripts/build-vercel.mjs
+    new:      scripts/optimize-images.mjs
+  Commit and push. Check the site, then you are done.
+
+WHAT CHANGED
+  Images   7.1 MB -> 1.2 MB. WebP, and the 4K video posters resampled to
+           1920x1080 (they were never displayed larger than that).
+  JS       Admin screens split into their own chunk instead of being sent to
+           every visitor. Main bundle 718 kB -> 650 kB.
+  Preload  Progress now follows real load signals instead of a fixed timer,
+           and a blocked YouTube embed no longer holds the screen for 11s.
+
+If the site looks wrong after this, the likely cause is a missed file in
+step 2 - check that all six .webp files arrived.

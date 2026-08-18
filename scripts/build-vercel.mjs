@@ -44,7 +44,7 @@ const LANDING_HTML = `<!doctype html>
         place-items: center;
         background-image:
           linear-gradient(180deg, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.26) 45%, rgba(0,0,0,0.62) 100%),
-          url("/landing-site/landing-hero.jpg");
+          url("/landing-site/landing-hero.webp");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -98,7 +98,7 @@ async function build() {
 
   // 2. Archived splash page, parked at /landing-site/ for maintenance windows.
   await mkdir("dist/landing-site", { recursive: true });
-  await copyFile("assets/SS-TOGETHER.jpg", "dist/landing-site/landing-hero.jpg");
+  await copyFile("assets/SS-TOGETHER.webp", "dist/landing-site/landing-hero.webp");
   await writeFile("dist/landing-site/index.html", LANDING_HTML, "utf8");
 }
 

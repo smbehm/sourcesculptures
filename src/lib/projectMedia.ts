@@ -96,9 +96,9 @@ export const resolveExtraVideo = (project: ProjectRow, slot: 2 | 3): ResolvedPro
 
 /** Custom poster art shipped in public/thumbnails (overrides YouTube stills). */
 const THUMBNAIL_BY_SLUG: Record<string, string> = {
-  isabelle: "thumbnails/isabelle-tn.jpg",
-  "the-veil": "thumbnails/the-veil-tn.jpg",
-  inferna: "thumbnails/inferna-tn.jpg",
+  isabelle: "thumbnails/isabelle-tn.webp",
+  "the-veil": "thumbnails/the-veil-tn.webp",
+  inferna: "thumbnails/inferna-tn.webp",
 };
 
 const assetUrl = (relativePath: string): string => {
