@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /sphere
 
 User-agent: Bingbot
 Allow: /
+Disallow: /sphere
 
 User-agent: Twitterbot
 Allow: /

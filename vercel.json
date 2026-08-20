@@ -12,5 +12,15 @@
     { "source": "/sphere", "destination": "/sphere/index.html" },
     { "source": "/sphere/", "destination": "/sphere/index.html" },
     { "source": "/:path*", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/sphere",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/sphere/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
   ]
 }
