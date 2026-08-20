@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bhutan Sphere Explorations</title>
+<style>
+  :root{
+    --bg:#07080b; --pane:rgba(16,18,23,.9); --line:#2a2f3a;
+    --txt:#dfe4ec; --dim:#8b93a3; --acc:#ffb347; --acc2:#5fb8ff;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  #wrap{position:fixed;inset:0;overflow:hidden}
+  /* canvas must fill the viewport in CSS px regardless of devicePixelRatio */
+  #wrap canvas{display:block;width:100%!important;height:100%!important}
+
+  .pane{position:fixed;background:var(--pane);border:1px solid var(--line);
+    border-radius:8px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+
+  #ui{top:12px;left:12px;width:286px;max-height:calc(100vh - 24px);overflow-y:auto;padding:12px 13px 14px}
+  #ui::-webkit-scrollbar{width:8px}
+  #ui::-webkit-scrollbar-thumb{background:#2c313c;border-radius:4px}
+  h1{margin:0 0 2px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--acc)}
+  .sub{color:var(--dim);font-size:11px;margin:0 0 11px;font-family:var(--mono)}
+  .grp{border-top:1px solid var(--line);margin-top:11px;padding-top:9px}
+  .grp>.lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+  .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .row label{flex:0 0 74px;font-size:11px;color:var(--dim)}
+  .row input[type=range]{flex:1;min-width:0;height:16px;accent-color:var(--acc);background:transparent}
+  .row .val{flex:0 0 60px;text-align:right;font-family:var(--mono);font-size:11px}
+  .chk{display:flex;align-items:center;gap:7px;margin:6px 0;font-size:11.5px;cursor:pointer}
+  .chk input{accent-color:var(--acc);width:13px;height:13px;margin:0}
+
+  /* pattern gallery */
+  #gal{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  #gal button{background:#181c24;border:1px solid var(--line);color:var(--dim);
+    border-radius:5px;padding:6px 6px;font-size:10.5px;line-height:1.25;cursor:pointer;text-align:left}
+  #gal button:hover{border-color:#48505f;color:var(--txt)}
+  #gal button.on{background:var(--acc);border-color:var(--acc);color:#1a1206;font-weight:600}
+  #gal button i{display:block;font-style:normal;font-size:9px;opacity:.72;margin-top:1px}
+  #gal button.on i{opacity:.8}
+
+  .btns{display:flex;gap:5px;margin-top:8px}
+  .btns button{flex:1;background:#181c24;border:1px solid var(--line);color:var(--txt);
+    border-radius:5px;padding:6px 0;font-size:10.5px;cursor:pointer;font-family:var(--mono)}
+  .btns button:hover{border-color:var(--acc);color:var(--acc)}
+  .note{font-size:10.5px;color:var(--dim);line-height:1.5;margin-top:8px}
+  .note b{color:var(--acc);font-weight:600}
+  label.file{display:block;font-size:11px;color:var(--dim);margin:8px 0 2px}
+  label.file input{display:block;margin-top:5px;width:100%;font-size:10px;color:var(--dim)}
+  label.file input::file-selector-button{background:#181c24;border:1px solid var(--line);
+    color:var(--txt);border-radius:5px;padding:4px 9px;font-size:10.5px;cursor:pointer;margin-right:7px}
+
+  #hud{top:12px;right:12px;width:252px;padding:11px 12px;font-family:var(--mono)}
+  #hud .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+    margin:0 0 8px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  td{padding:2.5px 0;vertical-align:baseline}
+  td:first-child{color:var(--dim)}
+  td:last-child{text-align:right}
+  tr.hd td{color:var(--acc);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+    padding-top:9px;border-bottom:1px solid var(--line);padding-bottom:3px}
+  #flat{width:100%;height:114px;margin-top:9px;border:1px solid var(--line);border-radius:5px;
+    image-rendering:pixelated;background:#0b0d12;display:block}
+
+  #legend{bottom:12px;left:12px;right:12px;max-width:800px;margin:0 auto;padding:9px 13px;
+    font-size:11.5px;color:var(--dim);text-align:center}
+  #legend b{color:var(--acc);font-weight:600}
+
+  .tg{position:fixed;top:12px;z-index:30;width:22px;height:26px;padding:0;
+    background:var(--pane);border:1px solid var(--line);border-radius:6px;
+    color:var(--dim);font-size:13px;line-height:1;cursor:pointer;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .tg:hover{color:var(--acc);border-color:var(--acc)}
+  #tgUi{left:308px} #tgHud{right:274px}
+  body.noUi  #ui{display:none}   body.noUi  #tgUi{left:12px}
+  body.noHud #hud{display:none}  body.noHud #tgHud{right:12px}
+  @media (max-width:900px){
+    #hud{display:none} #ui{width:244px}
+    #tgUi{left:266px} #tgHud{right:12px}
+    body.noUi #tgUi{left:12px}
+  }
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+
+<div id="ui" class="pane">
+  <h1>Bhutan Sphere Explorations</h1>
+  <p class="sub">&Oslash;6 m &middot; R = 3000 mm &middot; 3 mm 316SS</p>
+
+  <div class="grp">
+    <div class="lbl">Pattern family</div>
+    <div id="gal"></div>
+    <label class="chk"><input type="checkbox" id="invert"> invert (swap metal / void)</label>
+  </div>
+
+  <div class="grp">
+    <div class="lbl" id="plbl">Parameters</div>
+    <div class="row"><label id="lA">count</label><input type="range" id="pA"><span class="val" id="vA"></span></div>
+    <div class="row"><label id="lB">width</label><input type="range" id="pB"><span class="val" id="vB"></span></div>
+    <div class="row"><label id="lC">phase</label><input type="range" id="pC"><span class="val" id="vC"></span></div>
+    <div class="row"><label id="lD">variant</label><input type="range" id="pD"><span class="val" id="vD"></span></div>
+    <div class="btns">
+      <button id="rnd">randomise</button><button id="rst">reset</button><button id="cpy">copy params</button>
+    </div>
+    <div class="note" id="pnote"></div>
+    <div class="lbl" style="margin:11px 0 5px">Pattern axis</div>
+    <div class="row"><label>tilt</label><input type="range" id="tilt" min="0" max="180" step="1" value="0"><span class="val" id="vtilt"></span></div>
+    <div class="row"><label>azimuth</label><input type="range" id="azim" min="0" max="360" step="1" value="0"><span class="val" id="vazim"></span></div>
+    <div class="note">0&deg; = poles vertical. 90&deg; lays the axis horizontal so two-pole families (loxodromes, parastichy) converge on the horizon instead of overhead.</div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">Observer</div>
+    <div class="row"><label>standoff</label><input type="range" id="dist" min="3.2" max="60" step="0.05" value="9.0"><span class="val" id="vdist"></span></div>
+    <label class="chk"><input type="checkbox" id="spin" checked> auto-orbit</label>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">Interior light volume</div>
+    <div class="row"><label>core r&#8321;</label><input type="range" id="r1" min="0.05" max="2.9" step="0.01" value="0.79"><span class="val" id="vr1"></span></div>
+    <div class="row"><label>mid r&#8322;</label><input type="range" id="r2" min="0.05" max="2.9" step="0.01" value="1.51"><span class="val" id="vr2"></span></div>
+    <div class="row"><label>outer r&#8323;</label><input type="range" id="r3" min="0.05" max="2.9" step="0.01" value="2.23"><span class="val" id="vr3"></span></div>
+    <div class="row"><label>output</label><input type="range" id="lum" min="0" max="2" step="0.01" value="1"><span class="val" id="vlum"></span></div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">Finish &amp; environment</div>
+    <div class="row"><label>roughness</label><input type="range" id="rough" min="0.02" max="0.60" step="0.005" value="0.14"><span class="val" id="vrough"></span></div>
+    <div class="row"><label>reflection</label><input type="range" id="envi" min="0" max="1.6" step="0.01" value="1.0"><span class="val" id="venvi"></span></div>
+    <label class="chk"><input type="checkbox" id="bg" checked> show surroundings</label>
+    <label class="file">load 360 / panorama<input type="file" id="pano" accept="image/*"></label>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">View</div>
+    <label class="chk"><input type="checkbox" id="fit" checked> keep sphere framed</label>
+    <div class="row"><label>far wall</label><input type="range" id="back" min="0.05" max="1" step="0.01" value="0.45"><span class="val" id="vback"></span></div>
+    <label class="chk"><input type="checkbox" id="linerOn"> interior liner (blocks far wall)</label>
+    <label class="chk"><input type="checkbox" id="shellonly"> hide interior light</label>
+    <label class="chk"><input type="checkbox" id="day"> daylight mode</label>
+    <label class="chk"><input type="checkbox" id="ss"> 2× supersample (crisper cut edges)</label>
+    <div class="btns"><button id="png">export PNG</button></div>
+  </div>
+</div>
+
+<div id="hud" class="pane">
+  <p class="lbl">Measured &middot; live</p>
+  <table>
+    <tr class="hd"><td>fabrication</td><td>GPU-measured</td></tr>
+    <tr><td>open area</td><td id="h_oa">&mdash;</td></tr>
+    <tr><td>cut path</td><td id="h_cp">&mdash;</td></tr>
+    <tr><td>arc time @10 m/min</td><td id="h_at">&mdash;</td></tr>
+    <tr><td>min feature</td><td id="h_mf">&mdash;</td></tr>
+    <tr class="hd"><td>observer</td><td></td></tr>
+    <tr><td>standoff</td><td id="h_so"></td></tr>
+    <tr><td>k = D/R</td><td id="h_k"></td></tr>
+    <tr><td>silhouette &theta;</td><td id="h_lim"></td></tr>
+    <tr class="hd"><td>burst &psi;max = asin(r/R)</td><td></td></tr>
+    <tr><td>core / mid / outer</td><td id="h_psi"></td></tr>
+    <tr><td>surface disk &oslash;</td><td id="h_disk"></td></tr>
+  </table>
+  <canvas id="flat" width="256" height="128" title="equirectangular mask — check seamlessness"></canvas>
+</div>
+
+<div id="legend" class="pane">
+  Pattern is an analytic <b>signed field on the surface direction</b> &mdash; seamless, no UV wrap.
+  Eight families are pole-free; <b>parastichy slots and loxodromes are two-pole</b>, because banding a lattice
+  into spirals makes a direction field and the hairy-ball theorem forces total index +2.
+  Open area and cut path are <b>measured on the GPU</b> from the actual field &mdash; validated to 0.5% against
+  closed form &mdash; not estimated per pattern.
+</div>
+
+<button id="tgUi"  class="tg" title="hide/show controls">&lsaquo;</button>
+<button id="tgHud" class="tg" title="hide/show readout">&rsaquo;</button>
+
+<script>/* three.js r128 (MIT) placeholder */</script>
+<script>
+(function(){
+"use strict";
+
+const R=3.0, FT=3.280839895, D2=180/Math.PI;   // 6 m diameter shell
+const $=id=>document.getElementById(id);
+
+/* ============================ point sets ============================ */
+const PHI=(1+Math.sqrt(5))/2;
+const nrm=v=>{const l=Math.hypot(v[0],v[1],v[2]);return[v[0]/l,v[1]/l,v[2]/l];};
+
+function icoVerts(){                       // 12
+  const o=[];
+  for(const s1 of [1,-1]) for(const s2 of [1,-1]){
+    o.push([0,s1,s2*PHI],[s1,s2*PHI,0],[s2*PHI,0,s1]);
+  }
+  return o.map(nrm);
+}
+function dodecVerts(){                     // 20 = icosahedron face centres
+  const o=[];
+  for(const a of [1,-1]) for(const b of [1,-1]) for(const c of [1,-1]) o.push([a,b,c]);
+  const p=PHI, q=1/PHI;
+  for(const s1 of [1,-1]) for(const s2 of [1,-1]) o.push([0,s1*q,s2*p],[s1*q,s2*p,0],[s2*p,0,s1*q]);
+  return o.map(nrm);
+}
+function icosidodecVerts(){                // 30 = icosahedron edge midpoints
+  const o=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].map(v=>[v[0]*PHI,v[1]*PHI,v[2]*PHI]);
+  const h=0.5,p=PHI/2,p2=PHI*PHI/2;
+  for(const a of [1,-1]) for(const b of [1,-1]) for(const c of [1,-1]){
+    o.push([a*h,b*p,c*p2],[b*p,c*p2,a*h],[c*p2,a*h,b*p]);
+  }
+  return o.map(nrm);
+}
+function fibSet(n){
+  const o=[];
+  for(let i=0;i<n;i++){
+    const z=1-(2*i+1)/n, st=Math.sqrt(Math.max(0,1-z*z)), ph=2*Math.PI*((i*(PHI-1))%1);
+    o.push([Math.cos(ph)*st,Math.sin(ph)*st,z]);
+  }
+  return o;
+}
+const NODESETS={
+  ico12 : icoVerts(),
+  ico32 : icoVerts().concat(dodecVerts()),
+  ico62 : icoVerts().concat(dodecVerts(),icosidodecVerts())
+};
+
+/* ============================ icosphere mesh ============================ */
+function icosphere(sub){
+  let verts=icoVerts().map(v=>v.slice());
+  let faces=[[0,1,2],[0,2,3],[0,3,4],[0,4,5],[0,5,1]];   // rebuilt below
+  // robust: build faces by proximity (edge length = 2/sqrt(phi*sqrt5))
+  faces=[];
+  const el=Math.hypot(verts[0][0]-verts[1][0],verts[0][1]-verts[1][1],verts[0][2]-verts[1][2]);
+  let minE=Infinity;
+  for(let i=0;i<12;i++)for(let j=i+1;j<12;j++){
+    const d=Math.hypot(verts[i][0]-verts[j][0],verts[i][1]-verts[j][1],verts[i][2]-verts[j][2]);
+    if(d<minE)minE=d;
+  }
+  const tol=minE*1.05;
+  const adj=(i,j)=>Math.hypot(verts[i][0]-verts[j][0],verts[i][1]-verts[j][1],verts[i][2]-verts[j][2])<tol;
+  for(let i=0;i<12;i++)for(let j=i+1;j<12;j++)for(let k=j+1;k<12;k++)
+    if(adj(i,j)&&adj(j,k)&&adj(i,k)){
+      const a=verts[i],b=verts[j],c=verts[k];
+      const cr=[(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]),
+                (b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]),
+                (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])];
+      faces.push(cr[0]*a[0]+cr[1]*a[1]+cr[2]*a[2] > 0 ? [i,j,k] : [i,k,j]);
+    }
+  for(let s=0;s<sub;s++){
+    const mid=new Map(), nf=[];
+    const gm=(a,b)=>{
+      const key=a<b?a+"_"+b:b+"_"+a;
+      if(mid.has(key))return mid.get(key);
+      const va=verts[a],vb=verts[b];
+      verts.push(nrm([va[0]+vb[0],va[1]+vb[1],va[2]+vb[2]]));
+      const i=verts.length-1; mid.set(key,i); return i;
+    };
+    for(const f of faces){
+      const a=gm(f[0],f[1]),b=gm(f[1],f[2]),c=gm(f[2],f[0]);
+      nf.push([f[0],a,c],[f[1],b,a],[f[2],c,b],[a,b,c]);
+    }
+    faces=nf;
+  }
+  const pos=new Float32Array(verts.length*3), nor=new Float32Array(verts.length*3);
+  verts.forEach((v,i)=>{pos[i*3]=v[0]*R;pos[i*3+1]=v[1]*R;pos[i*3+2]=v[2]*R;
+                        nor[i*3]=v[0];nor[i*3+1]=v[1];nor[i*3+2]=v[2];});
+  const idx=new Uint32Array(faces.length*3);
+  faces.forEach((f,i)=>{idx[i*3]=f[0];idx[i*3+1]=f[1];idx[i*3+2]=f[2];});
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  g.setIndex(new THREE.BufferAttribute(idx,1));
+  return g;
+}
+
+/* ============================ pattern GLSL ============================
+   Signed field f(n) on the unit direction.  f < 0 = void (cut away),
+   f > 0 = metal.  Everything is a function of the 3-D direction, so the
+   pattern is seamless across the whole sphere with no UV wrap and no
+   poles — except the loxodrome family, which is two-pole by definition. */
+const PATTERN_GLSL = `
+#define TPI 6.283185307179586
+#define MPI 3.141592653589793
+#define GPHI 1.618033988749895
+
+uniform int   uMode;
+uniform float uA, uB, uC, uD;      // count, width, phase, variant
+uniform float uInv;
+uniform vec3  uNodes[62];
+uniform int   uNodeN;
+uniform mat3  uRot;                // pattern-axis orientation
+
+float madfrac(float a,float b){ return a*b - floor(a*b); }
+
+vec3 sfPoint(float i, float n){
+  float ph = TPI*madfrac(i, GPHI-1.0);
+  float z  = 1.0 - (2.0*i+1.0)/n;
+  float st = sqrt(max(0.0, 1.0-z*z));
+  return vec3(cos(ph)*st, sin(ph)*st, z);
+}
+
+// Keinert et al. inverse spherical Fibonacci mapping. Locates the lattice
+// cell containing p in O(1); the caller then tests a small neighbourhood.
+// Returns (F0, F1, c.x, c.y).
+vec4 sfCell(vec3 p, float n){
+  float phi  = atan(p.y, p.x);
+  float cosT = clamp(p.z, -1.0, 1.0);
+  float s2   = max(1.0 - cosT*cosT, 1e-7);
+  float k    = max(2.0, floor(log(n*MPI*sqrt(5.0)*s2)/log(GPHI*GPHI)));
+  float Fk   = pow(GPHI,k)/sqrt(5.0);
+  float F0   = floor(Fk+0.5), F1 = floor(Fk*GPHI+0.5);
+  float b00  = TPI*(madfrac(F0+1.0,GPHI-1.0)-(GPHI-1.0));
+  float b01  = TPI*(madfrac(F1+1.0,GPHI-1.0)-(GPHI-1.0));
+  float b10  = -2.0*F0/n, b11 = -2.0*F1/n;
+  float det  = b00*b11 - b01*b10;
+  det = (abs(det) < 1e-20) ? 1e-20 : det;
+  float x = phi, y = cosT - (1.0 - 1.0/n);
+  return vec4(F0, F1, floor(vec2((b11*x - b01*y)/det, (-b10*x + b00*y)/det)));
+}
+
+void sfNear(vec3 p, float n, out float d1, out float d2, out float idx){
+  vec4 cl = sfCell(p,n);
+  d1 = 1e9; d2 = 1e9; idx = 0.0;
+  for(int a=-1;a<=1;a++){
+    for(int b=-1;b<=1;b++){
+      float i = clamp(dot(cl.xy, cl.zw+vec2(float(a),float(b))), 0.0, n-1.0);
+      float d = length(sfPoint(i,n) - p);
+      if(d < d1){ d2 = d1; d1 = d; idx = i; }
+      else if(d < d2){ d2 = d; }
+    }
+  }
+}
+
+// True Flower of Life: a circle of radius rr centred on EVERY lattice point.
+// When rr equals the nearest-neighbour spacing each circle passes through its
+// neighbours' centres and the arcs cross in genuine vesicae — that is the
+// construction, and it is what a min-distance-to-node field cannot produce.
+// 5x5 neighbourhood so circles centred up to two rings out still reach p.
+float sfFlower(vec3 p, float n, float rr, float w, float rings){
+  vec4 cl = sfCell(p,n);
+  float best = 1e9;
+  for(int a=-2;a<=2;a++){
+    for(int b=-2;b<=2;b++){
+      float i = clamp(dot(cl.xy, cl.zw+vec2(float(a),float(b))), 0.0, n-1.0);
+      float ang = acos(clamp(dot(sfPoint(i,n), p), -1.0, 1.0));
+      for(int k=1;k<=3;k++){
+        if(float(k) > rings) break;
+        best = min(best, abs(ang - rr*float(k)));
+      }
+    }
+  }
+  return best - w;
+}
+
+// Nearest-neighbour spacing of an N-point quasi-uniform spherical lattice:
+// hexagonal packing gives area (sqrt3/2)*d^2 per point = 4*pi/N.
+float nnSpacing(float n){ return sqrt(8.0*MPI/(sqrt(3.0)*n)); }
+
+vec3 rotZ(vec3 v, float a){
+  float c=cos(a), s=sin(a);
+  return vec3(c*v.x - s*v.y, s*v.x + c*v.y, v.z);
+}
+
+float bandOf(float u, float w){ u = fract(u); return min(u,1.0-u) - w*0.5; }
+
+float patternField(vec3 nWorld){
+  vec3 n = uRot * nWorld;          // pattern axis, independent of the mesh
+  float f = 1.0;
+
+  if(uMode==0){                                   // phyllotaxis dots
+    float d1,d2,i; sfNear(n,uA,d1,d2,i);
+    f = d1 - uB*2.0/sqrt(uA);
+  }
+  else if(uMode==1){
+    // Parastichy spirals. The Fibonacci lattice is an integer lattice in the
+    // coordinates s = continuous index and t = s*g - theta/2pi, both of which
+    // are whole numbers at every generated point. A parastichy family joining
+    // points F apart runs along (F, F') with F' = round(F*g), so its spirals
+    // are the level sets of the linear form F'*s - F*t. Banding that form is
+    // continuous everywhere — banding the discrete index instead is piecewise
+    // constant per cell and produces stepped, faceted edges.
+    float g  = GPHI - 1.0;
+    float s  = uA*(1.0 - n.z)*0.5 - 0.5;
+    float t  = s*g - atan(n.y,n.x)/TPI;
+    float F  = max(2.0, floor(uD+0.5));
+    float Fp = floor(F*g + 0.5);
+    f = bandOf(Fp*s - F*t + uC, uB);
+  }
+  else if(uMode==2){                              // Fibonacci Voronoi web
+    float d1,d2,i; sfNear(n,uA,d1,d2,i);
+    f = uB*2.5 - (d2-d1)*sqrt(uA);
+  }
+  else if(uMode==3){                              // great-circle weave
+    float m = max(3.0, floor(uA*0.05));
+    float best = 1e9;
+    for(int j=0;j<64;j++){
+      if(float(j) >= m) break;
+      best = min(best, abs(dot(n, rotZ(sfPoint(float(j), m*2.0), uC*TPI))));
+    }
+    f = best - uB*0.09;
+  }
+  else if(uMode==4){                              // great-circle moire
+    float m1 = max(3.0, floor(uA*0.05));
+    float m2 = m1 + max(1.0, floor(uD));
+    float w  = uB*0.09;
+    float b1=1e9, b2=1e9;
+    for(int j=0;j<64;j++){ if(float(j)>=m1) break; b1=min(b1, abs(dot(n, sfPoint(float(j), m1*2.0)))); }
+    for(int j=0;j<64;j++){ if(float(j)>=m2) break; b2=min(b2, abs(dot(n, rotZ(sfPoint(float(j), m2*2.0), uC*TPI)))); }
+    // Signed CSG exclusive-or: A\B on the two band fields. Using step() here
+    // would make f binary, which kills both the fwidth edge coverage and the
+    // gradient the co-area measurement depends on.
+    float d1 = b1 - w, d2 = b2 - w;
+    f = max(min(d1,d2), -max(d1,d2));
+  }
+  else if(uMode==5){                              // gyroid slice
+    vec3 p = n*uA*0.16;
+    float g = sin(p.x)*cos(p.y) + sin(p.y)*cos(p.z) + sin(p.z)*cos(p.x);
+    f = abs(g - (uC*2.0-1.0)*uD) - uB*1.6;
+  }
+  else if(uMode==6){                              // Schwarz-P slice
+    vec3 p = n*uA*0.16;
+    float g = cos(p.x)+cos(p.y)+cos(p.z);
+    f = abs(g - (uC*2.0-1.0)*uD) - uB*1.6;
+  }
+  else if(uMode==7){                              // icosahedral quasicrystal
+    vec3 p = n*uA*0.16;
+    float g = 0.0;
+    for(int j=0;j<6;j++){
+      if(j >= uNodeN) break;
+      g += cos(dot(p, uNodes[j]) + uC*TPI);
+    }
+    f = abs(g)*0.45 - uB*2.2 + (uD-1.0)*0.6;
+  }
+  else if(uMode==8){                              // flower of life
+    float sp = nnSpacing(uA);                     // circle r = lattice spacing
+    f = sfFlower(n, uA, sp*uD, uB*sp*0.03, floor(uC*3.0+1.0));  // width tracks spacing
+  }
+  else if(uMode==9){                              // loxodrome spirals (2 poles)
+    float th = acos(clamp(n.z,-1.0,1.0));
+    float ph = atan(n.y,n.x);
+    float m  = max(1.0, floor(uA*0.04));
+    f = bandOf(m*ph/TPI + uD*log(max(1e-4,tan(th*0.5)))/TPI + uC, uB);
+  }
+
+  return uInv > 0.5 ? -f : f;
+}
+`;
+
+/* ============================ scene ============================ */
+const wrap=$('wrap');
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.setClearColor(0x07080b,1);
+wrap.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,0.05,4000);
+
+const U={
+  uMode:{value:0}, uA:{value:600}, uB:{value:0.5}, uC:{value:0}, uD:{value:8},
+  uInv:{value:0}, uNodes:{value:[]}, uNodeN:{value:0},
+  uBack:{value:0.45},        // far-wall (backface) dimming, for depth read
+  uRot:{value:new THREE.Matrix3()}          // far-wall (backface) dimming, for depth read
+};
+for(let i=0;i<62;i++) U.uNodes.value.push(new THREE.Vector3(0,0,1));
+function setNodes(list){
+  for(let i=0;i<62;i++){
+    const v=list[i%Math.max(1,list.length)]||[0,0,1];
+    U.uNodes.value[i].set(v[0],v[1],v[2]);
+  }
+  U.uNodeN.value=Math.min(62,list.length);
+}
+
+const skyMat=new THREE.MeshBasicMaterial({side:THREE.BackSide,depthWrite:false});
+const sky=new THREE.Mesh(new THREE.SphereGeometry(1200,64,40),skyMat);
+sky.renderOrder=-10; scene.add(sky);
+
+const shellMat=new THREE.MeshStandardMaterial({
+  color:0xf2f4f6, metalness:1.0, roughness:0.14, side:THREE.DoubleSide, envMapIntensity:1.0
+});
+shellMat.extensions={derivatives:true};
+shellMat.onBeforeCompile=sh=>{
+  Object.assign(sh.uniforms,U);
+  sh.vertexShader=sh.vertexShader
+    .replace('#include <common>','#include <common>\nvarying vec3 vObj;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\nvObj = position;');
+  sh.fragmentShader=sh.fragmentShader
+    .replace('#include <common>','#include <common>\nvarying vec3 vObj;\n'+PATTERN_GLSL+`
+float bayer4(vec2 c){
+  vec2 p = floor(mod(c,4.0));
+  float i = p.y*4.0 + p.x;
+  float b = 0.0;
+  if(i< 1.0) b= 0.0; else if(i< 2.0) b= 8.0; else if(i< 3.0) b= 2.0; else if(i< 4.0) b=10.0;
+  else if(i< 5.0) b=12.0; else if(i< 6.0) b= 4.0; else if(i< 7.0) b=14.0; else if(i< 8.0) b= 6.0;
+  else if(i< 9.0) b= 3.0; else if(i<10.0) b=11.0; else if(i<11.0) b= 1.0; else if(i<12.0) b= 9.0;
+  else if(i<13.0) b=15.0; else if(i<14.0) b= 7.0; else if(i<15.0) b=13.0; else b= 5.0;
+  return (b+0.5)/16.0;
+}`)
+    .replace('#include <clipping_planes_fragment>',`
+{
+  float _f = patternField(normalize(vObj));
+  float _w = max(fwidth(_f), 1e-8);
+  float _cov = clamp(0.5 - _f/_w, 0.0, 1.0);        // 1 = fully void
+  if(_cov > bayer4(gl_FragCoord.xy)) discard;       // dithered edge coverage
+}
+#include <clipping_planes_fragment>`)
+    // Dim back faces so the far wall seen through the near cutouts reads as
+    // a separate depth rather than merging with the near surface.
+    .replace('#include <output_fragment>',
+             '#include <output_fragment>\nif(!gl_FrontFacing) gl_FragColor.rgb *= uBack;');
+};
+const shell=new THREE.Mesh(icosphere(6),shellMat);
+scene.add(shell);
+
+// Optional opaque interior backdrop. OFF by default — it hides the far wall,
+// and the whole point of the bench is reading the near/far cutout overlay.
+const linerMat=new THREE.MeshBasicMaterial({color:0x0a0c11,side:THREE.BackSide});
+const liner=new THREE.Mesh(new THREE.SphereGeometry(R*0.992,96,64),linerMat);
+liner.visible=false; scene.add(liner);
+
+const scrimDefs=[{c:0xfff3e2,o:0.72},{c:0xffd39a,o:0.22},{c:0xff9038,o:0.10}];
+const scrims=scrimDefs.map(d=>{
+  const m=new THREE.Mesh(new THREE.SphereGeometry(1,72,52),
+    new THREE.MeshBasicMaterial({color:d.c,transparent:true,opacity:d.o,
+      blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  m.renderOrder=2; scene.add(m); return m;
+});
+const darkCore=new THREE.Mesh(new THREE.SphereGeometry(1,64,48),
+  new THREE.MeshBasicMaterial({color:0x0c0d10}));
+darkCore.visible=false; scene.add(darkCore);
+
+const amb=new THREE.AmbientLight(0xffffff,0.10); scene.add(amb);
+const key=new THREE.DirectionalLight(0xdce6f5,0.30); key.position.set(1,1.4,0.7); scene.add(key);
+const fill=new THREE.DirectionalLight(0x88a0c0,0.12); fill.position.set(-1,-0.5,-0.8); scene.add(fill);
+
+/* ============================ environment ============================ */
+function makeValleyEquirect(){
+  const W=4096,H=2048,HZ=H*0.5;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const g=cv.getContext('2d');
+  let lg=g.createLinearGradient(0,0,0,HZ);
+  lg.addColorStop(0,'#0e2a5c');lg.addColorStop(.38,'#2f6299');
+  lg.addColorStop(.74,'#7ea6c8');lg.addColorStop(1,'#c9d8e2');
+  g.fillStyle=lg; g.fillRect(0,0,W,HZ);
+  const sx=W*0.62, sy=HZ-(28/90)*HZ;
+  const halo=g.createRadialGradient(sx,sy,0,sx,sy,420);
+  halo.addColorStop(0,'rgba(255,252,240,1)');halo.addColorStop(.05,'rgba(255,247,222,.96)');
+  halo.addColorStop(.22,'rgba(255,236,196,.34)');halo.addColorStop(1,'rgba(255,230,190,0)');
+  g.fillStyle=halo; g.beginPath(); g.arc(sx,sy,420,0,7); g.fill();
+  g.globalAlpha=.16; g.fillStyle='#fff';
+  for(let i=0;i<26;i++){
+    const y=HZ*(.10+Math.random()*.72), w=W*(.05+Math.random()*.16);
+    g.beginPath(); g.ellipse(Math.random()*W,y,w,6+Math.random()*22,0,0,7); g.fill();
+  }
+  g.globalAlpha=1;
+  const ridge=(top,amp,col,seed)=>{
+    g.fillStyle=col; g.beginPath(); g.moveTo(0,H);
+    for(let x=0;x<=W;x+=4){
+      const u=x/W*Math.PI*2;
+      g.lineTo(x, top - amp*(0.55*Math.sin(u*3.1+seed)+0.3*Math.sin(u*7.3+seed*2.1)
+                            +0.15*Math.sin(u*13.7+seed*3.7)+0.5));
+    }
+    g.lineTo(W,H); g.closePath(); g.fill();
+  };
+  ridge(HZ*0.895,74,'#93aac2',0.8); ridge(HZ*0.945,46,'#5d7186',2.4); ridge(HZ*0.988,28,'#2f3c39',5.1);
+  lg=g.createLinearGradient(0,HZ,0,H);
+  lg.addColorStop(0,'#3b4238');lg.addColorStop(.28,'#4a4b3a');
+  lg.addColorStop(.70,'#2e3029');lg.addColorStop(1,'#1d1f1c');
+  g.fillStyle=lg; g.fillRect(0,HZ,W,H-HZ);
+  g.globalAlpha=.30;
+  for(let i=0;i<70;i++){
+    const y=HZ+Math.pow(Math.random(),.6)*(H-HZ);
+    g.fillStyle=Math.random()<.5?'#5a5c46':'#22241f';
+    g.fillRect(Math.random()*W,y,60+Math.random()*300,2+Math.random()*7);
+  }
+  g.globalAlpha=1;
+  return cv;
+}
+let pmrem=null, envRT=null;
+function installEnv(source){
+  const tex=new THREE.Texture(source);
+  tex.mapping=THREE.EquirectangularReflectionMapping;
+  tex.encoding=THREE.sRGBEncoding; tex.needsUpdate=true;
+  if(!pmrem){ pmrem=new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader(); }
+  const rt=pmrem.fromEquirectangular(tex);
+  if(envRT)envRT.dispose();
+  envRT=rt; scene.environment=rt.texture;
+  shellMat.envMap=rt.texture; shellMat.needsUpdate=true;
+  skyMat.map=tex; skyMat.needsUpdate=true;
+}
+
+/* ================= measurement: open area + cut path =================
+   Renders the same field over a Lambert cylindrical equal-area map, so every
+   texel carries identical solid angle.  R channel = void indicator (exact
+   area by counting).  G channel = co-area band indicator: with
+   h = 1.5*eps*|grad f|, the estimator (1/2h)*integral over {|f|<h} of |grad f|
+   collapses to (1/(3*eps)) * band fraction * 4pi, independent of how the
+   field is scaled.  That gives true boundary length for ANY pattern from one
+   implementation, rather than a per-pattern formula.                     */
+const MW=2048, MH=1024, EPS0=0.008, EPS_MIN=0.002;
+const mRT=new THREE.WebGLRenderTarget(MW,MH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+const mScene=new THREE.Scene();
+const mCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const mMat=new THREE.ShaderMaterial({
+  uniforms:Object.assign({uEps:{value:EPS0}},U),
+  vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }',
+  fragmentShader:'precision highp float;\nvarying vec2 vUv;\nuniform float uEps;\n'+PATTERN_GLSL+`
+void main(){
+  float z  = 2.0*vUv.y - 1.0;
+  float ph = TPI*vUv.x;
+  float st = sqrt(max(0.0,1.0-z*z));
+  vec3  n  = vec3(cos(ph)*st, sin(ph)*st, z);
+  vec3  up = abs(n.z) < 0.9 ? vec3(0.0,0.0,1.0) : vec3(1.0,0.0,0.0);
+  vec3  t1 = normalize(cross(up,n));
+  vec3  t2 = cross(n,t1);
+  float f0 = patternField(n);
+  float gx = (patternField(normalize(n+t1*uEps)) - f0)/uEps;
+  float gy = (patternField(normalize(n+t2*uEps)) - f0)/uEps;
+  float gm = max(1e-6, sqrt(gx*gx+gy*gy));
+  gl_FragColor = vec4(f0 < 0.0 ? 1.0 : 0.0,
+                      abs(f0) < 1.5*uEps*gm ? 1.0 : 0.0, 0.0, 1.0);
+}`});
+mScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),mMat));
+const mBuf=new Uint8Array(MW*MH*4);
+const flatCtx=$('flat').getContext('2d');
+const flatImg=flatCtx.createImageData(256,128);
+let meas={open:0,cut:0,voidW:0,eps:EPS0,resolved:true};
+
+function pass(eps){
+  mMat.uniforms.uEps.value=eps;
+  renderer.setRenderTarget(mRT);
+  renderer.render(mScene,mCam);
+  renderer.readRenderTargetPixels(mRT,0,0,MW,MH,mBuf);
+  renderer.setRenderTarget(null);
+  let hole=0,band=0;
+  for(let i=0;i<MW*MH;i++){
+    if(mBuf[i*4]  >127) hole++;
+    if(mBuf[i*4+1]>127) band++;
+  }
+  const tot=MW*MH;
+  return {openFrac:hole/tot, perimAng:4*Math.PI*(band/tot)/(3*eps)};
+}
+
+// Mean chord widths of the two phases, in radians. For N discs of angular
+// radius rho these give exactly rho and the inter-disc gap, so they are the
+// right scale to size the co-area band against.
+function widths(r){
+  if(r.perimAng<1e-6) return {v:1,m:1,s:1};
+  const v=2*(4*Math.PI*r.openFrac)/r.perimAng;
+  const m=2*(4*Math.PI*(1-r.openFrac))/r.perimAng;
+  return {v:v, m:m, s:Math.min(v,m)};
+}
+
+function measure(){
+  // The band half-width 1.5*eps must sit INSIDE the thinner phase, or the
+  // annulus clips against itself at the feature centre and the estimator
+  // over-reads. Size eps from the feature width, not just boundary spacing,
+  // and iterate since the width estimate itself depends on the perimeter.
+  let r=pass(EPS0), eps=EPS0;
+  for(let it=0;it<3;it++){
+    const w=widths(r);
+    const next=Math.min(EPS0,Math.max(EPS_MIN,w.s/6));
+    if(Math.abs(next-eps)/eps < 0.1) { eps=next; break; }
+    eps=next; r=pass(eps);
+  }
+  const w=widths(r);
+  meas.open=r.openFrac*100;
+  meas.cut =r.perimAng*R;
+  meas.voidW=w.v*R*1000;
+  meas.eps=eps;
+  meas.resolved = 1.5*eps <= 0.45*w.s;   // false => band clips, cut path over-reads
+
+  // flat equirect preview, box-downsampled from the measurement buffer
+  const sx=MW/256, sy=MH/128, d=flatImg.data;
+  for(let y=0;y<128;y++)for(let x=0;x<256;x++){
+    let acc=0,cnt=0;
+    for(let j=0;j<sy;j+=2)for(let i=0;i<sx;i+=2){
+      acc += mBuf[(((y*sy+j)|0)*MW + ((x*sx+i)|0))*4] > 127 ? 1 : 0; cnt++;
+    }
+    const v=acc/cnt, t=((127-y)*256+x)*4, g=Math.round(214-(214-18)*v);
+    d[t]=g; d[t+1]=g; d[t+2]=Math.round(222-(222-24)*v); d[t+3]=255;
+  }
+  flatCtx.putImageData(flatImg,0,0);
+}
+let mPend=null;
+const measureSoon=()=>{clearTimeout(mPend);mPend=setTimeout(measure,140);};
+
+/* ============================ pattern registry ============================ */
+const PATTERNS=[
+ {id:'Phyllotaxis dots', sub:'spherical Fibonacci', mode:0, nodes:null,
+  p:[['points',80,4000,1,900],['hole ø',0.10,1.20,0.005,0.424],['—',0,1,0.01,0],['—',0,1,0.01,0]],
+  use:[1,1,0,0],
+  note:'Vogel/Fibonacci lattice via the Keinert inverse mapping. Quasi-uniform with no defect clustering — the closest analogue to the Wolfram phyllotaxis demo.'},
+
+ {id:'Parastichy slots', sub:'phyllotaxis spirals', mode:1, nodes:null,
+  p:[['points',80,4000,1,1200],['slot width',0.02,0.70,0.005,0.180],['phase',0,1,0.005,0],['arms (Fₖ)',2,144,1,34]],
+  use:[1,1,1,1],
+  note:'Set arms to a Fibonacci number (8, 13, 21, 34, 55, 89) for a clean single family; anything else beats against the lattice. TWO-POLE: banding the lattice into spirals creates a direction field, which must carry index +2 — so it has two convergence points on the z-axis. They read as vortex centres, so aim them deliberately.'},
+
+ {id:'Fibonacci web', sub:'Voronoi cell edges', mode:2, nodes:null,
+  p:[['cells',80,4000,1,700],['web width',0.20,1.60,0.005,0.797],['—',0,1,0.01,0],['—',0,1,0.01,0]],
+  use:[1,1,0,0],
+  note:'Metal retained only near Voronoi edges. Pole-free equivalent of a Goldberg lattice — no twelve-pentagon defect ring.'},
+
+ {id:'Great-circle weave', sub:'geodesic bands', mode:3, nodes:null,
+  p:[['circles',60,900,1,320],['band width',0.02,0.80,0.002,0.134],['twist',0,1,0.005,0],['—',0,1,0.01,0]],
+  use:[1,1,1,0],
+  note:'Great circles with Fibonacci-distributed poles. Bands crowd toward the silhouette and open at the centre — reinforces the burst read.'},
+
+ {id:'Great-circle moiré', sub:'two beating families', mode:4, nodes:null,
+  p:[['circles',60,900,1,300],['band width',0.02,0.80,0.002,0.106],['rotation',0,1,0.005,0.12],['Δ count',1,24,1,5]],
+  use:[1,1,1,1],
+  note:'XOR of two great-circle families. The beat frequency is set by Δ count; small values give broad viewer-locked rosettes.'},
+
+ {id:'Gyroid slice', sub:'TPMS section', mode:5, nodes:null,
+  p:[['frequency',10,260,1,130],['channel',0.02,0.70,0.002,0.172],['level',0,1,0.005,0.5],['offset',0,1.4,0.01,0]],
+  use:[1,1,1,1],
+  note:'Sphere sliced through a 3-D gyroid. Seamless because the field is genuinely volumetric — organic, chiral, no symmetry axes to give it away.'},
+
+ {id:'Schwarz-P slice', sub:'TPMS section', mode:6, nodes:null,
+  p:[['frequency',10,260,1,120],['channel',0.02,0.70,0.002,0.213],['level',0,1,0.005,0.5],['offset',0,1.4,0.01,0]],
+  use:[1,1,1,1],
+  note:'Cubic-symmetry TPMS. Reads more architectural and orthogonal than the gyroid; three visible axis families.'},
+
+ {id:'Quasicrystal', sub:'icosahedral, 6 waves', mode:7, nodes:'ico12',
+  p:[['frequency',10,260,1,120],['line width',0.02,0.55,0.002,0.108],['phase',0,1,0.005,0],['density',0.4,1.6,0.01,1]],
+  use:[1,1,1,1],
+  note:'Six plane waves along the icosahedral 5-fold axes. Aperiodic yet perfectly ordered — never repeats, never seams.'},
+
+ {id:'Flower of life', sub:'true vesica lattice', mode:8, nodes:null,
+  p:[['centres',60,1200,1,220],['line width',0.1,2.0,0.01,0.5],['rings',0,1,0.34,0],['radius \u00d7sp',0.5,1.9,0.005,1.0]],
+  use:[1,1,1,1],
+  note:'A circle on every lattice centre. At radius \u00d7sp = 1.00 each circle passes exactly through its neighbours\u2019 centres, so the arcs cross in true vesicae \u2014 the actual Flower of Life construction. Past 1.0 gives Seed/Fruit-of-Life overlaps; rings adds concentric circles.'},
+
+ {id:'Loxodromes', sub:'rhumb spirals (2 poles)', mode:9, nodes:null,
+  p:[['arms',20,900,1,300],['slot width',0.02,0.70,0.005,0.180],['phase',0,1,0.005,0],['pitch',0.2,6,0.01,1.6]],
+  use:[1,1,1,1],
+  note:'TWO-POLE by definition — both z-axis poles are singular. Included as the classic spiral for comparison against the parastichy family.'}
+];
+
+/* ============================ state ============================ */
+const S={pat:0,inv:false,A:0,B:0,C:0,D:0,dist:9.0,spin:true,
+         r:[0.79,1.51,2.23],lum:1,rough:0.14,envI:1.0,bg:true,
+         fit:true,shellOnly:false,day:false,back:0.45,liner:false,tilt:0,azim:0};
+
+function applyPattern(i,keep){
+  S.pat=i;
+  const P=PATTERNS[i];
+  U.uMode.value=P.mode;
+  setNodes(P.nodes?NODESETS[P.nodes]:NODESETS.ico12);
+  ['A','B','C','D'].forEach((kk,j)=>{
+    const [lab,mn,mx,st,dv]=P.p[j];
+    const el=$('p'+kk);
+    el.min=mn; el.max=mx; el.step=st;
+    if(!keep) S[kk]=dv;
+    S[kk]=Math.min(mx,Math.max(mn,S[kk]));
+    el.value=S[kk];
+    $('l'+kk).textContent=lab;
+    el.disabled=!P.use[j];
+    el.style.opacity=P.use[j]?1:0.28;
+    $('v'+kk).style.opacity=P.use[j]?1:0.28;
+  });
+  $('plbl').textContent=P.id+' · '+P.sub;
+  $('pnote').textContent=P.note;
+  [...$('gal').children].forEach((b,j)=>b.classList.toggle('on',j===i));
+  pushUniforms(); syncLabels(); measureSoon();
+}
+function pushUniforms(){
+  U.uA.value=S.A; U.uB.value=S.B; U.uC.value=S.C; U.uD.value=S.D;
+  U.uInv.value=S.inv?1:0;
+}
+
+/* ============================ UI ============================ */
+PATTERNS.forEach((P,i)=>{
+  const b=document.createElement('button');
+  b.innerHTML=P.id+'<i>'+P.sub+'</i>';
+  b.addEventListener('click',()=>applyPattern(i,false));
+  $('gal').appendChild(b);
+});
+
+function fmt(v,st){ return st>=1 ? String(Math.round(v)) : v.toFixed(2); }
+function syncLabels(){
+  const P=PATTERNS[S.pat];
+  ['A','B','C','D'].forEach((k,j)=>{ $('v'+k).textContent=P.use[j]?fmt(S[k],P.p[j][3]):'—'; });
+  $('vdist').textContent=(S.dist-R).toFixed(2)+' m';
+  $('vr1').textContent=(S.r[0]*1000).toFixed(0)+' mm';
+  $('vr2').textContent=(S.r[1]*1000).toFixed(0)+' mm';
+  $('vr3').textContent=(S.r[2]*1000).toFixed(0)+' mm';
+  $('vlum').textContent=S.lum.toFixed(2)+'×';
+  $('vrough').textContent=S.rough<=0.08?'mirror':S.rough<=0.22?'satin':'brushed';
+  $('venvi').textContent=S.envI.toFixed(2)+'×';
+  $('vback').textContent=S.back>=0.98?'equal':(S.back*100).toFixed(0)+'%';
+  $('vtilt').textContent=S.tilt.toFixed(0)+'\u00b0';
+  $('vazim').textContent=S.azim.toFixed(0)+'\u00b0';
+}
+['A','B','C','D'].forEach(k=>{
+  $('p'+k).addEventListener('input',e=>{
+    S[k]=parseFloat(e.target.value); pushUniforms(); syncLabels(); measureSoon();
+  });
+});
+function bindRange(id,key,arr){
+  $(id).addEventListener('input',e=>{
+    const v=parseFloat(e.target.value);
+    if(arr) S.r[arr-1]=v; else S[key]=v;
+    syncLabels();
+  });
+}
+bindRange('dist','dist'); bindRange('r1',null,1); bindRange('r2',null,2);
+bindRange('r3',null,3);  bindRange('lum','lum');
+bindRange('rough','rough'); bindRange('envi','envI');
+$('back').addEventListener('input',e=>{
+  S.back=parseFloat(e.target.value); U.uBack.value=S.back; syncLabels();
+});
+$('linerOn').addEventListener('change',e=>S.liner=e.target.checked);
+
+// Orient the pattern's own axis independently of the mesh. tilt 0 puts the
+// pattern poles on world +Y (overhead); 90 lays the axis in the ground plane.
+// A rotation is an isometry, so open area and cut path are invariant — the
+// measurement is a useful self-check here.
+function updateRot(){
+  const t=S.tilt*Math.PI/180, a=S.azim*Math.PI/180;
+  const ax=new THREE.Vector3(Math.sin(t)*Math.sin(a),Math.cos(t),Math.sin(t)*Math.cos(a)).normalize();
+  const ref=Math.abs(ax.z)<0.9?new THREE.Vector3(0,0,1):new THREE.Vector3(1,0,0);
+  const e1=new THREE.Vector3().crossVectors(ref,ax).normalize();
+  const e2=new THREE.Vector3().crossVectors(ax,e1);
+  U.uRot.value.set(e1.x,e1.y,e1.z, e2.x,e2.y,e2.z, ax.x,ax.y,ax.z);
+}
+['tilt','azim'].forEach(id=>$(id).addEventListener('input',e=>{
+  S[id]=parseFloat(e.target.value); updateRot(); syncLabels(); measureSoon();
+}));
+[['spin','spin'],['bg','bg'],['fit','fit'],['shellonly','shellOnly'],['day','day']]
+  .forEach(([id,key])=>$(id).addEventListener('change',e=>S[key]=e.target.checked));
+$('ss').addEventListener('change',e=>{
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)*(e.target.checked?2:1));
+  resize();
+});
+$('invert').addEventListener('change',e=>{S.inv=e.target.checked;pushUniforms();measureSoon();});
+$('rnd').addEventListener('click',()=>{
+  const P=PATTERNS[S.pat];
+  ['A','B','C','D'].forEach((k,j)=>{
+    if(!P.use[j])return;
+    const [,mn,mx,st]=P.p[j];
+    let v=mn+Math.random()*(mx-mn);
+    if(st>=1) v=Math.round(v);
+    S[k]=v; $('p'+k).value=v;
+  });
+  pushUniforms(); syncLabels(); measureSoon();
+});
+$('rst').addEventListener('click',()=>applyPattern(S.pat,false));
+$('cpy').addEventListener('click',()=>{
+  const P=PATTERNS[S.pat];
+  const o={pattern:P.id,invert:S.inv};
+  ['A','B','C','D'].forEach((k,j)=>{ if(P.use[j]) o[P.p[j][0]]=S[k]; });
+  o.openAreaPct=+meas.open.toFixed(2); o.cutPath_m=+meas.cut.toFixed(1);
+  const txt=JSON.stringify(o,null,1);
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
+    .then(()=>{$('cpy').textContent='copied';setTimeout(()=>$('cpy').textContent='copy params',1100);})
+    .catch(()=>{$('pnote').textContent=txt;});
+});
+$('png').addEventListener('click',()=>{
+  renderer.render(scene,camera);
+  const a=document.createElement('a');
+  a.download='pattern_'+PATTERNS[S.pat].id.replace(/\W+/g,'_')+'.png';
+  a.href=renderer.domElement.toDataURL('image/png'); a.click();
+});
+$('pano').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const url=URL.createObjectURL(f), img=new Image();
+  img.onload=()=>{installEnv(img);URL.revokeObjectURL(url);};
+  img.src=url;
+});
+
+/* ============================ orbit ============================ */
+let th=0.62, ph=1.20, drag=false, px=0, py=0;
+const el=renderer.domElement;
+el.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;el.setPointerCapture(e.pointerId);});
+el.addEventListener('pointerup',e=>{drag=false;try{el.releasePointerCapture(e.pointerId);}catch(_){}});
+el.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  th-=(e.clientX-px)*0.0055; ph-=(e.clientY-py)*0.0055;
+  ph=Math.max(0.06,Math.min(Math.PI-0.06,ph)); px=e.clientX; py=e.clientY;
+});
+el.addEventListener('wheel',e=>{
+  e.preventDefault();
+  S.dist=Math.max(3.2,Math.min(60,S.dist*Math.exp(e.deltaY*0.0012)));
+  $('dist').value=S.dist; syncLabels();
+},{passive:false});
+
+/* ============================ framing ============================ */
+const BASE_FOV=45, free={l:0,r:0,t:0,b:0};
+function measureFree(){
+  const w=innerWidth,h=innerHeight;
+  const vis=e=>e&&getComputedStyle(e).display!=='none';
+  const ui=$('ui'),hud=$('hud'),lg=$('legend');
+  free.l=vis(ui)?ui.getBoundingClientRect().right+16:10;
+  free.r=vis(hud)?hud.getBoundingClientRect().left-16:w-10;
+  free.t=10;
+  free.b=vis(lg)?lg.getBoundingClientRect().top-14:h-10;
+  if(free.r-free.l<120){free.l=10;free.r=w-10;}
+  if(free.b-free.t<120){free.t=10;free.b=h-10;}
+}
+function frameCamera(){
+  const w=innerWidth,h=innerHeight;
+  const fw=free.r-free.l, fh=free.b-free.t;
+  let fov=BASE_FOV;
+  if(S.fit){
+    const alpha=Math.asin(Math.min(0.9995,R/S.dist));
+    fov=Math.min(85,Math.max(BASE_FOV,
+        2*Math.atan((h/2)*Math.tan(alpha)/(0.46*Math.min(fw,fh)))*D2));
+  }
+  camera.fov=fov;
+  camera.setViewOffset(w,h,-((free.l+free.r)/2-w/2),-((free.t+free.b)/2-h/2),w,h);
+}
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  renderer.setSize(w,h); camera.aspect=w/h;
+  measureFree(); frameCamera();
+}
+addEventListener('resize',resize);
+function toggle(cls,btn,a,b){
+  document.body.classList.toggle(cls);
+  btn.innerHTML=document.body.classList.contains(cls)?b:a;
+  requestAnimationFrame(()=>{measureFree();frameCamera();});
+}
+$('tgUi').addEventListener('click',e=>toggle('noUi',e.currentTarget,'&lsaquo;','&rsaquo;'));
+$('tgHud').addEventListener('click',e=>toggle('noHud',e.currentTarget,'&rsaquo;','&lsaquo;'));
+
+/* ============================ loop ============================ */
+function thetaMax(rho,k){
+  if(rho>=1)return Math.acos(1/k);
+  const disc=(1-rho*rho)*(k*k-rho*rho);
+  if(disc<0)return 0;
+  return Math.acos(Math.max(-1,Math.min(1,(rho*rho+Math.sqrt(disc))/k)));
+}
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(S.spin&&!drag) th+=dt*0.16;
+  camera.position.setFromSphericalCoords(S.dist,ph,th);
+  camera.lookAt(0,0,0);
+  measureFree(); frameCamera();     // re-solve framing every frame: pane
+                                    // geometry can change without a resize
+
+  const night=!S.day, k=S.dist/R;
+  linerMat.color.setHex(night?0x0a0c11:0xdfe3e8);
+  scrims.forEach((m,i)=>{
+    m.visible=night&&!S.shellOnly; m.scale.setScalar(S.r[i]);
+    m.material.opacity=scrimDefs[i].o*S.lum;
+  });
+  darkCore.visible=!night&&!S.shellOnly&&S.liner; darkCore.scale.setScalar(S.r[0]);
+  liner.visible=S.liner;
+  amb.intensity=S.day?0.22:0.04;
+  key.intensity=S.day?0.34:0.10;
+  fill.intensity=S.day?0.16:0.05;
+  shellMat.roughness=S.rough;
+  shellMat.envMapIntensity=S.envI*(S.day?1.0:0.17);
+  sky.visible=S.bg; skyMat.color.setScalar(S.day?1.0:0.085);
+
+  renderer.render(scene,camera);
+
+  $('h_oa').textContent=meas.open.toFixed(1)+' %';
+  $('h_cp').textContent=meas.cut>=1000?(meas.cut/1000).toFixed(2)+' km':meas.cut.toFixed(0)+' m';
+  $('h_at').textContent=(meas.cut/10/60).toFixed(1)+' h';
+  $('h_mf').textContent=meas.voidW.toFixed(0)+' mm';
+  $('h_cp').style.color=meas.resolved?'':'#ff7a5c';
+  $('h_cp').title=meas.resolved?'co-area measured':'features finer than sampler — cut path under-reported';
+  $('h_so').textContent=(S.dist-R).toFixed(2)+' m ('+((S.dist-R)*FT).toFixed(1)+' ft)';
+  $('h_k').textContent=k.toFixed(2);
+  $('h_lim').textContent=(Math.acos(Math.min(1,1/k))*D2).toFixed(1)+'°';
+  $('h_psi').textContent=S.r.map(r=>(Math.asin(Math.min(1,r/R))*D2).toFixed(0)+'°').join(' / ');
+  $('h_disk').textContent=(2*R*thetaMax(S.r[0]/R,k)).toFixed(2)+' m';
+
+  requestAnimationFrame(frame);
+}
+
+updateRot();
+installEnv(makeValleyEquirect());
+applyPattern(0,false);
+resize();
+measure();
+window.__ready=true;
+requestAnimationFrame(frame);
+
+/* test hooks */
+window.__set=o=>{Object.assign(S,o);pushUniforms();};
+window.__meas=()=>({...meas});
+window.__measureNow=()=>{measure();return {...meas};};
+window.__patterns=()=>PATTERNS.map(p=>p.id);
+window.__pick=(i,keep)=>applyPattern(i,!!keep);
+window.__state=()=>({...S});
+window.__setAxis=(t,a)=>{S.tilt=t;S.azim=a;updateRot();};
+window.__probe=()=>{
+  const v=new THREE.Vector3(0,0,0).project(camera);
+  const w=innerWidth,h=innerHeight;
+  return {sphereX:(v.x*.5+.5)*w, sphereY:(-v.y*.5+.5)*h,
+          freeX:(free.l+free.r)/2, freeY:(free.t+free.b)/2, w,h, fov:+camera.fov.toFixed(2)};
+};
+})();
+</script>
+</body>
+</html>

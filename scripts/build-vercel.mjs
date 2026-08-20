@@ -5,6 +5,7 @@
  *
  *   dist/                  main portfolio app (root src/), base "/"   → sourcesculptures.com/
  *   dist/landing-site/     static "Coming Soon" splash (archived)     → /landing-site/
+ *   dist/sphere/           Bhutan sphere pattern bench (sphere/)      → /sphere
  *
  * Build order matters: the main app is built first because Vite empties
  * `dist/` on build; the splash is written into it afterwards.
@@ -100,6 +101,12 @@ async function build() {
   await mkdir("dist/landing-site", { recursive: true });
   await copyFile("assets/SS-TOGETHER.webp", "dist/landing-site/landing-hero.webp");
   await writeFile("dist/landing-site/index.html", LANDING_HTML, "utf8");
+
+  // 3. Unlisted sphere pattern bench. Self-contained single HTML file (three.js
+  //    is inlined), so only index.html ships — the source variant and docs that
+  //    live alongside it in sphere/ stay out of the deployed tree.
+  await mkdir("dist/sphere", { recursive: true });
+  await copyFile("sphere/index.html", "dist/sphere/index.html");
 }
 
 build().catch((error) => {

@@ -9,6 +9,8 @@
   "rewrites": [
     { "source": "/landing-site", "destination": "/landing-site/index.html" },
     { "source": "/landing-site/:path*", "destination": "/landing-site/index.html" },
+    { "source": "/sphere", "destination": "/sphere/index.html" },
+    { "source": "/sphere/", "destination": "/sphere/index.html" },
     { "source": "/:path*", "destination": "/index.html" }
   ]
 }

@@ -9,13 +9,14 @@ Supabase backend, deployed on Vercel.
 |---|---|---|
 | `/` | `src/` | Main portfolio site (homepage) |
 | `/landing-site/` | `scripts/build-vercel.mjs` | Archived "Coming Soon" splash, `noindex`. Kept for maintenance windows. |
+| `/sphere` | `sphere/index.html` | Bhutan sphere pattern bench. Unlisted (`noindex`, not linked from the site). |
 | `/SITE/*`, `/SITE2/*` | — | 301 → `/` (legacy paths, links preserved) |
 
 ## Commands
 
 ```bash
 npm run dev          # main app, http://localhost:8080/
-npm run build        # full Vercel output: / + /landing-site/
+npm run build        # full Vercel output: / + /landing-site/ + /sphere
 npm run build:main   # main app only → dist/
 npm run lint
 npm test
