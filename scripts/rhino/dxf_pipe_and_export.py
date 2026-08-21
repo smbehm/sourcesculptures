@@ -293,8 +293,29 @@ def setup_view():
     vp = view.ActiveViewport
     vp.SetProjection(Rhino.Display.DefinedViewportProjection.Top, None, False)
 
+    # These three are real, independent per-viewport switches - none of
+    # them are display-mode settings, so they have to be turned off here
+    # rather than assumed to follow from picking "Shaded".
+    vp.ConstructionGridVisible = False
+    vp.ConstructionAxesVisible = False
+    vp.WorldAxesVisible = False
+
     dmd = Rhino.Display.DisplayModeDescription.FindByName(DISPLAY_MODE)
     if dmd:
+        # SetFill(WHITE) pins the display mode's frame-buffer clear
+        # color to solid white regardless of whether "Shaded" is
+        # otherwise configured for a gradient, an environment, or a
+        # background bitmap - so there's no gradient/env/bitmap left to
+        # show through as an off-white background. This is mutating a
+        # local copy of the descriptor (from FindByName, not
+        # UpdateDisplayMode'd back), so it only affects this viewport
+        # for this session - it does not rewrite the shared "Shaded"
+        # display mode other views or other files still use.
+        dmd.DisplayAttributes.SetFill(WHITE)
+        try:
+            dmd.DisplayAttributes.CustomGroundPlaneOn = False
+        except Exception:
+            pass
         vp.DisplayMode = dmd
     else:
         print("  !! Display mode '{}' not found.".format(DISPLAY_MODE))
@@ -322,14 +343,11 @@ def setup_view():
 
 def flatten_onto_white(bitmap):
     """
-    Composite the capture onto an opaque white sheet. Handles the
-    transparent-background case and guarantees pure white regardless of
-    the viewport's gradient background - PROVIDED the capture actually
-    came back with real alpha. If ViewCaptureSettings ignored the
-    transparent-background request (see write_jpg), the source bitmap is
-    already fully opaque with whatever the display mode's background
-    color is, and this composite will just preserve that color instead
-    of forcing white. Verify the first output file per session.
+    Composite the capture onto an opaque white sheet. setup_view()
+    already pins the display mode's own fill to solid white before the
+    capture happens, so this is a safety net for anti-aliased edge
+    pixels and JPEG (which has no alpha channel to begin with) rather
+    than the thing actually forcing the color.
     """
     flat = System.Drawing.Bitmap(bitmap.Width, bitmap.Height,
                                  System.Drawing.Imaging.PixelFormat.Format24bppRgb)
@@ -384,15 +402,20 @@ def write_jpg(view, jpg_path):
         size = System.Drawing.Size(IMG_WIDTH, IMG_HEIGHT)
         settings = Rhino.Display.ViewCaptureSettings(view, size, 300)
 
-        # Ask for a transparent background so the composite below decides
-        # the final color. If unsupported, the flatten still runs.
-        for prop in ("TransparentBackground", "DrawBackground",
-                     "DrawGroundPlane", "DrawGrid", "DrawAxes"):
+        # ViewCaptureSettings has no TransparentBackground or
+        # DrawGroundPlane property (those belong to the older, unrelated
+        # ViewCapture class) - setting them here used to fail silently
+        # and do nothing. The frame buffer is now pinned to solid white
+        # directly on the display mode in setup_view(), and the
+        # property here is "DrawAxis" (singular), not "DrawAxes" - the
+        # old plural name also failed silently, so the world axes icon
+        # was never actually being suppressed for the capture.
+        for prop in ("DrawBackground", "DrawGrid", "DrawAxis"):
             try:
-                setattr(settings, prop,
-                        True if prop == "TransparentBackground" else False)
-            except Exception:
-                pass
+                setattr(settings, prop, False)
+            except Exception as ex:
+                print("  !! could not set ViewCaptureSettings.{} ({}: {})"
+                      .format(prop, type(ex).__name__, ex))
 
         try:
             bitmap = Rhino.Display.ViewCapture.CaptureToBitmap(settings)
