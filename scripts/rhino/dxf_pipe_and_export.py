@@ -4,7 +4,8 @@ dxf_pipe_and_export.py
 Rhino 8 ScriptEditor (CPython 3)
 
 Batch: for every .dxf in a chosen folder ->
-  1. Import into a cleared document
+  1. Reset the document to a blank slate (objects, units, layers, block
+     definitions) and import just this DXF into it
   2. Force every object to #111111
   3. Find all curves with bounding-box diagonal < SMALL_THRESHOLD_MM
   4. Build pipe meshes around them (Radius/Segments/Faceted/CapType/
@@ -12,6 +13,19 @@ Batch: for every .dxf in a chosen folder ->
   5. Top view, shaded display mode, zoom extents
   6. Write a high-res JPG (~10080 x 7024) with a pure white background,
      named after the source DXF, saved beside it
+
+RUN THIS IN A DISPOSABLE DOCUMENT:
+  Step 1 resets the document you have open when you launch this - not
+  just the objects in it, but its layers, block definitions, and unit
+  system too - then reuses that same document for every DXF in the
+  folder. It cannot open each DXF in its own separate window: handing
+  off to a new document mid-script isn't reliably scriptable (on Mac,
+  a script loses the ability to drive a window it just created), so
+  this gets the same "nothing carries over between files" result by
+  clearing the one document instead of opening a new one each time.
+  Net effect: whatever was in the file you had open is gone once this
+  finishes. Run it in a new/throwaway Rhino file, and don't save over
+  your open file afterward.
 
 WHY NO ApplyCurvePiping COMMAND:
   The dash form still stops for an Enter on every file and there is no
@@ -84,10 +98,59 @@ def get_dxf_list():
     return sorted(set(files))
 
 
-def clear_document():
+def reset_document():
+    """
+    Wipe every trace of whatever was in the document before this DXF -
+    not just objects, but units, layers, and block definitions - so
+    nothing about the file you had open when you ran this script (or
+    the previous DXF in this same batch) bleeds into the next import.
+
+    This does NOT open a separate Rhino document/window per DXF. Doing
+    that from a running script is not reliably scriptable: '_-New'/
+    '_-Open' hand control to a new window, and on Mac a script cannot
+    keep driving that new window afterward (McNeel forum: "As New
+    always creates a new window in MacRhino, if you are running a
+    script in the original window, there's absolutely nothing you can
+    do with it in the new window"). So this stays in the one document
+    the whole run and resets it in place instead - the practical
+    equivalent for everything this script actually reads or writes.
+
+    Consequence: whatever file you had open when you launched this
+    gets its content replaced, DXF by DXF, for the whole run. Don't
+    save over it afterward - close without saving once the batch is
+    done.
+    """
     ids = rs.AllObjects()
     if ids:
         rs.DeleteObjects(ids)
+
+    # DXF import does not change the document's unit system, so without
+    # this every SMALL_THRESHOLD_MM / PIPE_RADIUS_MM comparison would
+    # silently inherit whatever units the previously open file used.
+    sc.doc.AdjustModelUnitSystem(Rhino.UnitSystem.Millimeters, False)
+
+    keep_layer = "Default"
+    if not rs.IsLayer(keep_layer):
+        rs.AddLayer(keep_layer)
+    rs.CurrentLayer(keep_layer)
+
+    # Layers/blocks can be nested, so a layer or block left over from a
+    # deeper level won't delete until its children are gone first - a
+    # few passes clears the whole tree without hand-coding the order.
+    for _ in range(25):
+        leftover = [n for n in (rs.LayerNames() or []) if n != keep_layer]
+        if not leftover:
+            break
+        for name in leftover:
+            rs.DeleteLayer(name)
+
+    for _ in range(25):
+        leftover = rs.BlockNames() or []
+        if not leftover:
+            break
+        for name in leftover:
+            rs.DeleteBlock(name)
+
     sc.doc.Views.Redraw()
 
 
@@ -362,7 +425,7 @@ def write_jpg(view, jpg_path):
 
 def process_one(path):
     print("Processing: {}".format(path))
-    clear_document()
+    reset_document()
 
     if not import_dxf(path):
         return False
