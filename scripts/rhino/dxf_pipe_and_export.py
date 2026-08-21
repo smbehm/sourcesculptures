@@ -343,18 +343,51 @@ def setup_view():
 
 def flatten_onto_white(bitmap):
     """
-    Composite the capture onto an opaque white sheet. setup_view()
-    already pins the display mode's own fill to solid white before the
-    capture happens, so this is a safety net for anti-aliased edge
-    pixels and JPEG (which has no alpha channel to begin with) rather
-    than the thing actually forcing the color.
+    setup_view() asks the display mode/capture settings to give us a
+    solid white background, but that has proven unreliable in practice
+    (the capture can still come back with the display mode's actual
+    gray) - so this does not trust that request succeeded. Instead it
+    samples the corner pixel, which ZoomExtents guarantees is
+    background (never real geometry), and remaps that exact color to
+    pure white in one native GDI+ pass. That works regardless of *why*
+    the background wasn't already white, since it doesn't depend on
+    any Rhino display/capture setting having taken effect - only on the
+    background actually being a flat, uniform color, which Rhino's
+    Shaded mode is by default.
+
+    Leaves anti-aliased edge pixels (a blend between geometry and
+    background, so not an exact match to the sampled corner color)
+    untouched - at 10080x7024 that is a sub-pixel-scale fringe, not a
+    visible defect.
     """
+    w, h = bitmap.Width, bitmap.Height
+    corners = [bitmap.GetPixel(0, 0), bitmap.GetPixel(w - 1, 0),
+               bitmap.GetPixel(0, h - 1), bitmap.GetPixel(w - 1, h - 1)]
+    # ZoomExtents pads the frame, so all four corners are background in
+    # the normal case; if geometry happens to reach a corner, go with
+    # whichever color the majority of the corners agree on.
+    bg = max(corners, key=lambda c: sum(1 for o in corners if o == c))
+
     flat = System.Drawing.Bitmap(bitmap.Width, bitmap.Height,
                                  System.Drawing.Imaging.PixelFormat.Format24bppRgb)
     g = System.Drawing.Graphics.FromImage(flat)
     try:
         g.Clear(WHITE)
-        g.DrawImage(bitmap, 0, 0, bitmap.Width, bitmap.Height)
+
+        if bg.R >= 250 and bg.G >= 250 and bg.B >= 250:
+            g.DrawImage(bitmap, 0, 0, bitmap.Width, bitmap.Height)
+            return flat
+
+        remap = System.Drawing.Imaging.ColorMap()
+        remap.OldColor = System.Drawing.Color.FromArgb(255, bg.R, bg.G, bg.B)
+        remap.NewColor = WHITE
+        attrs = System.Drawing.Imaging.ImageAttributes()
+        attrs.SetRemapTable(
+            System.Array[System.Drawing.Imaging.ColorMap]([remap]))
+
+        dest = System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height)
+        g.DrawImage(bitmap, dest, 0, 0, bitmap.Width, bitmap.Height,
+                    System.Drawing.GraphicsUnit.Pixel, attrs)
     finally:
         g.Dispose()
     return flat
