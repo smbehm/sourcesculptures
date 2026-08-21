@@ -8,10 +8,13 @@ Batch: for every .dxf in a chosen folder ->
      definitions) and import just this DXF into it
   2. Force every object to #111111
   3. Find all curves with bounding-box diagonal < SMALL_THRESHOLD_MM
-  4. Build pipe meshes around them (Radius/Segments/Faceted/CapType/
-     Accuracy per the Properties panel screenshot)
-  5. Top view, shaded display mode, zoom extents
-  6. Write a high-res JPG (~10080 x 7024) with a pure white background,
+  4. Scale each of those small curves by DOUBLE_SMALL_CURVES_FACTOR
+     about its own center, in place - before piping runs on it
+  5. Build pipe meshes around the (now doubled) small curves
+     (Radius/Segments/Faceted/CapType/Accuracy per the Properties
+     panel screenshot)
+  6. Top view, shaded display mode, zoom extents
+  7. Write a high-res JPG (~10080 x 7024) with a pure white background,
      named after the source DXF, saved beside it
 
 RUN THIS IN A DISPOSABLE DOCUMENT:
@@ -217,6 +220,37 @@ def find_small_curves(threshold_mm):
         if isinstance(geo, Rhino.Geometry.Curve):
             found.append((obj_id, geo))
     return found
+
+
+DOUBLE_SMALL_CURVES_FACTOR = 2.0
+
+
+def double_small_curves(curve_pairs):
+    """
+    Scale each small curve by DOUBLE_SMALL_CURVES_FACTOR about its own
+    bounding-box center - in place, growing in every direction rather
+    than shifting position - before piping runs on it. Returns the
+    (guid, Curve) pairs for the scaled replacements, in the same order,
+    so callers don't hold onto pre-transform references: ObjectTable's
+    Transform deletes the original and bakes a new object, so the old
+    Guid/Curve pair passed in is no longer live.
+    """
+    scaled = []
+    for obj_id, curve in curve_pairs:
+        center = curve.GetBoundingBox(True).Center
+        xform = Rhino.Geometry.Transform.Scale(center, DOUBLE_SMALL_CURVES_FACTOR)
+        new_id = sc.doc.Objects.Transform(obj_id, xform, True)
+        if new_id == System.Guid.Empty:
+            continue
+        new_obj = sc.doc.Objects.FindId(new_id)
+        if new_obj is None:
+            continue
+        new_geo = new_obj.Geometry
+        if isinstance(new_geo, Rhino.Geometry.Curve):
+            scaled.append((new_id, new_geo))
+
+    sc.doc.Views.Redraw()
+    return scaled
 
 
 def cap_style(name):
@@ -495,6 +529,8 @@ def process_one(path):
         len(small), total, SMALL_THRESHOLD_MM, recolored))
 
     if small:
+        small = double_small_curves(small)
+        print("  doubled {} small curves in place".format(len(small)))
         added, failed = build_pipe_meshes(small)
         print("  piped {} curves ({} failed)".format(added, failed))
     else:
