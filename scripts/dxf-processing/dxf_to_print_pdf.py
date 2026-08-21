@@ -25,7 +25,7 @@ from scale_labels import classify_and_cluster
 PAGE_W_IN = 11.0
 PAGE_H_IN = 8.5
 MARGIN_IN = 0.25
-LABEL_BOX_MARGIN = 1.0  # mm, on each side of a label's bounding box
+LABEL_BOX_MARGIN = 3.0  # mm, on each side of a label's bounding box
 
 # On an already-processed (labels doubled) DXF, labels run up to ~24
 # units and parts start around ~180, so this stays a safe midpoint.

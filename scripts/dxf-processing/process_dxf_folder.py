@@ -35,7 +35,7 @@ STROKE_MAX = 2.2
 PAGE_W_IN = 11.0
 PAGE_H_IN = 8.5
 MARGIN_IN = 0.25
-LABEL_BOX_MARGIN = 1.0  # mm, on each side of a (post-scale) label's bounding box
+LABEL_BOX_MARGIN = 3.0  # mm, on each side of a (post-scale) label's bounding box
 PRINT_LABEL_SIZE_THRESHOLD = 40.0  # labels are ~2x bigger after scaling, so raise the cutoff
 
 
