@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#! python 3
+# r: ezdxf, matplotlib
 """
 Prompts for a folder, then for every .dxf file in it: doubles the size
 of the part-number labels in place (keeping the same center point),
@@ -8,12 +9,32 @@ clutter it), and saves a same-named, 11x8.5in landscape, print-ready
 PDF into that same folder. Part outlines are left untouched.
 
 Run:
-    pip3 install ezdxf matplotlib
-    python3 process_dxf_folder.py
-(then type/paste the folder path when asked)
+    Rhino 8 ScriptEditor (CPython 3), then pick the folder in the
+    dialog that opens. The "# r:" line above makes the editor install
+    ezdxf and matplotlib from PyPI on the first run - that pass takes
+    a while and the editor is disabled until it finishes.
+
+Rhino does no geometry work here: ezdxf reads the DXF and matplotlib
+writes the PDF. Rhino only supplies the folder picker, so this stays
+runnable as a plain desktop script - swap BrowseForFolder back for
+input() and drop the two header lines.
 """
 import glob
 import os
+
+import rhinoscriptsyntax as rs
+
+# Rhino owns the UI thread, so let matplotlib pick its own interactive
+# backend and figure creation can hang or throw. This script only ever
+# savefig()s - it never shows a window - so the file-only Agg backend
+# is what it actually needs.
+#
+# This has to run before the ezdxf imports below, not just before
+# "import matplotlib.pyplot": ezdxf.addons.drawing.matplotlib pulls in
+# pyplot itself, and the backend is resolved on that first pyplot
+# import.
+import matplotlib
+matplotlib.use("Agg")
 
 import ezdxf
 from ezdxf.math import BoundingBox
@@ -143,7 +164,15 @@ def render_print_pdf(doc, out_path):
 
 
 def main():
-    folder = input("Folder containing your .dxf files: ").strip().strip('"')
+    # Rhino 8's ScriptEditor gives a script no stdin, so input() dies
+    # with an EOFError before anything runs. McNeel's answer is to use
+    # the Rhino prompts instead; a folder picker also beats pasting a
+    # Windows path by hand.
+    folder = rs.BrowseForFolder(message="Select folder containing DXF files")
+    if not folder:
+        print("Cancelled.")
+        return
+
     dxf_paths = sorted(glob.glob(os.path.join(folder, "*.dxf")))
     if not dxf_paths:
         print(f"No .dxf files found in {folder}")
