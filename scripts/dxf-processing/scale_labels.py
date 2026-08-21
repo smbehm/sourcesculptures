@@ -132,10 +132,10 @@ def main():
     ap.add_argument("--cluster-gap", type=float, default=12.0,
                      help="max gap (drawing units) between label entity bboxes to merge them into one label (default: 12)")
     ap.add_argument("--scale", type=float, default=2.0, help="label scale factor (default: 2.0)")
-    ap.add_argument("--stroke-fraction", type=float, default=0.07,
-                     help="stroke width as a fraction of the scaled label height (default: 0.07)")
-    ap.add_argument("--stroke-min", type=float, default=0.35, help="minimum stroke width, drawing units (default: 0.35)")
-    ap.add_argument("--stroke-max", type=float, default=1.2, help="maximum stroke width, drawing units (default: 1.2)")
+    ap.add_argument("--stroke-fraction", type=float, default=0.14,
+                     help="stroke width as a fraction of the scaled label height (default: 0.14)")
+    ap.add_argument("--stroke-min", type=float, default=0.7, help="minimum stroke width, drawing units (default: 0.7)")
+    ap.add_argument("--stroke-max", type=float, default=2.2, help="maximum stroke width, drawing units (default: 2.2)")
     args = ap.parse_args()
 
     process(args.input, args.output, args.size_threshold, args.cluster_gap,
