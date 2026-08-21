@@ -236,6 +236,22 @@ def setup_view():
     else:
         print("  !! Display mode '{}' not found.".format(DISPLAY_MODE))
 
+    # ZoomExtents fits the CURRENT viewport aspect ratio, not the export
+    # image's. If the on-screen panel isn't the same shape as
+    # IMG_WIDTH x IMG_HEIGHT, the frustum ZoomExtents computes doesn't
+    # match what ViewCaptureSettings renders, so the export can end up
+    # cropped or under-filled even though the on-screen view looks
+    # perfectly framed (a known Rhino issue - McNeel RH-53656/RH-53758 -
+    # with custom-resolution capture at a non-viewport aspect ratio).
+    # Matching the viewport's pixel size to the export size first makes
+    # ZoomExtents compute the fit at the exact aspect that gets
+    # captured, so there is no mismatch left for that bug to trigger.
+    try:
+        vp.Size = System.Drawing.Size(IMG_WIDTH, IMG_HEIGHT)
+    except Exception as ex:
+        print("  !! could not match viewport size to export size ({}: {})"
+              .format(type(ex).__name__, ex))
+
     rs.ZoomExtents()
     sc.doc.Views.Redraw()
     return view
