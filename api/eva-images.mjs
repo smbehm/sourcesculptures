@@ -1,6 +1,7 @@
 import { timingSafeEqual, randomUUID } from 'node:crypto';
 
 const categories = ['Eva', 'Roberto', 'Rachele', 'Daniele', 'Robert', 'Cristiana', 'Tommaso', 'Friends', 'Family', 'Locations'];
+const validScope = s => categories.includes(s) || /^Scenes_S(0[1-9]|1[0-8])$/.test(s) || /^Locations_L(0[1-9]|1[01])$/.test(s) || ['Eva_Cavalli','Roberto_Cavalli','Rachele_Cavalli','Daniele_Cavalli','Robert_Cavalli','Cristiana_Cavalli','Tommaso_Cavalli','Marta_Marzotto'].some(n => s === 'Characters_' + n);
 const types = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const bucket = 'eva-team-images';
 export default async function handler(req, res) {
@@ -21,7 +22,9 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const files = [];
-      for (const category of categories) {
+      const scope = req.query?.scope;
+      if (!scope || !validScope(scope)) return res.status(400).json({ error: 'Select a scene, location or character.' });
+      for (const category of [scope]) {
         let offset = 0;
         while (true) {
           const batch = await storage(`/object/list/${bucket}`, { prefix: category, limit: 100, offset, sortBy: { column: 'created_at', order: 'desc' } });
@@ -36,7 +39,7 @@ export default async function handler(req, res) {
     }
     if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method not allowed.' }); }
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-    if (!categories.includes(body.category) || !types[body.type] || !Number.isInteger(body.size) || body.size < 1 || body.size > 20 * 1024 * 1024) return res.status(400).json({ error: 'Choose a category and a JPG, PNG or WebP image up to 20 MB.' });
+    if (!validScope(body.category) || !types[body.type] || !Number.isInteger(body.size) || body.size < 1 || body.size > 20 * 1024 * 1024) return res.status(400).json({ error: 'Choose a category and a JPG, PNG or WebP image up to 20 MB.' });
     const safeName = String(body.name || 'image').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 80) || 'image';
     const path = `${body.category}/${randomUUID()}--${safeName}.${types[body.type]}`;
     const ticket = await storage(`/object/upload/sign/${bucket}/${path}`, {});
