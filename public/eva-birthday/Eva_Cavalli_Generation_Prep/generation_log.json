@@ -1,0 +1,14 @@
+{
+  "entries": [],
+  "fields": [
+    "shot",
+    "version",
+    "model",
+    "settings",
+    "references",
+    "prompt",
+    "output_file",
+    "review_notes",
+    "approved"
+  ]
+}

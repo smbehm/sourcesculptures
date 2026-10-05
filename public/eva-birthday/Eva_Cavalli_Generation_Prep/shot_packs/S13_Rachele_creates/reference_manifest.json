@@ -1,0 +1,23 @@
+[
+  {
+    "id": "013",
+    "file": "03_Rachele_Cavalli/2010s/013_2012_Rachele_ELLE_portrait_1320x1759.webp",
+    "subjects": "Rachele Cavalli",
+    "date_or_era": "2012",
+    "date_basis": "Source publication/issue year; not verified capture date",
+    "width": 1320,
+    "height": 1759,
+    "megapixels": 2.32,
+    "bytes": 150132,
+    "source_page": "https://www.elle.se/mode/vaskan-i-fokus-rachele-cavalli-1/4079308",
+    "image_url": "https://image.elle.se/image-4079363?imageId=4079363&width=1320&height=1759&format=webp&compression=90",
+    "credit": "ELLE; article credits Martin Vallin, Marco Glaviano et al.",
+    "quality": "Standard web reference",
+    "watermark_check": "No visible watermark in visual review",
+    "rights": "Copyright retained by source/photographer; no reuse licence acquired",
+    "notes": "Largest version advertised by ELLE page; CDN-served size. Camera-original resolution not verified.",
+    "downloaded": "2026-10-06",
+    "sha256": "bce215d5d4a30845fd87f3015a330657073e5fb5346c15b6bbf1948c53ba6cce",
+    "pack_file": "shot_packs/S13_Rachele_creates/013_2012_Rachele_ELLE_portrait_1320x1759.webp"
+  }
+]
