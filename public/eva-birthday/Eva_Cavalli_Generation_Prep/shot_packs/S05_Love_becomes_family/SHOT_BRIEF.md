@@ -29,3 +29,7 @@ Use the approved starting frame. Use a restrained editorial push, preserving all
 Doorway cut introduces family; no child-to-adult morph.
 
 Do not infer baby identities or fabricate a dated newborn scene from adult references.
+
+## Location references
+
+- L10: [Tenuta degli Dei vineyard context with Roberto and Tommaso](../../../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg) — Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva.

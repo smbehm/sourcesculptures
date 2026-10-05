@@ -29,3 +29,7 @@ Use the approved starting frame. Eva makes a small eye movement toward the mirro
 Hard cut from childhood; no age morph.
 
 The costume and room are proposed reconstruction. Do not recreate the fitting as a documented backstage event.
+
+## Location references
+
+- L04: [Sala Carlos Piantini.JPG](../../../Eva_Cavalli_Locations/02_Santo_Domingo/L04_Sala_Carlos_Piantini_JPG.jpg) — Present-day auditorium layout reference; do not assume the seats, lights or fittings match 1977.

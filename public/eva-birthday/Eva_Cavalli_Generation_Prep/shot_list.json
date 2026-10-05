@@ -13,7 +13,24 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. An authentic childhood photograph, framed within a soft warm border; retain its real setting and expressions. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Use a slow editorial push over the original photograph. Keep faces still. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Open with near silence and lake ambience.",
-    "continuity_caution": "If no family photo arrives, use a face-free lakeside establishing image with an explicitly reconstructed setting."
+    "continuity_caution": "If no family photo arrives, use a face-free lakeside establishing image with an explicitly reconstructed setting.",
+    "location_references": [
+      {
+        "id": "L01",
+        "file": "../Eva_Cavalli_Locations/01_Austria/L01_Marktplatz_Dornbirn_1975_01_jpg.jpg",
+        "notes": "Source identifies 1975 Dornbirn; period street reference, not Eva’s house."
+      },
+      {
+        "id": "L02",
+        "file": "../Eva_Cavalli_Locations/01_Austria/L02_Marktplatz_Dornbirn_JPG.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      },
+      {
+        "id": "L03",
+        "file": "../Eva_Cavalli_Locations/01_Austria/L03_20180625_19_Bregenz_Bodensee_29177022348_jpg.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      }
+    ]
   },
   {
     "shot": "S02",
@@ -51,7 +68,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. A seventeen-year-old Eva in a quiet late-1970s dressing room, medium portrait, simple mirror and warm practical lights. Use a separately prepared Eva-only reference from 032, excluding the tailor. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Eva makes a small eye movement toward the mirror; very slow camera push, relaxed shoulders. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Hard cut from childhood; no age morph.",
-    "continuity_caution": "The costume and room are proposed reconstruction. Do not recreate the fitting as a documented backstage event."
+    "continuity_caution": "The costume and room are proposed reconstruction. Do not recreate the fitting as a documented backstage event.",
+    "location_references": [
+      {
+        "id": "L04",
+        "file": "../Eva_Cavalli_Locations/02_Santo_Domingo/L04_Sala_Carlos_Piantini_JPG.jpg",
+        "notes": "Present-day auditorium layout reference; do not assume the seats, lights or fittings match 1977."
+      }
+    ]
   },
   {
     "shot": "S03",
@@ -89,7 +113,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Use the supplied original finalist group as an archival photograph, fully readable within a 16:9 composition. Eva is fourth from left; do not assign her identity to the crowned woman. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Prefer an editorial pan toward Eva over the unchanged photograph. For an AI test, keep people almost still and allow only a faint light shift. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "A flash transition is added in the edit.",
-    "continuity_caution": "Group image is identity/context evidence; do not use the entire group as a solo identity reference."
+    "continuity_caution": "Group image is identity/context evidence; do not use the entire group as a solo identity reference.",
+    "location_references": [
+      {
+        "id": "L04",
+        "file": "../Eva_Cavalli_Locations/02_Santo_Domingo/L04_Sala_Carlos_Piantini_JPG.jpg",
+        "notes": "Present-day auditorium layout reference; do not assume the seats, lights or fittings match 1977."
+      }
+    ]
   },
   {
     "shot": "S04",
@@ -148,7 +179,19 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Young Eva in a warm Florence stone courtyard, three-quarter back view, with a distant male figure. Preserve late-1970s styling; figures remain separate. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. A light breeze moves fabric as the camera slowly tracks toward the courtyard doorway. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "White flash clears into Florence.",
-    "continuity_caution": "017 is undated and cannot establish Roberto’s exact 1977–1980 appearance. This scene is symbolic, not a claimed first meeting."
+    "continuity_caution": "017 is undated and cannot establish Roberto’s exact 1977–1980 appearance. This scene is symbolic, not a claimed first meeting.",
+    "location_references": [
+      {
+        "id": "L05",
+        "file": "../Eva_Cavalli_Locations/03_Florence/L05_Ponte_Vecchio_at_dusk_1_JPG.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      },
+      {
+        "id": "L07",
+        "file": "../Eva_Cavalli_Locations/03_Florence/L07_Boboli_Gardens.jpg",
+        "notes": "Public Boboli Gardens: garden/architecture inspiration, not Cavalli family home."
+      }
+    ]
   },
   {
     "shot": "S05",
@@ -164,7 +207,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. A warm candid family photograph in the Florence home, using the supplied real family archive. Keep each child at the age shown in that photograph. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Use a restrained editorial push, preserving all faces and the original family arrangement. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Doorway cut introduces family; no child-to-adult morph.",
-    "continuity_caution": "Do not infer baby identities or fabricate a dated newborn scene from adult references."
+    "continuity_caution": "Do not infer baby identities or fabricate a dated newborn scene from adult references.",
+    "location_references": [
+      {
+        "id": "L10",
+        "file": "../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg",
+        "notes": "Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva."
+      }
+    ]
   },
   {
     "shot": "S06",
@@ -202,7 +252,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Present the original 1987 photograph as an archival image with generous border and a restrained warm treatment. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Editorial push of about 3 percent; no synthetic expression or body movement. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "A brief genuine image anchors the family chapter.",
-    "continuity_caution": "712×1024 is modest resolution; keep the photograph inset rather than stretching it across 4K."
+    "continuity_caution": "712×1024 is modest resolution; keep the photograph inset rather than stretching it across 4K.",
+    "location_references": []
   },
   {
     "shot": "S07",
@@ -218,7 +269,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Close view of a hand placing a plain ceramic plate on a linen-covered Mediterranean terrace table for five. Warm evening light, olive branches and distant water, no visible faces. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. One hand sets down the plate; locked camera; linen moves faintly in the breeze. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Match cut plate circle to a candle base.",
-    "continuity_caution": "Face-free fallback can be designed now. Setting is evocative, not the verified family terrace."
+    "continuity_caution": "Face-free fallback can be designed now. Setting is evocative, not the verified family terrace.",
+    "location_references": [
+      {
+        "id": "L08",
+        "file": "../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      }
+    ]
   },
   {
     "shot": "S08",
@@ -277,7 +335,19 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. A wider version of the same terrace and table, with more place settings, flowers and softly defocused guests. Match the approved table design exactly. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Slow lateral camera movement across place settings; background people remain unobtrusive. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Cut between separately composed tables to make it grow.",
-    "continuity_caution": "Marta images are 1985 or undated. They cannot establish a specific 1990s dinner or guest attendance."
+    "continuity_caution": "Marta images are 1985 or undated. They cannot establish a specific 1990s dinner or guest attendance.",
+    "location_references": [
+      {
+        "id": "L08",
+        "file": "../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      },
+      {
+        "id": "L10",
+        "file": "../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg",
+        "notes": "Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva."
+      }
+    ]
   },
   {
     "shot": "S09",
@@ -293,7 +363,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Macro view of hands arranging printed silk beside sketches on a worn atelier table; warm task lighting and tactile surfaces. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. One hand smooths the fabric once; camera gently slides sideways. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Candle highlight cuts to atelier light.",
-    "continuity_caution": "Hands need not be attributed to Eva. Do not generate logos, signatures or a claimed authentic collection."
+    "continuity_caution": "Hands need not be attributed to Eva. Do not generate logos, signatures or a claimed authentic collection.",
+    "location_references": [
+      {
+        "id": "L11",
+        "file": "../Eva_Cavalli_Locations/04_Tuscany/L11_Tenuta_degli_Dei_wine_cellar_with_Tommaso.jpg",
+        "notes": "Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva."
+      }
+    ]
   },
   {
     "shot": "S10",
@@ -331,7 +408,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Use the original 2007 launch photograph as a composed archival frame. Preserve the original people and clothing. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Editorial movement across the original image; no invented crowd animation. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Quicker cut rhythm and a flash in the edit.",
-    "continuity_caution": "Use as a 2007 beat, not evidence of the 1994 renaissance."
+    "continuity_caution": "Use as a 2007 beat, not evidence of the 1994 renaissance.",
+    "location_references": []
   },
   {
     "shot": "S11",
@@ -369,7 +447,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Use the exact 2014 runway finale photograph as the starting frame. Retain both identities, hands, garments and runway composition. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Tiny natural breathing only; slow camera push; preserve hand positions and both faces. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Let the energy peak, then cut back to human warmth.",
-    "continuity_caution": "Do not prompt a walk or a new hand gesture until the restrained test holds identity."
+    "continuity_caution": "Do not prompt a walk or a new hand gesture until the restrained test holds identity.",
+    "location_references": []
   },
   {
     "shot": "S12",
@@ -428,7 +507,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Two separate original-photo frames: the 2014 yacht photograph and the 2024 front-row photograph. Keep each event and cast intact. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Animate each separately with minimal editorial movement; join in the edit. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Two three-second inserts within this six-second beat.",
-    "continuity_caution": "These are public event photos, not evidence of a private dinner. Do not place Cindy in a scene without a suitable reference."
+    "continuity_caution": "These are public event photos, not evidence of a private dinner. Do not place Cindy in a scene without a suitable reference.",
+    "location_references": []
   },
   {
     "shot": "S13",
@@ -466,7 +546,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Rachele in a quiet accessories work space, medium portrait with a single design object. Preserve identity from 013; use separately approved workspace and object references. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Small downward glance toward the object; camera stays steady. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "First of three linked creator portraits.",
-    "continuity_caution": "The work scene is reconstructed; reference is an editorial portrait, not footage of this action."
+    "continuity_caution": "The work scene is reconstructed; reference is an editorial portrait, not footage of this action.",
+    "location_references": []
   },
   {
     "shot": "S14",
@@ -504,7 +585,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Daniele in his approved creative space, restrained medium portrait, natural light; preserve his appearance from 015. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Small head turn toward something just off camera; gentle push. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Continue the creator portrait rhythm.",
-    "continuity_caution": "Do not invent a music performance or a specific artwork from an identity portrait."
+    "continuity_caution": "Do not invent a music performance or a specific artwork from an identity portrait.",
+    "location_references": []
   },
   {
     "shot": "S15",
@@ -563,7 +645,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Robert in an approved design space, medium portrait; use 012 as primary identity and 024 only as supporting face evidence from 2015. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. A small attentive glance off camera; locked composition and minimal movement. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Third portrait resolves toward the family table.",
-    "continuity_caution": "012 is only 800×533. Keep framing moderate; 2015 and 2019 references are not interchangeable exact-age records."
+    "continuity_caution": "012 is only 800×533. Keep framing moderate; 2015 and 2019 references are not interchangeable exact-age records.",
+    "location_references": []
   },
   {
     "shot": "S16",
@@ -579,7 +662,8 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. Use a real family gathering photograph, with every person identified by the family; preserve the original arrangement. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Editorial movement over the original family image; avoid generated child expressions or altered identities. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Family laughter can enter under the next shot.",
-    "continuity_caution": "Tommaso and Cristiana appear only if the family confirms the relationship and chosen shared imagery."
+    "continuity_caution": "Tommaso and Cristiana appear only if the family confirms the relationship and chosen shared imagery.",
+    "location_references": []
   },
   {
     "shot": "S17",
@@ -638,7 +722,14 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. First use a real Eva–Roberto photograph, then cut to a separately approved current Eva portrait in natural light. The memory remains visibly photographic. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Five seconds of editorial movement on the memory; five seconds of a still current portrait with only a subtle camera push. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Music settles. No death chapter or simulated speech.",
-    "continuity_caution": "Do not age 001 into “Eva today”: its capture date is unverified. Current scene waits for a current reference."
+    "continuity_caution": "Do not age 001 into “Eva today”: its capture date is unverified. Current scene waits for a current reference.",
+    "location_references": [
+      {
+        "id": "L05",
+        "file": "../Eva_Cavalli_Locations/03_Florence/L05_Ponte_Vecchio_at_dusk_1_JPG.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      }
+    ]
   },
   {
     "shot": "S18",
@@ -760,6 +851,28 @@
     "starting_image_prompt": "16:9 cinematic still for a birthday memory film. A Mediterranean garden table combining lake light, Florence stone and Sardinian sea as an intentional dream. Begin with Eva’s approved portrait, then reveal the setting through separate wide shots and family-photo inserts. Natural skin texture, restrained expressions, coherent light direction. No generated text. Keep each named person linked only to their own supplied identity reference. This brief describes a proposed scene, not a historical photograph.",
     "motion_prompt": "Use the approved starting frame. Gentle pullback on a simple wide frame; candle flicker only. Build the ensemble with separate inserts or compositing rather than one crowded generation. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.",
     "edit_note": "Final twelve seconds: six-second reveal, then six seconds for “EVA · 67 / Happy Birthday / The story continues.” Set typography in the edit.",
-    "continuity_caution": "Listed portraits are optional identity references, not a confirmed final cast. Avoid generating deceased relatives into a photorealistic current event; keep the memory treatment explicit."
+    "continuity_caution": "Listed portraits are optional identity references, not a confirmed final cast. Avoid generating deceased relatives into a photorealistic current event; keep the memory treatment explicit.",
+    "location_references": [
+      {
+        "id": "L03",
+        "file": "../Eva_Cavalli_Locations/01_Austria/L03_20180625_19_Bregenz_Bodensee_29177022348_jpg.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      },
+      {
+        "id": "L07",
+        "file": "../Eva_Cavalli_Locations/03_Florence/L07_Boboli_Gardens.jpg",
+        "notes": "Public Boboli Gardens: garden/architecture inspiration, not Cavalli family home."
+      },
+      {
+        "id": "L08",
+        "file": "../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg",
+        "notes": "Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot."
+      },
+      {
+        "id": "L10",
+        "file": "../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg",
+        "notes": "Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva."
+      }
+    ]
   }
 ]

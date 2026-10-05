@@ -30,3 +30,7 @@ Use the approved starting frame. Five seconds of editorial movement on the memor
 Music settles. No death chapter or simulated speech.
 
 Do not age 001 into “Eva today”: its capture date is unverified. Current scene waits for a current reference.
+
+## Location references
+
+- L05: [Ponte Vecchio at dusk 1.JPG](../../../Eva_Cavalli_Locations/03_Florence/L05_Ponte_Vecchio_at_dusk_1_JPG.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.

@@ -29,3 +29,9 @@ Use the approved starting frame. Use a slow editorial push over the original pho
 Open with near silence and lake ambience.
 
 If no family photo arrives, use a face-free lakeside establishing image with an explicitly reconstructed setting.
+
+## Location references
+
+- L01: [Marktplatz Dornbirn 1975 01.jpg](../../../Eva_Cavalli_Locations/01_Austria/L01_Marktplatz_Dornbirn_1975_01_jpg.jpg) — Source identifies 1975 Dornbirn; period street reference, not Eva’s house.
+- L02: [Marktplatz Dornbirn.JPG](../../../Eva_Cavalli_Locations/01_Austria/L02_Marktplatz_Dornbirn_JPG.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.
+- L03: [20180625 19 Bregenz - Bodensee (29177022348).jpg](../../../Eva_Cavalli_Locations/01_Austria/L03_20180625_19_Bregenz_Bodensee_29177022348_jpg.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.

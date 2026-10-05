@@ -30,3 +30,8 @@ Use the approved starting frame. A light breeze moves fabric as the camera slowl
 White flash clears into Florence.
 
 017 is undated and cannot establish Roberto’s exact 1977–1980 appearance. This scene is symbolic, not a claimed first meeting.
+
+## Location references
+
+- L05: [Ponte Vecchio at dusk 1.JPG](../../../Eva_Cavalli_Locations/03_Florence/L05_Ponte_Vecchio_at_dusk_1_JPG.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.
+- L07: [Boboli Gardens](../../../Eva_Cavalli_Locations/03_Florence/L07_Boboli_Gardens.jpg) — Public Boboli Gardens: garden/architecture inspiration, not Cavalli family home.

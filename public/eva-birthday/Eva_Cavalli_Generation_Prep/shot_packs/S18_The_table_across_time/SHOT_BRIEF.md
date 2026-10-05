@@ -33,3 +33,10 @@ Use the approved starting frame. Gentle pullback on a simple wide frame; candle 
 Final twelve seconds: six-second reveal, then six seconds for “EVA · 67 / Happy Birthday / The story continues.” Set typography in the edit.
 
 Listed portraits are optional identity references, not a confirmed final cast. Avoid generating deceased relatives into a photorealistic current event; keep the memory treatment explicit.
+
+## Location references
+
+- L03: [20180625 19 Bregenz - Bodensee (29177022348).jpg](../../../Eva_Cavalli_Locations/01_Austria/L03_20180625_19_Bregenz_Bodensee_29177022348_jpg.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.
+- L07: [Boboli Gardens](../../../Eva_Cavalli_Locations/03_Florence/L07_Boboli_Gardens.jpg) — Public Boboli Gardens: garden/architecture inspiration, not Cavalli family home.
+- L08: [Capriccioli beach](../../../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.
+- L10: [Tenuta degli Dei vineyard context with Roberto and Tommaso](../../../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg) — Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva.

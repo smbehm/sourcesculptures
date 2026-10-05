@@ -30,3 +30,8 @@ Use the approved starting frame. Slow lateral camera movement across place setti
 Cut between separately composed tables to make it grow.
 
 Marta images are 1985 or undated. They cannot establish a specific 1990s dinner or guest attendance.
+
+## Location references
+
+- L08: [Capriccioli beach](../../../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.
+- L10: [Tenuta degli Dei vineyard context with Roberto and Tommaso](../../../Eva_Cavalli_Locations/04_Tuscany/L10_Tenuta_degli_Dei_vineyard_context_with_Roberto_and_Tommaso.jpg) — Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva.

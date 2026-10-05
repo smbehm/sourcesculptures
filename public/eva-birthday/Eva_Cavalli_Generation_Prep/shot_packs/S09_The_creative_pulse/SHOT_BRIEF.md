@@ -29,3 +29,7 @@ Use the approved starting frame. One hand smooths the fabric once; camera gently
 Candle highlight cuts to atelier light.
 
 Hands need not be attributed to Eva. Do not generate logos, signatures or a claimed authentic collection.
+
+## Location references
+
+- L11: [Tenuta degli Dei wine cellar with Tommaso](../../../Eva_Cavalli_Locations/04_Tuscany/L11_Tenuta_degli_Dei_wine_cellar_with_Tommaso.jpg) — Estate context image with people retained; do not use the men as anonymous characters or identity references for Eva.

@@ -29,3 +29,7 @@ Use the approved starting frame. One hand sets down the plate; locked camera; li
 Match cut plate circle to a candle base.
 
 Face-free fallback can be designed now. Setting is evocative, not the verified family terrace.
+
+## Location references
+
+- L08: [Capriccioli beach](../../../Eva_Cavalli_Locations/05_Sardinia/L08_Capriccioli_beach.jpg) — Location / atmosphere reference. Capture date does not establish film-era appearance. Not proof Eva visited this exact spot.

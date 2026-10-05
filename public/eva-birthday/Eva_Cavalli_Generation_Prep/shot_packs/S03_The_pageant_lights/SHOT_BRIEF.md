@@ -29,3 +29,7 @@ Use the approved starting frame. Prefer an editorial pan toward Eva over the unc
 A flash transition is added in the edit.
 
 Group image is identity/context evidence; do not use the entire group as a solo identity reference.
+
+## Location references
+
+- L04: [Sala Carlos Piantini.JPG](../../../Eva_Cavalli_Locations/02_Santo_Domingo/L04_Sala_Carlos_Piantini_JPG.jpg) — Present-day auditorium layout reference; do not assume the seats, lights or fittings match 1977.
