@@ -1,6 +1,6 @@
 # S08 — More chairs, more life
 
-Timeline: 21–24s · 3s in edit
+Timeline: 45–52s · 7s in edit
 
 Era: 1990s, proposed reconstruction
 

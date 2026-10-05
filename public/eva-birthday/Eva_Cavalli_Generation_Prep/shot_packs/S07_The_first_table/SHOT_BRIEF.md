@@ -1,6 +1,6 @@
 # S07 — The first table
 
-Timeline: 18–21s · 3s in edit
+Timeline: 38–45s · 7s in edit
 
 Era: Late 1980s–1990s, proposed reconstruction
 

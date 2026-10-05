@@ -1,6 +1,6 @@
 # S09 — The creative pulse
 
-Timeline: 24–27s · 3s in edit
+Timeline: 52–58s · 6s in edit
 
 Era: 1994–early 2000s, proposed reconstruction
 

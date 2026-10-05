@@ -1,6 +1,6 @@
 # S05 — Love becomes family
 
-Timeline: 12–15s · 3s in edit
+Timeline: 23–33s · 10s in edit
 
 Era: 1980s–early 1990s
 

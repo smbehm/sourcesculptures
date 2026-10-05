@@ -1,6 +1,6 @@
 # S04 — Florence opens
 
-Timeline: 09–12s · 3s in edit
+Timeline: 17–23s · 6s in edit
 
 Era: 1978–1980, proposed reconstruction
 

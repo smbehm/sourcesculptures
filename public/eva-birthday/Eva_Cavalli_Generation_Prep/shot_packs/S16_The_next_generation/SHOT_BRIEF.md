@@ -1,6 +1,6 @@
 # S16 — The next generation
 
-Timeline: 45–48s · 3s in edit
+Timeline: 89–98s · 9s in edit
 
 Era: 2010s–2020s
 

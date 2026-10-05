@@ -1,6 +1,6 @@
 # S10 — The world expands
 
-Timeline: 27–30s · 3s in edit
+Timeline: 58–63s · 5s in edit
 
 Era: 2007
 

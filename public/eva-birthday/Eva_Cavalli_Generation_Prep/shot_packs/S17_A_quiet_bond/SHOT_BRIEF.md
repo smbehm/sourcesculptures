@@ -1,6 +1,6 @@
 # S17 — A quiet bond
 
-Timeline: 48–54s · 6s in edit
+Timeline: 98–108s · 10s in edit
 
 Era: Memory, then Eva today
 
@@ -23,7 +23,7 @@ A private Eva–Roberto image and current Eva photo/video in her preferred place
 
 ## Motion prompt
 
-Use the approved starting frame. Three seconds of editorial movement on the memory; three seconds of a still current portrait with only a subtle camera push. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.
+Use the approved starting frame. Five seconds of editorial movement on the memory; five seconds of a still current portrait with only a subtle camera push. Preserve identity, age, wardrobe, lighting and the number of people. Generate the shortest supported useful clip, with roughly one second of editing handles at either end where possible; trim to the planned edit duration. Add no speech or text.
 
 ## Edit and continuity
 

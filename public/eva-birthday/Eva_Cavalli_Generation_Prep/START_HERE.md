@@ -1,6 +1,8 @@
-# Eva — generation preparation, version 1
+# Eva — generation preparation, version 2
 
-An 18-shot, 60-second proposed edit based on the original memory-dream concept. Eva remains the centre; the recurring table grows from home into a world of family and friends. This pack contains briefs and source references, not generated starting frames or completed videos.
+An 18-shot, 120-second proposed edit based on the original memory-dream concept. Eva remains the centre; the recurring table grows from home into a world of family and friends. This pack contains briefs and source references, not generated starting frames or completed videos.
+
+The two-minute edit gives childhood and Florence room to establish, keeps the fashion section brisk, and allows longer family, memory and final-table beats. Longer beats may contain multiple clips or archival inserts; they are not requests for a single 10–12-second generation.
 
 Working defaults: 16:9, 1920×1080 edit, 24 fps timeline, warm natural light, subtle grain added consistently during finishing, gentle motion, no dialogue or lip-sync. Durations are edit targets, not claims about a model’s supported clip lengths. Music and personal sound recordings are still to be chosen. The ending uses age 67 for the planned October 2026 birthday.
 
@@ -44,21 +46,21 @@ Does this look like the intended person at this age? Are all people correctly as
 
 | Shot | Time | Scene | Era | Status | Reference IDs |
 |---|---|---|---|---|---|
-| S01 | 00–03s | Austria before the world | 1959–1976 | Family photos needed | Needed |
-| S02 | 03–06s | The girl steps forward | 1977 | Still test; date caveat | 032 |
-| S03 | 06–09s | The pageant lights | 1977 | Ready for editorial test | 030 |
-| S04 | 09–12s | Florence opens | 1978–1980, proposed reconstruction | Age and location references needed | 032, 017 |
-| S05 | 12–15s | Love becomes family | 1980s–early 1990s | Family photos needed | Needed |
-| S06 | 15–18s | Together, 1987 | 1987 | Ready for editorial test | 031 |
-| S07 | 18–21s | The first table | Late 1980s–1990s, proposed reconstruction | Era and location references needed | Needed |
-| S08 | 21–24s | More chairs, more life | 1990s, proposed reconstruction | Family and era references needed | 010, 009 |
-| S09 | 24–27s | The creative pulse | 1994–early 2000s, proposed reconstruction | Design and location references needed | Needed |
-| S10 | 27–30s | The world expands | 2007 | Ready for editorial test | 028 |
-| S11 | 30–33s | The partnership onstage | 2014 | Ready for still/motion test | 002 |
-| S12 | 33–36s | Friends and warmth | 2014 / 2024 montage | Ready for editorial test | 003, 014 |
-| S13 | 36–39s | Rachele creates | 2012 reference; symbolic creative beat | Identity reference available; context needed | 013 |
-| S14 | 39–42s | Daniele creates | 2020 reference; symbolic creative beat | Identity reference available; context needed | 015 |
-| S15 | 42–45s | Robert carries it forward | 2019 reference; symbolic creative beat | Identity reference available; context needed | 012, 024 |
-| S16 | 45–48s | The next generation | 2010s–2020s | Family photos needed | Needed |
-| S17 | 48–54s | A quiet bond | Memory, then Eva today | Memory test ready; current portrait needed | 031, 002 |
-| S18 | 54–60s | The table across time | Intentionally timeless dream | Ensemble and location references needed | 013, 015, 012, 018, 027 |
+| S01 | 00–06s | Austria before the world | 1959–1976 | Family photos needed | Needed |
+| S02 | 06–12s | The girl steps forward | 1977 | Still test; date caveat | 032 |
+| S03 | 12–17s | The pageant lights | 1977 | Ready for editorial test | 030 |
+| S04 | 17–23s | Florence opens | 1978–1980, proposed reconstruction | Age and location references needed | 032, 017 |
+| S05 | 23–33s | Love becomes family | 1980s–early 1990s | Family photos needed | Needed |
+| S06 | 33–38s | Together, 1987 | 1987 | Ready for editorial test | 031 |
+| S07 | 38–45s | The first table | Late 1980s–1990s, proposed reconstruction | Era and location references needed | Needed |
+| S08 | 45–52s | More chairs, more life | 1990s, proposed reconstruction | Family and era references needed | 010, 009 |
+| S09 | 52–58s | The creative pulse | 1994–early 2000s, proposed reconstruction | Design and location references needed | Needed |
+| S10 | 58–63s | The world expands | 2007 | Ready for editorial test | 028 |
+| S11 | 63–68s | The partnership onstage | 2014 | Ready for still/motion test | 002 |
+| S12 | 68–74s | Friends and warmth | 2014 / 2024 montage | Ready for editorial test | 003, 014 |
+| S13 | 74–79s | Rachele creates | 2012 reference; symbolic creative beat | Identity reference available; context needed | 013 |
+| S14 | 79–84s | Daniele creates | 2020 reference; symbolic creative beat | Identity reference available; context needed | 015 |
+| S15 | 84–89s | Robert carries it forward | 2019 reference; symbolic creative beat | Identity reference available; context needed | 012, 024 |
+| S16 | 89–98s | The next generation | 2010s–2020s | Family photos needed | Needed |
+| S17 | 98–108s | A quiet bond | Memory, then Eva today | Memory test ready; current portrait needed | 031, 002 |
+| S18 | 108–120s | The table across time | Intentionally timeless dream | Ensemble and location references needed | 013, 015, 012, 018, 027 |

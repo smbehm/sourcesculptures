@@ -1,6 +1,6 @@
 # S06 — Together, 1987
 
-Timeline: 15–18s · 3s in edit
+Timeline: 33–38s · 5s in edit
 
 Era: 1987
 

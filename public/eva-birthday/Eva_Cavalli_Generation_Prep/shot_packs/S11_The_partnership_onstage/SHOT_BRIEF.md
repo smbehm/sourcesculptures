@@ -1,6 +1,6 @@
 # S11 — The partnership onstage
 
-Timeline: 30–33s · 3s in edit
+Timeline: 63–68s · 5s in edit
 
 Era: 2014
 

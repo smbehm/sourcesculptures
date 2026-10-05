@@ -1,6 +1,6 @@
 # S02 — The girl steps forward
 
-Timeline: 03–06s · 3s in edit
+Timeline: 06–12s · 6s in edit
 
 Era: 1977
 

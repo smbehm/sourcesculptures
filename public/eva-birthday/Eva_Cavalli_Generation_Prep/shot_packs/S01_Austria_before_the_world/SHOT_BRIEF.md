@@ -1,6 +1,6 @@
 # S01 — Austria before the world
 
-Timeline: 00–03s · 3s in edit
+Timeline: 00–06s · 6s in edit
 
 Era: 1959–1976
 

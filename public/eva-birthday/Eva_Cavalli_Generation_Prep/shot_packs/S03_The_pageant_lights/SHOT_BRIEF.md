@@ -1,6 +1,6 @@
 # S03 — The pageant lights
 
-Timeline: 06–09s · 3s in edit
+Timeline: 12–17s · 5s in edit
 
 Era: 1977
 

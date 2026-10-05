@@ -1,6 +1,6 @@
 # S12 — Friends and warmth
 
-Timeline: 33–36s · 3s in edit
+Timeline: 68–74s · 6s in edit
 
 Era: 2014 / 2024 montage
 
@@ -27,6 +27,6 @@ Use the approved starting frame. Animate each separately with minimal editorial 
 
 ## Edit and continuity
 
-Two 1.5-second inserts within this three-second beat.
+Two three-second inserts within this six-second beat.
 
 These are public event photos, not evidence of a private dinner. Do not place Cindy in a scene without a suitable reference.

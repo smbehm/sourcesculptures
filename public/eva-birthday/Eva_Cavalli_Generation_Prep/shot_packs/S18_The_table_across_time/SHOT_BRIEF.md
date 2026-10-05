@@ -1,6 +1,6 @@
 # S18 — The table across time
 
-Timeline: 54–60s · 6s in edit
+Timeline: 108–120s · 12s in edit
 
 Era: Intentionally timeless dream
 
@@ -30,6 +30,6 @@ Use the approved starting frame. Gentle pullback on a simple wide frame; candle 
 
 ## Edit and continuity
 
-Final six seconds: reveal, then “EVA · 67 / Happy Birthday / The story continues.” Set typography in the edit.
+Final twelve seconds: six-second reveal, then six seconds for “EVA · 67 / Happy Birthday / The story continues.” Set typography in the edit.
 
 Listed portraits are optional identity references, not a confirmed final cast. Avoid generating deceased relatives into a photorealistic current event; keep the memory treatment explicit.
